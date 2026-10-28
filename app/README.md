@@ -1,4 +1,4 @@
-# Portal Nós Passa Frotas
+# Portal XRMOVI Fleet
 
 Primeira versão de cadastro de empresa e veículos, com Supabase Auth e políticas RLS.
 
@@ -10,3 +10,5 @@ Primeira versão de cadastro de empresa e veículos, com Supabase Auth e políti
 5. Testar criação, confirmação de email, cadastro de empresa, RLS e veículos com duas contas de empresas distintas.
 
 A página continua mostrando integração pendente enquanto `config.json` não for criado. Não utilizar em produção sem testes e revisão de segurança.
+
+> Identidade comercial atual: **XRMOVI Fleet**. O antigo endereço `frota.nospassa.com.br` deve permanecer configurado até o domínio novo ser registrado, apontado e validado. Não substituir URLs de autenticação nem pagamentos antecipadamente.
