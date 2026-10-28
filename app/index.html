@@ -14,7 +14,7 @@ main{max-width:1600px;padding:20px 24px}
 #sideNav button{width:100%;border-radius:11px;min-height:44px;background:transparent;color:#c6d9e5;text-align:left;margin:2px 0;padding:11px 13px;font-size:14px;font-weight:650;display:flex;gap:10px;align-items:center}
 #sideNav button:hover{background:#173c50}
 #sideNav button[aria-current="page"]{background:linear-gradient(90deg,#245f64,#17405a);color:#6df1c4;border-left:3px solid #65edb9}
-#sideNav .sidebar-meta{border-top:1px solid #315368;margin-top:12px;padding:14px 10px;color:#afc8d0;font-size:12px}
+#sideNav .sidebar-company{margin:6px 0 14px;padding:10px;background:#112f41;border-radius:12px;border:1px solid #315368}#sideNav .sidebar-company label{display:block;font-size:11px}#sideNav .sidebar-company select{width:100%;max-width:100%!important;font-size:12px;padding:9px;margin:6px 0 0}#sideNav .sidebar-meta{border-top:1px solid #315368;margin-top:12px;padding:14px 10px;color:#afc8d0;font-size:12px}
 #workspaceContent{min-width:0}
 .workspace-pane{display:none}
 .workspace-pane.active{display:block}
@@ -58,7 +58,7 @@ const content=document.createElement('div');content.id='workspaceContent';const 
 const pages=[
 {id:'painel',label:'◫ Painel',elements:['executiveDashboard','maintenanceDashboard']},
 {id:'veiculos',label:'▣ Veículos',elements:['vehicleOperations']},
-{id:'contratos',label:'▤ Contratos',elements:['companySwitcher','contractsSection']},
+{id:'contratos',label:'▤ Contratos',elements:['contractsSection']},
 {id:'manutencao',label:'⚒ Manutenção',elements:['maintenanceSection']},
 {id:'abastecimentos',label:'◈ Abastecimentos',elements:['fuelSection']},
 {id:'relatorios',label:'▥ Relatórios',elements:['reportsSection']},
@@ -66,7 +66,7 @@ const pages=[
 {id:'assinatura',label:'◇ Assinatura',elements:[]}
 ];
 const wrap=document.createElement('div');wrap.id='vehicleOperations';const metric=fleet.querySelector(':scope > .metrics');const vehicleSplit=[...fleet.children].find(el=>el.classList.contains('split'));if(metric)wrap.append(metric);if(vehicleSplit)wrap.append(vehicleSplit);
-const companySwitcher=[...fleet.children].find(el=>el.classList.contains('box')&&el.querySelector('#companySelect'));if(companySwitcher)companySwitcher.id='companySwitcher';
+const companySwitcher=[...fleet.children].find(el=>el.classList.contains('box')&&el.querySelector('#companySelect'));if(companySwitcher){companySwitcher.id='companySwitcher';companySwitcher.classList.add('sidebar-company');nav.append(companySwitcher)}
 const panes={};for(const page of pages){const btn=document.createElement('button');btn.type='button';btn.textContent=page.label;btn.dataset.page=page.id;const pane=document.createElement('section');pane.className='workspace-pane';pane.dataset.page=page.id;for(const id of page.elements){const el=id==='vehicleOperations'?wrap:document.getElementById(id);if(el)pane.append(el)}if(page.id==='assinatura'){const note=document.createElement('div');note.className='box';note.textContent='Seu plano está disponível no cabeçalho. Use “Escolher ou alterar plano” para ver as opções.';pane.append(note)}btn.addEventListener('click',()=>showWorkspacePage(page.id));nav.append(btn);content.append(pane);panes[page.id]=pane}
 const foot=document.createElement('div');foot.className='sidebar-meta';foot.textContent='XRMOVI Fleet • Gestão integrada';nav.append(foot);
 workspace.append(nav,content);fleet.prepend(workspace);
