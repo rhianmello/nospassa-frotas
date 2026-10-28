@@ -76,6 +76,32 @@ main{padding-top:10px}
 #portalFooter a{color:#55dfad}
 @media(max-width:1050px){#appHeader{flex-wrap:wrap!important}#headerAccount{order:2!important;flex-basis:100%!important}#appHeader>a.back-home{margin-left:auto!important}#accountCard{gap:12px}}
 @media(max-width:650px){#appHeader{gap:8px!important}#accountCard{display:grid!important;grid-template-columns:1fr;gap:9px;padding:10px!important}#accountCard .header-identity{min-width:0}#planCompact{align-items:flex-start}#headerAccount #logout{align-self:center}#portalFooter{font-size:11px}}
+/* Dashboard compacto - indicadores e alertas visiveis no primeiro viewport */
+#tabTitle{font-size:19px;margin:0 0 8px}
+#executiveDashboard{padding:16px 20px;margin-bottom:12px}
+#executiveDashboard .executive-head h2{font-size:clamp(21px,2vw,26px);margin:3px 0 4px;line-height:1.15}
+#executiveDashboard>.executive-head .sub{font-size:12px;margin:2px 0 4px}
+#executiveDashboard>.executive-head small{font-size:10px}
+#executiveDashboard>.kpi-grid{margin:10px 0;gap:9px}
+#executiveDashboard .kpi{padding:11px 13px;border-radius:11px}
+#executiveDashboard .kpi small{font-size:11px}
+#executiveDashboard .kpi strong{font-size:clamp(20px,2vw,25px);margin-top:3px;line-height:1.2}
+#executiveDashboard .dashboard-surface{padding:12px 14px}
+#executiveDashboard #insightsSection{margin-bottom:10px!important}
+#executiveDashboard #insightsSection>.executive-head .sub{margin:3px 0;font-size:11px}
+#executiveDashboard #insightsSection>.kpi-grid{margin:9px 0;gap:9px}
+#executiveDashboard #insightsSection .kpi{padding:10px 12px}
+#executiveDashboard #insightsSection .kpi strong{font-size:21px}
+#executiveDashboard #insightPeriod{padding:7px 9px;margin:3px 0;font-size:12px}
+#executiveDashboard #maintenanceDashboard.alerts-compact{margin:10px 0!important;padding:10px 13px;background:#102b3b;border:1px solid #376275;border-radius:12px}
+#executiveDashboard .alerts-compact h2{font-size:14px;margin:0 0 8px}
+#executiveDashboard .alerts-compact .metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+#executiveDashboard .alerts-compact .metric{padding:8px 12px;border:1px solid #315569;background:#0b2637}
+#executiveDashboard .alerts-compact .metric strong{font-size:19px}
+#executiveDashboard .alerts-compact .metric small{font-size:11px}
+#executiveDashboard #maintenanceAlerts{padding:6px 10px;margin:8px 0 0;border:0;background:#082433;border-radius:8px;max-height:94px;overflow:auto}
+#executiveDashboard #maintenanceAlerts p{font-size:11px;margin:4px 0}
+@media(max-width:750px){#executiveDashboard{padding:12px}#executiveDashboard .kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#executiveDashboard .alerts-compact .metrics{grid-template-columns:repeat(3,minmax(0,1fr))}#executiveDashboard .alerts-compact .metric{padding:8px}#executiveDashboard .alerts-compact .metric small{font-size:10px}}
 </style></head><body><main>
 <header id="appHeader"><div class="logo">XR<span>MOVI</span></div><div id="headerAccount" class="hidden"><div id="accountCard"><div class="header-identity"><strong>Minha frota</strong><span id="account"></span></div><div id="planMount"></div></div><button class="secondary" id="logout">Sair</button></div><a class="back-home" href="/">← Voltar ao site</a></header>
 <div class="box" id="setup"><h1>Portal de clientes em preparação</h1><p class="sub">O aplicativo já está preparado para autenticação e gestão de veículos. O cadastro será liberado após configurar o banco de dados exclusivo da plataforma.</p><div class="notice">Nenhum cadastro ou dado comercial é salvo nesta demonstração.</div></div>
@@ -94,6 +120,11 @@ main{padding-top:10px}
 (function initializeWorkspace(){
 const fleet=document.getElementById('fleet'),dash=document.getElementById('dashboard');if(!fleet||!dash)return;
 const plan=document.getElementById('subscriptionBox');const mount=document.getElementById('planMount');if(plan&&mount){plan.id='planCompact';mount.appendChild(plan)}
+// Posiciona os alertas no topo do painel gerencial, preservando todos os IDs e eventos.
+const executive=document.getElementById('executiveDashboard');
+const alerts=document.getElementById('maintenanceDashboard');
+const insights=document.getElementById('insightsSection');
+if(executive&&alerts&&insights){alerts.classList.add('alerts-compact');executive.insertBefore(alerts,insights)}
 const workspace=document.createElement('div');workspace.id='workspace';const nav=document.createElement('nav');nav.id='sideNav';nav.setAttribute('aria-label','Navegação da gestão de frotas');const navHead=document.createElement('div');navHead.className='nav-title';navHead.textContent='MENU PRINCIPAL';nav.append(navHead);
 const content=document.createElement('div');content.id='workspaceContent';const pageTitle=document.createElement('h2');pageTitle.id='tabTitle';content.append(pageTitle);
 const pages=[
