@@ -15,21 +15,36 @@
 <div class="box"><h2>Veículos cadastrados</h2><div class="scroll"><table><thead><tr><th>Placa</th><th>Modelo</th><th>KM</th><th>Status</th></tr></thead><tbody id="vehicles"></tbody></table></div></div></div></div></section></div><p id="status" role="status" aria-live="polite"></p>
 </main>
 <script type="module">
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-let cfg=null;try{const r=await fetch('./config.json',{cache:'no-store'});if(r.ok)cfg=await r.json()}catch(e){}
-if(!cfg?.supabaseUrl||!cfg?.supabaseAnonKey){document.getElementById('status').textContent='Integração pendente: criar projeto Supabase exclusivo.';}
+import{createClient}from'https://esm.sh/@supabase/supabase-js@2';
+const $=id=>document.getElementById(id),show=(id,on)=>$(id)?.classList.toggle('hidden',!on),msg=s=>$('status').textContent=s;
+let cfg;try{const r=await fetch('./config.json',{cache:'no-store'});if(r.ok)cfg=await r.json()}catch{}
+if(!cfg?.supabaseUrl||!cfg?.supabaseAnonKey){msg('Configuração indisponível.');}
 else{
-const sb=createClient(cfg.supabaseUrl,cfg.supabaseAnonKey),$=id=>document.getElementById(id);$('setup').classList.add('hidden');$('live').classList.remove('hidden');let companyId=null;
-const message=s=>$('status').textContent=s;const toggle=(id,yes)=>$(id).classList.toggle('hidden',!yes);
-async function init(){const {data:{user}}=await sb.auth.getUser();toggle('auth',!user);toggle('dashboard',!!user);if(!user)return;$('account').textContent=user.email||'';await loadCompanies()}
-async function loadCompanies(){const {data,error}=await sb.from('memberships').select('company_id,role,companies(id,name)').order('created_at');if(error){message(error.message);return}const list=(data||[]).map(x=>({id:x.company_id,name:x.companies?.name,role:x.role}));toggle('onboarding',!list.length);toggle('fleet',!!list.length);toggle('inviteAcceptance',true);$('companySelect').replaceChildren(...list.map(c=>{let o=document.createElement('option');o.value=c.id;o.textContent=c.name;return o}));if(list.length){companyId=list.some(c=>c.id===companyId)?companyId:list[0].id;$('companySelect').value=companyId;$('createVehicle').querySelector('button').disabled=!['owner','manager'].includes(list.find(c=>c.id===companyId)?.role);$('invitePanel').classList.toggle('hidden',!['owner','manager'].includes(list.find(c=>c.id===companyId)?.role));await loadVehicles();await loadSubscription()}}
-async function loadSubscription(){const {data,error}=await sb.from('fleet_subscriptions').select('status,trial_end,plan_code,fleet_plans(label,vehicle_limit,seat_limit)').eq('company_id',companyId).maybeSingle();const info=$('subscriptionInfo');if(error){info.textContent='Não foi possível carregar o plano: '+error.message;return}if(!data){info.textContent='Assinatura não encontrada. Entre em contato com o suporte.';return}const plan=data.fleet_plans||{};const date=data.trial_end?(' · avaliação até '+new Date(data.trial_end).toLocaleDateString('pt-BR')):'';info.textContent=(plan.label||data.plan_code)+' · '+(plan.vehicle_limit??'Ilimitado')+' veículos · '+(plan.seat_limit??'sob contrato')+' login(s) · situação: '+data.status+date;const button=$('createVehicle').querySelector('button');button.disabled=button.disabled||!['trial','active'].includes(data.status)||(data.status==='trial'&&data.trial_end&&new Date(data.trial_end)<=new Date())}async function loadVehicles(){if(!companyId)return;const {data,error}=await sb.from('vehicles').select('id,plate,model,odometer_km,status').eq('company_id',companyId).order('created_at',{ascending:false});if(error){message(error.message);return}const arr=data||[];$('count').textContent=arr.length;$('activeCount').textContent=arr.filter(v=>v.status==='Ativo').length;$('maintenanceCount').textContent=arr.filter(v=>v.status==='Manutenção').length;$('vehicles').replaceChildren(...arr.map(v=>{const tr=document.createElement('tr');for(const val of [v.plate,v.model,Number(v.odometer_km).toLocaleString('pt-BR'),v.status]){const td=document.createElement('td');td.textContent=val;tr.append(td)}return tr}))}
-$('signin').addEventListener('submit',async e=>{e.preventDefault();const f=new FormData(e.target);const {error}=await sb.auth.signInWithPassword({email:String(f.get('email')),password:String(f.get('password'))});message(error?.message||'Login realizado.');if(!error)await init()});
-$('signup').addEventListener('submit',async e=>{e.preventDefault();const f=new FormData(e.target);const {error}=await sb.auth.signUp({email:String(f.get('email')),password:String(f.get('password'))});message(error?.message||'Cadastro enviado. Confirme seu e-mail, se solicitado.');if(!error)await init()});
-$('logout').onclick=async()=>{await sb.auth.signOut();companyId=null;message('Sessão encerrada.');await init()};
-$('createCompany').addEventListener('submit',async e=>{e.preventDefault();const name=new FormData(e.target).get('company');const {error}=await sb.rpc('create_my_company',{company_name:String(name)});message(error?.message||'Empresa cadastrada.');if(!error)await loadCompanies()});
-$('createInvite').addEventListener('submit',async e=>{e.preventDefault();if(!companyId)return;const role=new FormData(e.target).get('role');const {data,error}=await sb.rpc('fleet_create_invite',{cid:companyId,requested_role:String(role)});message(error?.message||'Convite gerado.');$('inviteResult').textContent=error?'':('Código privado: '+data+' — válido por 7 dias. Envie somente ao funcionário indicado.');});$('acceptInvite').addEventListener('submit',async e=>{e.preventDefault();const token=String(new FormData(e.target).get('token')).trim();const {error}=await sb.rpc('fleet_accept_invite',{token});message(error?.message||'Convite aceito.');if(!error){e.target.reset();await loadCompanies()}});$('companySelect').onchange=async e=>{companyId=e.target.value;await loadCompanies()};
-$('createVehicle').addEventListener('submit',async e=>{e.preventDefault();if(!companyId)return;const f=new FormData(e.target);const plate=String(f.get('plate')).toUpperCase().replace(/[^A-Z0-9]/g,'');const {error}=await sb.from('vehicles').insert({company_id:companyId,plate,model:String(f.get('model')).trim(),category:String(f.get('category')),odometer_km:Number(f.get('odometer'))});message(error?.message||'Veículo cadastrado.');if(!error){e.target.reset();await loadVehicles()}});
-sb.auth.onAuthStateChange(()=>{setTimeout(init,0)});await init();
+const sb=createClient(cfg.supabaseUrl,cfg.supabaseAnonKey),call=(name,args={})=>sb.rpc('xrmovi_'+name,args);
+show('setup',false);show('live',true);let companies=[],companyId=null,vehicleCount=0;
+async function init(){const{data:{user}}=await sb.auth.getUser();show('auth',!user);show('dashboard',!!user);if(!user){show('fleet',false);return}$('account').textContent=user.email||'';await loadCompanies()}
+async function loadCompanies(){const{data,error}=await call('my_companies');if(error){msg(error.message);return}companies=data||[];show('onboarding',companies.length===0);show('fleet',companies.length>0);show('inviteAcceptance',false);if(!companies.length)return;
+companyId=companies.some(x=>x.id===companyId)?companyId:companies[0].id;
+$('companySelect').replaceChildren(...companies.map(x=>{const o=document.createElement('option');o.value=x.id;o.textContent=x.name;return o}));$('companySelect').value=companyId;
+await loadVehicles();}
+async function loadVehicles(){const company=companies.find(x=>x.id===companyId);if(!company)return;
+const{data,error}=await call('my_vehicles',{cid:companyId});if(error){msg(error.message);return}
+const vehicles=data||[];vehicleCount=vehicles.length;
+$('count').textContent=vehicleCount;$('activeCount').textContent=vehicles.filter(x=>x.status==='Ativo').length;$('maintenanceCount').textContent=vehicles.filter(x=>x.status==='Manutenção').length;
+$('vehicles').replaceChildren(...vehicles.map(v=>{const tr=document.createElement('tr');for(const value of [v.plate,v.model,'—',v.status]){const td=document.createElement('td');td.textContent=value;tr.append(td)}return tr}));
+const allowed=['owner','manager'].includes(company.role)&&(['active','trial'].includes(company.status))&&(company.status!=='trial'||Date.parse(company.trial_end)>Date.now())&&(company.vehicle_limit===null||vehicleCount<company.vehicle_limit);
+$('createVehicle').querySelector('button').disabled=!allowed;
+$('subscriptionInfo').textContent=company.plan+' · '+(company.vehicle_limit??'Sem limite definido')+' veículos · '+(company.seat_limit??'Sob contrato')+' logins · status: '+company.status+(company.trial_end?' · teste até '+new Date(company.trial_end).toLocaleDateString('pt-BR'):'');
+show('invitePanel',false);
+}
+$('signin').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target),{error}=await sb.auth.signInWithPassword({email:String(f.get('email')),password:String(f.get('password'))});msg(error?.message||'Login realizado');if(!error)await init()};
+$('signup').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target),{error}=await sb.auth.signUp({email:String(f.get('email')),password:String(f.get('password')),options:{emailRedirectTo:location.origin+'/app/'}});msg(error?.message||'Cadastro enviado. Confirme o e-mail para entrar.')};
+$('logout').onclick=async()=>{await sb.auth.signOut();companyId=null;await init()};
+$('createCompany').onsubmit=async e=>{e.preventDefault();const name=String(new FormData(e.target).get('company'));const{error}=await call('create_company',{company_name:name});msg(error?.message||'Empresa criada!');if(!error)await loadCompanies()};
+$('companySelect').onchange=async e=>{companyId=e.target.value;await loadVehicles()};
+$('createVehicle').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);const{error}=await call('add_vehicle',{cid:companyId,p_plate:String(f.get('plate')).toUpperCase().replace(/[^A-Z0-9]/g,''),p_model:String(f.get('model')).trim()});msg(error?.message||'Veículo cadastrado');if(!error){e.target.reset();await loadVehicles()}};
+const inv=$('createInvite');if(inv)inv.onsubmit=e=>{e.preventDefault();msg('Convites serão liberados após validação dos limites de acesso no novo banco.')};
+const accept=$('acceptInvite');if(accept)accept.onsubmit=e=>{e.preventDefault();msg('Convites ainda não habilitados neste banco.')};
+sb.auth.onAuthStateChange(()=>setTimeout(init,0));await init();
 }
 </script></body></html>
