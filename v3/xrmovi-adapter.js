@@ -262,3 +262,29 @@ function appendDriverAlerts(){
 }
 for(const id of ['driver-search','driver-status','expense-search','expense-category','expense-status','expense-month'])el(id)?.addEventListener(id.endsWith('search')?'input':'change',renderRegistries);
 if(el('driver-clear'))el('driver-clear').onclick=()=>{el('driver-search').value='';el('driver-status').value='active';renderRegistries()};
+
+/* Finance exports use the same currently loaded, company-scoped records as the report cards. */
+function xrmFinancialExportRows(){
+ const ids=new Set(vehicles.filter(v=>!filteredVehicleIds||filteredVehicleIds.has(v.id)).map(v=>v.id));
+ const plate=id=>vehicles.find(v=>v.id===id)?.plate||'Veículo';
+ return [
+  ...fuelEntries.filter(x=>ids.has(x.vehicle_id)).map(x=>[x.fueled_on||x.date||'',plate(x.vehicle_id),'Combustível','Abastecimento'+(x.station?' - '+x.station:''),Number(x.cost??x.total_cost??0)]),
+  ...maintenanceExpenses.filter(x=>ids.has(x.vehicle_id)).map(x=>[x.completed_at||x.date||'',plate(x.vehicle_id),'Manutenção realizada',x.title||'Manutenção',Number(x.actual_cost||0)]),
+  ...paidExpenses.filter(x=>ids.has(x.vehicle_id)).map(x=>[x.paid_on||x.date||'',plate(x.vehicle_id),'Despesa paga',(expenseCategories[x.category]||'Despesa')+' - '+(x.description||''),Number(x.amount||0)])
+ ].sort((a,b)=>String(a[0]).localeCompare(String(b[0])));
+}
+if(el('financial-export-csv'))el('financial-export-csv').onclick=()=>{
+ if(financialState){msg('Relatório indisponível: consulte os dados do período novamente.');return}
+ const rows=xrmFinancialExportRows(),month=el('fuel-ranking-month')?.value||'periodo';
+ const escapeCsv=value=>'"'+String(value??'').replaceAll('"','""')+'"';
+ const data=[['Data','Veículo','Tipo','Descrição','Valor (R$)'],...rows].map(row=>row.map(escapeCsv).join(';')).join('\r\n');
+ const blob=new Blob(['\uFEFF'+data],{type:'text/csv;charset=utf-8'});
+ const url=URL.createObjectURL(blob),link=document.createElement('a');
+ link.href=url;link.download='xrmovi-financeiro-'+month+'.csv';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+};
+if(el('financial-print'))el('financial-print').onclick=()=>{
+ if(financialState){msg('Consulte os dados financeiros antes de imprimir.');return}
+ financialDetailsOpen=true;financialDetailsKind='all';
+ renderContractFinance(vehicles.filter(v=>!filteredVehicleIds||filteredVehicleIds.has(v.id)));
+ window.print();
+};
