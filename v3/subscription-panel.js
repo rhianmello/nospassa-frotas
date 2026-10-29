@@ -57,7 +57,7 @@ export function setupSubscriptionPanel({client,getCompany,onCompanyCreated,onDat
    <section class="xrm-group"><h3>Adicionar empresa</h3><form id="xrm-bill-company-form"><label>Nome da nova empresa<input name="company" required minlength="2" maxlength="160" placeholder="Ex.: Empresa de Transportes"></label><button type="submit">Cadastrar empresa</button></form><div class="xrm-feedback" id="xrm-bill-company-feedback" role="status"></div></section>
    <section class="xrm-group"><h3>Criar contrato</h3><form id="xrm-bill-contract-form"><label>Empresa<select name="company" required id="xrm-bill-contract-company"></select></label><label>Contrato<input name="name" required minlength="2" maxlength="160" placeholder="Ex.: Contrato Obra 02"></label><label>Cliente (opcional)<input name="client" maxlength="160"></label><label>Código (opcional)<input name="code" maxlength="60"></label><button type="submit" class="secondary">Adicionar contrato</button></form><div class="xrm-feedback" id="xrm-bill-contract-feedback" role="status"></div></section>
    <section class="xrm-group"><h3>Adicionar usuário</h3><form id="xrm-bill-member-form"><label>Empresa<select name="company" required id="xrm-bill-member-company"></select></label><label>E-mail cadastrado e confirmado<input type="email" name="email" required autocomplete="off" placeholder="usuario@empresa.com.br"></label><label>Permissão<select name="role"><option value="manager">Gestor</option><option value="driver">Motorista</option></select></label><button type="submit" class="secondary">Vincular usuário</button></form><div class="xrm-feedback" id="xrm-bill-member-feedback" role="status"></div><p class="xrm-info">O usuário precisa ter conta confirmada no XRMOVI. O número de usuários é independente do número de empresas.</p></section>
-   <section class="xrm-group"><h3>Alterar plano</h3><form id="xrm-bill-plan-form"><label>Plano desejado<select name="plan" required><option value="start">Start — R$ 19,90</option><option value="pro">Pro — R$ 39,90</option><option value="business">Business — R$ 64,90</option><option value="advanced">Advanced — R$ 99,90</option></select></label><button type="submit">Solicitar mudança de plano</button><button type="button" class="secondary" id="xrm-bill-checkout">Pagar com Mercado Pago</button></form><div class="xrm-feedback" id="xrm-bill-plan-feedback" role="status"></div><p class="xrm-info">Solicitar um plano não ativa cobrança nem libera cotas extras. O checkout ficará disponível após a habilitação segura do Mercado Pago. Para Enterprise, entre em contato.</p></section>
+   <section class="xrm-group"><h3>Alterar plano</h3><form id="xrm-bill-plan-form"><label>Plano desejado<select name="plan" required><option value="start">Start — R$ 19,90</option><option value="pro">Pro — R$ 39,90</option><option value="business">Business — R$ 64,90</option><option value="advanced">Advanced — R$ 99,90</option></select></label><button type="submit">Solicitar mudança de plano</button><button type="button" class="secondary" id="xrm-bill-checkout">Pagar com Mercado Pago</button></form><div class="xrm-feedback" id="xrm-bill-plan-feedback" role="status"></div><p class="xrm-info">Solicitar um plano não ativa cobrança nem libera cotas extras. O pagamento é feito no Mercado Pago. Após a confirmação do pagamento, o plano e os limites são atualizados automaticamente. Enquanto a integração estiver indisponível, nenhuma cobrança será iniciada. Para Enterprise, entre em contato.</p></section>
   </div>
   <p class="xrm-billing-foot">Apenas o titular da assinatura pode gerenciar empresas, usuários e planos. Todas as alterações são validadas pelo servidor.</p>
  </div>`;
@@ -101,10 +101,32 @@ export function setupSubscriptionPanel({client,getCompany,onCompanyCreated,onDat
   });
  });
  const checkoutButton=root.querySelector('#xrm-bill-checkout');
- checkoutButton.disabled=!billingEnabled;
- checkoutButton.title=billingEnabled?'Abrir ambiente seguro de pagamento':'Checkout indisponível até a configuração comercial.';
+ let billingReady=false;
+ const billingNotice=document.createElement('p');
+ billingNotice.className='xrm-info';
+ billingNotice.id='xrm-billing-readiness-message';
+ checkoutButton.insertAdjacentElement('afterend',billingNotice);
+ const checkoutState=(ready,message)=>{
+  billingReady=Boolean(ready);
+  checkoutButton.disabled=!billingReady;
+  checkoutButton.title=billingReady?'Abrir checkout seguro do Mercado Pago':'Cobrança ainda não habilitada';
+  checkoutButton.textContent=billingReady?'Assinar e pagar com Mercado Pago':'Pagamento aguardando configuração';
+  billingNotice.textContent=message;
+ };
+ checkoutState(false,'Consultando a disponibilidade do Mercado Pago...');
+ async function checkBillingReadiness(){
+  try{
+   const {data,error}=await client.functions.invoke('xrmovi-billing-readiness',{method:'GET'});
+   if(error)throw error;
+   checkoutState(data?.enabled===true,
+    data?.enabled===true?'Pagamento recorrente disponível. Seu plano só será liberado após confirmação efetiva do Mercado Pago.':'Pagamento em configuração: o checkout será habilitado após a ativação segura do provedor.');
+  }catch(err){
+   checkoutState(false,'Serviço de cobrança indisponível neste momento. Tente atualizar a página.');
+  }
+ }
+ void checkBillingReadiness();
  checkoutButton.addEventListener('click',async()=>{
-  if(!billingEnabled)return;
+  if(!billingReady)return;
   const base=getCompany();if(!base)return;
   checkoutButton.disabled=true;feedback('xrm-bill-plan-feedback','Preparando o pagamento no Mercado Pago...');
   try{
@@ -112,7 +134,11 @@ export function setupSubscriptionPanel({client,getCompany,onCompanyCreated,onDat
    const {data,error}=await client.functions.invoke('xrmovi-create-subscription',{
     body:{company_id:base.id,plan:chosen}
    });
-   if(error)throw new Error(error.message||'Não foi possível iniciar o checkout.');
+   if(error){
+    let description=error.message||'Não foi possível iniciar o checkout.';
+    try{const detail=await error.context?.json?.();if(detail?.error)description=String(detail.error)}catch{}
+    throw new Error(description);
+   }
    const url=new URL(String(data?.checkout_url||''));
    if(url.protocol!=='https:'||!(url.hostname==='mercadopago.com.br'||url.hostname.endsWith('.mercadopago.com.br')||url.hostname==='mercadopago.com'||url.hostname.endsWith('.mercadopago.com')))
     throw new Error('O provedor retornou um endereço de pagamento inválido.');
