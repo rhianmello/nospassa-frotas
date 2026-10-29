@@ -218,11 +218,11 @@ function renderFleetInsights(){
   const empty=document.createElement('p');empty.className='fleet-insight-empty';empty.textContent=hasFilters?'Nenhum motorista vinculado aos veículos filtrados.':'Nenhum motorista ativo cadastrado na empresa.';driversRoot.append(empty);return;
  }
  const today=new Date();today.setHours(0,0,0,0);
- const dateValue=d=>/^\\d{4}-\\d{2}-\\d{2}$/.test(String(d||''))?new Date(String(d)+'T00:00:00').getTime():Number.POSITIVE_INFINITY;
+ const dateValue=d=>/^\d{4}-\d{2}-\d{2}$/.test(String(d||''))?new Date(String(d)+'T00:00:00').getTime():Number.POSITIVE_INFINITY;
  const sorted=activeDrivers.slice().sort((a,b)=>dateValue(a.cnh_expires_on)-dateValue(b.cnh_expires_on)||String(a.name).localeCompare(String(b.name),'pt-BR'));
  for(const driver of sorted.slice(0,4)){
   const row=document.createElement('div');row.className='fleet-insight-driver';
-  const avatar=document.createElement('span');avatar.className='fleet-insight-avatar';avatar.textContent=String(driver.name||'?').trim().split(/\\s+/).slice(0,2).map(part=>part[0]||'').join('').toLocaleUpperCase('pt-BR');
+  const avatar=document.createElement('span');avatar.className='fleet-insight-avatar';avatar.textContent=String(driver.name||'?').trim().split(/\s+/).slice(0,2).map(part=>part[0]||'').join('').toLocaleUpperCase('pt-BR');
   const identity=document.createElement('span');identity.className='fleet-insight-driver-identity';
   const name=document.createElement('strong');name.textContent=driver.name||'Motorista';
   const category=document.createElement('small');category.textContent='CNH '+(driver.cnh_category||'não informada');
