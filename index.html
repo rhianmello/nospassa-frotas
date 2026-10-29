@@ -73,7 +73,7 @@ const modal=document.getElementById('demo');const close=document.getElementById(
 document.querySelectorAll('[data-demo]').forEach(el=>el.addEventListener('click',()=>{modal.classList.add('open');modal.setAttribute('aria-hidden','false');close.focus()}));
 function shut(){modal.classList.remove('open');modal.setAttribute('aria-hidden','true')}close.addEventListener('click',shut);modal.addEventListener('click',e=>{if(e.target===modal)shut()});document.addEventListener('keydown',e=>{if(e.key==='Escape')shut()});
 const previewData={
- dashboard:{cards:[['Frota Total','8'],['Operacionais','5'],['Em alerta','3'],['Itens vencidos','2'],['Revisões pendentes','4']],detail:'<div class="xrm-preview-panels"><div class="xrm-preview-panel"><h3>Ação imediata</h3><p>Revisão vencida · Veículo 002</p><p>CNH próxima do vencimento · Motorista exemplo</p></div><div class="xrm-preview-panel"><h3>Status da frota</h3><div class="xrm-preview-donut"><strong>8</strong></div><small>● 5 operacionais &nbsp; ● 1 manutenção &nbsp; ● 2 vencidos</small></div><div class="xrm-preview-panel"><h3>Vencimentos próximos</h3><p>Vencidos <meter min="0" max="8" value="2"></meter> 2</p><p>Até 30 dias <meter min="0" max="8" value="3"></meter> 3</p><p>31 a 90 dias <meter min="0" max="8" value="3"></meter> 3</p></div></div>'},
+ dashboard:{cards:[['Frota Total','8'],['Operacionais','5'],['Em alerta','3'],['Itens vencidos','2'],['Revisões pendentes','4']],detail:'<div class="xrm-preview-panels"><div class="xrm-preview-panel"><h3>Ação imediata</h3><p>Revisão vencida · Veículo 002</p><p>CNH próxima do vencimento · Motorista exemplo</p></div><div class="xrm-preview-panel"><h3>Status da frota</h3><div class="xrm-preview-donut"><strong>8</strong></div><small>● 5 operacionais &nbsp; ● 1 manutenção &nbsp; ● 2 vencidos</small></div><div class="xrm-preview-panel xrm-preview-drivers"><h3>Motoristas e CNH</h3><div class="xrm-preview-driver"><span class="xrm-driver-avatar">CM</span><span class="xrm-driver-name">Carlos M. <small>CNH E</small></span><b>03/2028</b></div><div class="xrm-preview-driver"><span class="xrm-driver-avatar">AS</span><span class="xrm-driver-name">Ana S. <small>CNH D</small></span><b>11/2027</b></div><div class="xrm-preview-driver"><span class="xrm-driver-avatar">RL</span><span class="xrm-driver-name">Rafael L. <small>CNH C</small></span><b>06/2029</b></div></div><div class="xrm-preview-panel"><h3>Vencimentos próximos</h3><p>Vencidos <meter min="0" max="8" value="2"></meter> 2</p><p>Até 30 dias <meter min="0" max="8" value="3"></meter> 3</p><p>31 a 90 dias <meter min="0" max="8" value="3"></meter> 3</p></div></div>'},
  assets:{cards:[['Ativos cadastrados','8'],['Motoristas vinculados','6'],['Em operação','5']],detail:'<div class="xrm-preview-panel"><h3>Cadastro e acompanhamento</h3><p>Veículo 001 · Caminhão · Operacional</p><p>Veículo 002 · Utilitário · Revisão vencida</p><p>Veículo 003 · Van · Em manutenção</p><small>Placa, categoria, motorista, documentos e quilometragem</small></div>'},
  maintenance:{cards:[['Pendentes','4'],['Vencidas','2'],['Em dia','2']],detail:'<div class="xrm-preview-panel"><h3>Manutenções e despesas</h3><p>Revisão de freios · Veículo 002 · Vencida</p><p>Troca de óleo · Veículo 003 · Programada</p><p>Comprovantes vinculados ao veículo e ao serviço</p></div>'},
  financial:{cards:[['Total','R$ 15.000'],['Combustível','R$ 12.000'],['Manutenção','R$ 2.000'],['Despesas','R$ 1.000']],detail:'<div class="xrm-preview-panel"><h3>Relatórios financeiros</h3><p>Filtros diário, quinzenal, mensal, trimestral e semestral</p><p>Despesas por veículo, lançamento e categoria</p><small>Exportação CSV e impressão em PDF</small></div>'}
@@ -228,4 +228,18 @@ form.addEventListener('submit',async event=>{
 @media(max-width:520px){.hero .actions{grid-template-columns:1fr}.hero .actions>.btn{min-height:46px}}
 html{scroll-padding-top:90px}
 #acesso{scroll-margin-top:90px}
+</style><style>
+/* Dashboard demo: motoristas between fleet status and next expirations. */
+#demo .xrm-preview-dialog{max-width:min(1120px,96vw)!important}
+#demo .xrm-preview-panels{grid-template-columns:repeat(4,minmax(0,1fr));align-items:stretch}
+#demo .xrm-preview-drivers{min-width:0}
+#demo .xrm-preview-driver{display:grid;grid-template-columns:25px minmax(0,1fr) auto;align-items:center;column-gap:6px;padding:6px 0;border-bottom:1px solid #254659;font-size:11px}
+#demo .xrm-preview-driver:last-child{border-bottom:0}
+#demo .xrm-driver-avatar{width:25px;height:25px;display:grid;place-items:center;background:#173d56;border-radius:7px;color:#82d8ee;font-size:10px;font-weight:700}
+#demo .xrm-driver-name{min-width:0;color:#e0f1fa;line-height:1.3}
+#demo .xrm-driver-name small{display:block;color:#95b9cc!important;font-size:9px!important;margin:0!important}
+#demo .xrm-preview-driver b{font-size:10px;font-weight:700;color:#7ae5c5;white-space:nowrap}
+@media(min-width:900px){#demo .xrm-preview-panels{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:clamp(6px,.7vw,9px)}}
+@media(min-width:741px) and (max-width:899px){#demo .xrm-preview-panels{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:740px){#demo .xrm-preview-panels{grid-template-columns:1fr}}
 </style></body></html>
