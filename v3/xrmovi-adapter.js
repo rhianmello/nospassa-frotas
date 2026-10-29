@@ -342,7 +342,7 @@ function buildVehicleDriverSelect(form,record){
  select.required=false;
  let selectedId=record?.driver_id||'';
  let resultsOpen=false;
- const normalize=value=>String(value??'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLocaleLowerCase('pt-BR');
+ const normalize=value=>String(value??'').normalize('NFD').replace(/\p{Diacritic}/gu,'').toLocaleLowerCase('pt-BR');
  const active=driver=>driver.active!==false&&driver.active!=='false'&&driver.active!==0;
  const candidates=()=>drivers.filter(driver=>active(driver)||driver.id===record?.driver_id);
  const driverLabel=driver=>driver.name+(driver.cnh_category?' · CNH '+driver.cnh_category:'')+(driver.cnh_number?' · final '+String(driver.cnh_number).slice(-4):'')+(!active(driver)?' (inativo)':'');
@@ -378,8 +378,8 @@ function buildVehicleDriverSelect(form,record){
   selectedId=driver.id;
   input.value=driver.name;
   updateSelect();
-  toggleResults(false);
   input.focus({preventScroll:true});
+  toggleResults(false);
  }
  function showMatches(){
   updateSelect();
