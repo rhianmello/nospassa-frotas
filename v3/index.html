@@ -115,7 +115,34 @@
 
           
           
-        </section>
+        
+          <div class="fleet-insights-grid" aria-label="Custos e motoristas da frota">
+            <section class="fleet-panel fleet-insight-card fleet-cost-insight" aria-labelledby="fleet-cost-title">
+              <header class="fleet-insight-header">
+                <div><p class="eyebrow">RESUMO FINANCEIRO</p><h2 id="fleet-cost-title">Painel da frota</h2></div>
+                <button type="button" class="fleet-link-button" data-view="financial">Ver relatório <i data-lucide="arrow-right"></i></button>
+              </header>
+              <p class="fleet-insight-period" id="fleet-insight-period">Mês atual · dados da empresa</p>
+              <div class="fleet-insight-stats" aria-live="polite">
+                <div class="fleet-insight-stat"><span>Serviços abertos</span><strong id="fleet-insight-open">—</strong></div>
+                <div class="fleet-insight-stat"><span>Serviços vencidos</span><strong id="fleet-insight-overdue">—</strong></div>
+                <div class="fleet-insight-stat"><span>Manutenção realizada</span><strong id="fleet-insight-maint-cost">—</strong></div>
+                <div class="fleet-insight-stat"><span>Abastecimentos</span><strong id="fleet-insight-fuel-cost">—</strong></div>
+              </div>
+              <div class="fleet-insight-subheading">Veículos com maior custo no período</div>
+              <div id="fleet-insight-cost-ranking" class="fleet-insight-ranking" aria-live="polite"><p class="fleet-insight-empty">Consultando os lançamentos…</p></div>
+            </section>
+            <section class="fleet-panel fleet-insight-card fleet-drivers-insight" aria-labelledby="fleet-drivers-title">
+              <header class="fleet-insight-header">
+                <div><p class="eyebrow">EQUIPE &amp; DOCUMENTAÇÃO</p><h2 id="fleet-drivers-title">Motoristas e CNH</h2></div>
+                <button type="button" class="fleet-link-button" data-view="drivers">Ver motoristas <i data-lucide="arrow-right"></i></button>
+              </header>
+              <p class="fleet-insight-period" id="fleet-insight-drivers-period">Próximos vencimentos dos motoristas ativos</p>
+              <div id="fleet-insight-drivers" class="fleet-insight-driver-list" aria-live="polite"><p class="fleet-insight-empty">Consultando motoristas…</p></div>
+            </section>
+          </div>
+
+</section>
 
 <section id="view-assets" class="fleet-view hidden" aria-label="Ativos / Veículos"><div class="fleet-workspace-heading"><div><p class="eyebrow">GESTÃO DE FROTA</p><h2 tabindex="-1">Ativos / Veículos</h2><p>Consulte os veículos, cadastre ativos e mantenha a identificação da frota atualizada.</p></div></div><div id="assets-actions" class="v3-write-actions"></div><section class="fleet-panel fleet-table-panel" id="fleet-assets-panel">
             <header>
