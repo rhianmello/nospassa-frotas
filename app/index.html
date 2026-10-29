@@ -154,6 +154,19 @@ main{max-width:none;padding:0 22px 16px}
 #portalFooter{margin-left:236px}
 @media(max-width:880px){#workspace{grid-template-columns:190px minmax(0,1fr)}#workspaceContent{padding:16px}#portalFooter{margin-left:190px}#sideNav .fleetInspiredBrand strong{font-size:12px}}
 @media(max-width:720px){#workspace{display:block;margin:0 -12px}#sideNav{height:auto;max-height:none;position:relative;display:flex;overflow-x:auto;align-items:center;border-bottom:1px solid #263f57;border-right:0;padding:8px 12px}#sideNav .fleetInspiredBrand,#sideNav .sidebarScene,#sideNav .nav-title,#sideNav .sidebar-meta{display:none}#sideNav .sidebar-company{min-width:155px;flex:0 0 155px;margin:0 8px 0 0;padding:4px}#workspaceContent{padding:16px 12px}#portalFooter{margin-left:0}#executiveDashboard>.executive-head:before{display:none}#executiveDashboard>.kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* Telas independentes CPL: cada botao mostra somente um modulo */
+#sideNav button{display:flex;gap:12px;align-items:center}
+#sideNav button svg{flex:0 0 18px;width:18px;height:18px;stroke:#90a9c2}
+#sideNav button[aria-current="page"] svg{stroke:#f5b72d}
+#sideNav button[aria-current="false"]{background:transparent;border-left-color:transparent}
+#workspaceContent .workspace-pane{display:none!important}
+#workspaceContent .workspace-pane.active{display:block!important;animation:panelReveal .18s ease-out}
+#workspaceContent .workspace-pane.active>#executiveDashboard{display:block}
+#workspaceContent .workspace-pane.active>.box,#workspaceContent .workspace-pane.active>#vehicleOperations{margin-top:0}
+#workspaceContent #tabTitle{display:flex;align-items:center;margin:0 0 14px;font-size:13px;color:#90abc5}
+#workspaceContent #tabTitle:before{content:'Gestão de Frota / ';color:#d1e2f0;white-space:pre}
+@keyframes panelReveal{from{opacity:.65;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){#workspaceContent .workspace-pane.active{animation:none}}
 </style></head><body><main>
 <header id="appHeader"><div class="logo">XR<span>MOVI</span></div><div id="headerAccount" class="hidden"><div id="accountCard"><div class="header-identity"><strong>Minha frota</strong><span id="account"></span></div><div id="planMount"></div></div><button class="secondary" id="logout">Sair</button></div><a class="back-home" href="/">← Voltar ao site</a></header>
 <div class="box" id="setup"><h1>Portal de clientes em preparação</h1><p class="sub">O aplicativo já está preparado para autenticação e gestão de veículos. O cadastro será liberado após configurar o banco de dados exclusivo da plataforma.</p><div class="notice">Nenhum cadastro ou dado comercial é salvo nesta demonstração.</div></div>
@@ -180,22 +193,39 @@ if(executive&&alerts&&insights){alerts.classList.add('alerts-compact');executive
 const workspace=document.createElement('div');workspace.id='workspace';const nav=document.createElement('nav');nav.id='sideNav';nav.setAttribute('aria-label','Navegação da gestão de frotas');const navHead=document.createElement('div');navHead.className='nav-title';navHead.textContent='NAVEGAÇÃO';const brand=document.createElement('div');brand.className='fleetInspiredBrand';brand.innerHTML='<span aria-hidden="true">▱</span><div><strong>XRMOVI Fleet</strong><small>Operação, manutenção<br>e inteligência</small></div>';nav.append(brand,navHead);
 const content=document.createElement('div');content.id='workspaceContent';const pageTitle=document.createElement('h2');pageTitle.id='tabTitle';content.append(pageTitle);
 const pages=[
-{id:'painel',label:'⌂ Visão Geral',elements:['executiveDashboard','maintenanceDashboard']},
-{id:'veiculos',label:'▣ Ativos',elements:['vehicleOperations']},
-{id:'contratos',label:'▤ Contratos',elements:['contractsSection']},
-{id:'manutencao',label:'⚒ Manutenção',elements:['maintenanceSection']},
-{id:'abastecimentos',label:'◈ Abastecimentos',elements:['fuelSection']},
-{id:'relatorios',label:'▥ Relatórios',elements:['reportsSection']},
-{id:'equipe',label:'♙ Equipe e acessos',elements:['invitePanel']},
-{id:'assinatura',label:'◇ Assinatura',elements:[]}
+{id:'painel',label:'Visão Geral',icon:'house',elements:['executiveDashboard']},
+{id:'veiculos',label:'Ativos',icon:'truck',elements:['vehicleOperations']},
+{id:'contratos',label:'Contratos',icon:'folders',elements:['contractsSection']},
+{id:'manutencao',label:'Manutenção',icon:'wrench',elements:['maintenanceSection']},
+{id:'documentacao',label:'Documentação',icon:'file-check',elements:['documentationIntro']},
+{id:'alertas',label:'Alertas',icon:'bell',elements:['maintenanceDashboard']},
+{id:'abastecimentos',label:'Abastecimentos',icon:'fuel',elements:['fuelSection']},
+{id:'relatorios',label:'Relatórios',icon:'chart',elements:['reportsSection']},
+{id:'equipe',label:'Equipe e acessos',icon:'users',elements:['invitePanel']},
+{id:'assinatura',label:'Assinatura',icon:'credit-card',elements:[]}
 ];
+const iconPaths={
+house:'<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/>',
+truck:'<rect x="2" y="6" width="12" height="12" rx="1"/><path d="M14 10h4l4 4v4h-8"/><circle cx="7" cy="19" r="2"/><circle cx="18" cy="19" r="2"/>',
+folders:'<rect x="3" y="7" width="18" height="14" rx="2"/><path d="M3 7V5a2 2 0 0 1 2-2h5l2 3"/>',
+wrench:'<path d="M14 6a5 5 0 0 0-6 6l-6 6a2 2 0 0 0 4 4l6-6a5 5 0 0 0 6-6l-4 2-3-3z"/>',
+'file-check':'<path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M13 2v7h7m-12 7 2 2 4-4"/>',
+bell:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 8-3 9h18c0-1-3-2-3-9M10 21h4"/>',
+fuel:'<rect x="3" y="4" width="12" height="18" rx="2"/><path d="M6 8h6M15 10l3 3v6a2 2 0 0 0 4 0v-8l-3-4"/>',
+chart:'<path d="M3 3v18h18M7 17v-5m5 5V7m5 10v-8"/>',
+users:'<circle cx="9" cy="8" r="3"/><path d="M3 21v-2a6 6 0 0 1 12 0v2M17 5a3 3 0 0 1 0 6m1 5a5 5 0 0 1 3 5"/>',
+'credit-card':'<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>'
+};
+const makeIcon=name=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(iconPaths[name]||iconPaths.house)+'</svg>';
+
 const wrap=document.createElement('div');wrap.id='vehicleOperations';const metric=fleet.querySelector(':scope > .metrics');const vehicleSplit=[...fleet.children].find(el=>el.classList.contains('split'));if(metric)wrap.append(metric);if(vehicleSplit)wrap.append(vehicleSplit);
 const companySwitcher=[...fleet.children].find(el=>el.classList.contains('box')&&el.querySelector('#companySelect'));if(companySwitcher){companySwitcher.id='companySwitcher';companySwitcher.classList.add('sidebar-company');nav.append(companySwitcher)}
-const panes={};for(const page of pages){const btn=document.createElement('button');btn.type='button';btn.textContent=page.label;btn.dataset.page=page.id;const pane=document.createElement('section');pane.className='workspace-pane';pane.dataset.page=page.id;for(const id of page.elements){const el=id==='vehicleOperations'?wrap:document.getElementById(id);if(el)pane.append(el)}if(page.id==='assinatura'){const note=document.createElement('div');note.className='box';note.textContent='Seu plano está disponível no cabeçalho. Use “Escolher ou alterar plano” para ver as opções.';pane.append(note)}btn.addEventListener('click',()=>showWorkspacePage(page.id));nav.append(btn);content.append(pane);panes[page.id]=pane}
+const docIntro=document.createElement('div');docIntro.id='documentationIntro';docIntro.className='box';docIntro.innerHTML='<h2>Documentação dos veículos</h2><p class="sub">Os documentos ficam vinculados ao veículo e protegidos por empresa. Para anexar ou consultar, abra o módulo Ativos e use o botão Documentos na linha correspondente.</p><button type="button" id="goVehiclesForDocs">Abrir veículos e documentos</button>';
+const panes={};for(const page of pages){const btn=document.createElement('button');btn.type='button';btn.innerHTML=makeIcon(page.icon)+'<span>'+page.label+'</span>';btn.dataset.page=page.id;const pane=document.createElement('section');pane.className='workspace-pane';pane.dataset.page=page.id;for(const id of page.elements){const el=id==='vehicleOperations'?wrap:document.getElementById(id);if(el)pane.append(el)}if(page.id==='assinatura'){const note=document.createElement('div');note.className='box';note.textContent='Seu plano está disponível no cabeçalho. Use “Escolher ou alterar plano” para ver as opções.';pane.append(note)}btn.addEventListener('click',()=>showWorkspacePage(page.id));nav.append(btn);content.append(pane);panes[page.id]=pane}
 const foot=document.createElement('div');foot.className='sidebar-meta';foot.innerHTML='<div class="sidebarScene" aria-hidden="true"><span>OPERAÇÃO CONECTADA</span><strong>Frota eficiente move grandes resultados.</strong></div><small>XRMOVI Fleet · Gestão integrada</small>';nav.append(foot);
-workspace.append(nav,content);fleet.prepend(workspace);
-function showWorkspacePage(id){if(!panes[id])id='painel';for(const p of pages){panes[p.id].classList.toggle('active',p.id===id);const button=nav.querySelector('[data-page="'+p.id+'"]');if(p.id===id)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current')}pageTitle.textContent=pages.find(p=>p.id===id).label.replace(/^[^A-Za-zÀ-ÿ]+/,'');try{history.replaceState(null,'','#'+id)}catch{}}
-showWorkspacePage((location.hash||'').slice(1));
+workspace.append(nav,content);fleet.prepend(workspace);document.getElementById('goVehiclesForDocs')?.addEventListener('click',()=>showWorkspacePage('veiculos'));
+function showWorkspacePage(id){if(!panes[id])id='painel';for(const p of pages){panes[p.id].classList.toggle('active',p.id===id);const button=nav.querySelector('[data-page="'+p.id+'"]');button.setAttribute('aria-current',p.id===id?'page':'false')}pageTitle.textContent=pages.find(p=>p.id===id).label;const anchor=document.getElementById('workspaceContent');if(anchor)anchor.scrollIntoView({block:'start',behavior:'instant'});try{history.replaceState(null,'','#'+id)}catch{}}
+showWorkspacePage((location.hash||'').slice(1));window.addEventListener('hashchange',()=>showWorkspacePage((location.hash||'').slice(1)));
 document.querySelectorAll('.nav-pills a').forEach(a=>{a.addEventListener('click',e=>{const page={'#contractsSection':'contratos','#maintenanceDashboard':'painel','#fuelSection':'abastecimentos','#reportsSection':'relatorios'}[a.getAttribute('href')];if(page){e.preventDefault();showWorkspacePage(page)}})});
 })();
 </script>
