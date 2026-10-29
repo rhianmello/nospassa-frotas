@@ -1,75 +1,161 @@
 <!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#071626"><title>XRMOVI | Administração da plataforma</title>
+<meta name="theme-color" content="#071725"><title>XRMOVI | Gestão comercial e clientes</title>
 <style>
-:root{color-scheme:dark;--bg:#061423;--panel:#0d2739;--card:#102d42;--line:#2b4b5d;--muted:#9ebacb;--mint:#48d9b8;--white:#edf9ff}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 95% 0,#104050 0,transparent 35%),var(--bg);color:var(--white);font:14px/1.5 Inter,system-ui,-apple-system,Segoe UI,sans-serif}button,input{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none}.hidden,[hidden]{display:none!important}
-header{min-height:72px;border-bottom:1px solid var(--line);background:#061726ed;display:flex;align-items:center;gap:18px;justify-content:space-between;padding:13px clamp(18px,3vw,44px);flex-wrap:wrap;position:sticky;top:0;z-index:3;backdrop-filter:blur(15px)}.brand{display:flex;align-items:center;gap:12px;font-size:17px;font-weight:850;letter-spacing:-.5px}.brand-mark{width:37px;height:37px;display:grid;place-items:center;background:#143d42;border:1px solid #38837e;color:var(--mint);border-radius:11px;font-size:22px}.brand strong{color:var(--mint)}.header-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.button{border:1px solid #3b6170;border-radius:10px;padding:10px 14px;background:#132e44;color:#dcf0f9;font-weight:650;font-size:12px}.button:hover{border-color:#51daba}.button.primary{background:var(--mint);border-color:var(--mint);color:#062b31}.button:disabled{opacity:.5;cursor:wait}
-main{width:min(1460px,100%);margin:auto;padding:clamp(20px,3vw,42px)}.eyebrow{color:var(--mint);font-size:11px;letter-spacing:1.8px;font-weight:850}.page-head{display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap;margin-bottom:22px}.page-head h1{font-size:clamp(26px,3vw,38px);letter-spacing:-1px;margin:8px 0 5px;line-height:1.18}.page-head p{color:var(--muted);margin:0;font-size:13px}.session{color:#b4cfda;font-size:11px;overflow-wrap:anywhere}
-.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin-bottom:22px}.metric{padding:18px;background:linear-gradient(150deg,#11324a,#0b2132);border:1px solid #284e64;border-radius:15px;min-width:0}.metric span{color:#9cbccc;text-transform:uppercase;letter-spacing:.75px;font-size:10px;font-weight:750}.metric strong{display:block;font-size:clamp(24px,3vw,34px);font-variant-numeric:tabular-nums;line-height:1.3;margin-top:9px;color:#f1fbff}.metric:last-child{border-color:#316957}.metric small{display:block;color:#92adbd;font-size:10px;margin-top:4px}
-nav.tabs{display:flex;gap:8px;border-bottom:1px solid #2b4e5f;padding-bottom:12px;flex-wrap:wrap;margin-bottom:19px}.tabs button{border:1px solid transparent;padding:10px 15px;color:#b4cfda;border-radius:10px;background:transparent;font-size:12px;font-weight:700}.tabs button[aria-selected=true]{background:#17443f;color:#82eccc;border-color:#297a6c}.tabs button:hover{border-color:#3d6c74}.panel{background:#0d273a;border:1px solid #2b4e62;border-radius:17px;overflow:hidden;margin-bottom:20px}.panel-head{padding:17px 20px;border-bottom:1px solid #284b60;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.panel h2{font-size:16px;margin:0}.panel-head small{font-size:11px;color:var(--muted)}.table-wrap{overflow:auto}.data-table{width:100%;border-collapse:collapse;min-width:680px}.data-table th{font-size:10px;letter-spacing:.5px;text-align:left;text-transform:uppercase;color:#8fbbd0;background:#102c42;padding:13px 17px;font-weight:750}.data-table td{font-size:12px;padding:14px 17px;border-top:1px solid #233f51;color:#d1e6f0;white-space:nowrap}.data-table tbody tr:hover{background:#143249}.empty{padding:25px 20px;color:#a6bdc9;margin:0;font-size:13px}.search{width:min(280px,100%);background:#071b2d;border:1px solid #376279;border-radius:10px;padding:10px 13px;color:#eafaff;outline-offset:2px}.state{font-size:10px;color:#a0c2d2;padding:5px 9px;background:#19394c;border-radius:99px}.state.active{color:#75e6c3;background:#16413e}.state.pending{color:#f5c27f;background:#413421}.notice{padding:13px 18px;border:1px solid #4b5244;background:#2a2924;color:#f4dcad;font-size:12px;border-radius:11px;margin-top:18px}.error{border-color:#935e59;background:#42282e;color:#ffd7d2}.loading{min-height:50vh;display:grid;place-content:center;text-align:center;gap:12px;color:#b7d2df}.loading strong{font-size:21px;color:#f1fbff}.overview-bottom{display:grid;grid-template-columns:1fr 1fr;gap:16px}.overview-bottom .panel{margin:0}footer{padding:0 30px 25px;color:#7e9eae;text-align:center;font-size:11px}
-@media(max-width:930px){.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.overview-bottom{grid-template-columns:1fr}}@media(max-width:570px){header{padding:12px 14px}main{padding:21px 14px}.metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.metric{padding:13px}.metric strong{font-size:22px}.data-table{min-width:620px}.panel-head{padding:14px}nav.tabs button{padding:8px 10px}}
+:root{color-scheme:dark;--bg:#061523;--panel:#0d2839;--panel2:#102f43;--line:#2d4f61;--mint:#4fe2b8;--muted:#9abacb;--white:#edfaff;--danger:#f58a9c;--gold:#eac47b}*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at 95% 0,#104351 0,transparent 42%),var(--bg);color:var(--white);font:14px/1.55 Inter,system-ui,-apple-system,Segoe UI,sans-serif}
+button,input,textarea{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none}[hidden]{display:none!important}
+header{position:sticky;top:0;z-index:5;background:#071624ed;backdrop-filter:blur(14px);border-bottom:1px solid #2c4c5b;padding:12px clamp(16px,2.5vw,34px);display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.brand{display:flex;gap:11px;align-items:center;font-size:18px;font-weight:850}.logo{width:37px;height:37px;display:grid;place-items:center;border-radius:11px;background:#13443c;border:1px solid #397d70;color:var(--mint);font-size:20px}.brand strong{color:var(--mint)}.brand small{font-size:10px;color:#93bec4;letter-spacing:1px;margin-left:4px}
+.actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.btn{background:#18374b;border:1px solid #3a6577;border-radius:9px;padding:9px 13px;color:#e8f7fa;font-weight:750;font-size:12px;cursor:pointer;white-space:nowrap}.btn:hover{border-color:#58dec3}.btn:disabled{opacity:.5;cursor:wait}.btn.primary{background:var(--mint);border-color:var(--mint);color:#06303a}.btn.danger{background:#542638;border-color:#985064;color:#ffdce1}.btn.ghost{background:transparent}
+main{max-width:1530px;padding:clamp(18px,2.5vw,34px);margin:auto}.eyebrow{color:var(--mint);font-weight:850;font-size:10px;letter-spacing:1.5px}.head{display:flex;justify-content:space-between;align-items:end;gap:20px;flex-wrap:wrap;margin-bottom:22px}.head h1{font-size:clamp(25px,3vw,38px);margin:6px 0;letter-spacing:-1px;line-height:1.2}.head p{color:var(--muted);margin:0;font-size:13px}.account-identity{font-size:11px;color:#b2cbd5;overflow-wrap:anywhere}
+.kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:20px}.kpi{background:linear-gradient(150deg,#123247,#0a2536);border:1px solid #2d5364;border-radius:13px;padding:16px;min-width:0}.kpi span{display:block;color:#a2c8d4;font-size:10px;text-transform:uppercase;letter-spacing:.55px;min-height:30px}.kpi b{display:block;font-size:clamp(21px,2.5vw,32px);line-height:1.2;white-space:nowrap;letter-spacing:-.8px}.kpi small{display:block;font-size:10px;color:#8aa9bb;margin-top:8px}.kpi.money b{color:#84eacb}.kpi.warning b{color:#f2c68d}.kpi.blocked b{color:#ffa4b4}
+.tabs{display:flex;flex-wrap:wrap;gap:7px;border-bottom:1px solid #2a5060;padding:0 0 13px;margin-bottom:18px}.tabs button{background:transparent;border:1px solid transparent;border-radius:10px;color:#b4cad6;padding:9px 14px;font-size:12px;font-weight:750}.tabs button[aria-selected=true]{background:#17463f;color:#8af1cf;border-color:#2c8271}.tabs button:hover{border-color:#376678}
+.panel{border:1px solid #2c5263;background:#0b2638;border-radius:16px;overflow:hidden;margin-bottom:17px}.panel-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;border-bottom:1px solid #24485a;padding:16px 18px}.panel h2{font-size:16px;margin:0}.panel small{color:#91b1bf;font-size:11px}.table-wrap{overflow:auto}table{border-collapse:collapse;width:100%;min-width:710px}th,td{text-align:left;border-bottom:1px solid #254759;padding:12px 15px;font-size:12px}th{background:#113044;color:#91b8c9;font-size:10px;letter-spacing:.7px;text-transform:uppercase}td{color:#d5e7ef}tbody tr:hover{background:#123449}tbody tr:last-child td{border-bottom:0}.sub{display:block;color:#89aabd;font-size:10px;margin-top:4px}.empty{margin:0;padding:20px;color:#a6c5d1;font-size:12px}.pill{display:inline-flex;border-radius:999px;padding:4px 8px;background:#214156;color:#c8deea;font-size:10px;font-weight:750}.pill.active{background:#17473c;color:#70eec0}.pill.blocked{background:#562b38;color:#ffadb9}.pill.trial{background:#433c29;color:#f6d392}.pill.pending{background:#4a3929;color:#ffca83}
+.search{border:1px solid #3b6880;color:#fff;background:#061c2c;border-radius:9px;padding:10px 12px;font-size:12px;min-width:min(290px,100%)}.search:focus,textarea:focus{outline:2px solid #55e7bb;outline-offset:1px}.two-col{display:grid;grid-template-columns:1.22fr .78fr;gap:15px}.two-col>.panel{margin:0}.chart{display:flex;align-items:end;gap:9px;min-height:225px;padding:18px 20px 16px}.chart-col{flex:1;display:grid;grid-template-rows:1fr auto auto;justify-items:center;gap:7px;height:195px;min-width:0}.chart-space{width:100%;display:flex;align-items:end;height:153px;background:linear-gradient(180deg,#15394a0e,#16334444);border-radius:8px}.chart-bar{width:100%;min-height:3px;background:linear-gradient(0deg,#278a8d,#61eac0);border-radius:8px 8px 2px 2px}.chart-label{font-size:10px;color:#9cbdcc;white-space:nowrap}.chart-value{font-size:9px;color:#c7e8e5;font-variant-numeric:tabular-nums}
+.notice{margin-top:17px;border:1px solid #5e5a3f;background:#332f20;border-radius:11px;padding:13px 16px;color:#e9d7aa;font-size:12px}.notice.error{border-color:#925064;background:#3e2631;color:#ffd2dc}.notice.success{border-color:#367f6d;background:#173d37;color:#c2f6e4}.status{color:#c5e6d9;font-size:12px;min-height:20px;margin-bottom:12px}.screen{display:grid;place-content:center;text-align:center;min-height:45vh;gap:12px}.screen h2{margin:0}.screen p{color:#a5c4d4}.inbox{display:grid;grid-template-columns:minmax(250px,340px) minmax(0,1fr);min-height:490px}.contacts{border-right:1px solid #2c5367;overflow-y:auto;max-height:650px}.contact{display:grid;gap:3px;width:100%;text-align:left;background:transparent;border:0;border-bottom:1px solid #234456;padding:14px;color:#dcecf6}.contact:hover,.contact.active{background:#154038}.contact b{font-size:12px}.contact small{font-size:11px;color:#92b2c4}.unread{color:#0a3033;background:#63edba;border-radius:99px;padding:2px 6px;font-size:10px;font-weight:800;float:right}.conversation{display:flex;flex-direction:column;min-width:0}.conversation-top{padding:15px;border-bottom:1px solid #2c5367;font-weight:750}.messages{min-height:280px;max-height:520px;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;flex:1;background:#091e2f}.bubble{align-self:flex-start;max-width:min(80%,550px);padding:10px 13px;background:#1b3c50;border:1px solid #356176;border-radius:12px;overflow-wrap:anywhere;white-space:pre-wrap;font-size:12px}.bubble.mine{align-self:flex-end;background:#16493f;border-color:#387c68}.bubble small{display:block;margin-top:7px;font-size:9px;color:#a0c2c9;text-align:right}.compose{display:flex;gap:10px;padding:14px;border-top:1px solid #2c5367;align-items:flex-end}.compose textarea{resize:vertical;min-height:54px;max-height:155px;border:1px solid #3a6b7e;background:#061b29;border-radius:10px;color:white;flex:1;padding:11px;font-size:12px}
+footer{padding:20px;text-align:center;color:#849eae;font-size:11px}
+@media(max-width:1200px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:860px){.two-col{grid-template-columns:1fr}.inbox{grid-template-columns:1fr}.contacts{max-height:210px;border-right:0;border-bottom:1px solid #2c5367}}@media(max-width:550px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi{padding:12px}.kpi b{font-size:21px}main{padding:17px 11px}.compose{flex-direction:column;align-items:stretch}.chart{gap:4px;padding:12px}.chart-label{font-size:8px}}
 </style></head><body>
-<header><a class="brand" href="../"><span class="brand-mark">↗</span><span>XR<strong>MOVI</strong> <small>ADMIN</small></span></a><div class="header-actions"><a href="../v3/" class="button">Painel operacional</a><button type="button" class="button" id="refresh">Atualizar</button><button type="button" class="button" id="signout">Sair</button></div></header>
-<main><div id="loading" class="loading"><strong>Validando acesso administrativo</strong><span>Verificando sua sessão e permissões no Supabase…</span></div>
-<div id="unauthorized" class="loading hidden" role="alert"><strong>Acesso restrito</strong><span id="access-message">Esta conta não possui permissão de administrador da plataforma.</span><a href="../" class="button primary">Voltar ao site</a></div>
-<div id="content" class="hidden">
- <div class="page-head"><div><div class="eyebrow">ADMINISTRAÇÃO DA PLATAFORMA</div><h1>Central administrativa XRMOVI</h1><p>Empresas, assinaturas, planos e solicitações em uma visão exclusiva.</p></div><div class="session" id="admin-email"></div></div>
- <div class="metrics" aria-label="Indicadores administrativos">
-  <div class="metric"><span>Empresas cadastradas</span><strong id="m-companies">—</strong><small>Total da plataforma</small></div>
-  <div class="metric"><span>Usuários vinculados</span><strong id="m-members">—</strong><small>Usuários em empresas XRMOVI</small></div>
-  <div class="metric"><span>Veículos cadastrados</span><strong id="m-vehicles">—</strong><small>Em todas as empresas</small></div>
-  <div class="metric"><span>Assinaturas ativas</span><strong id="m-active">—</strong><small>Conforme status no cadastro</small></div>
-  <div class="metric"><span>Solicitações pendentes</span><strong id="m-pending">—</strong><small>Pedidos de plano</small></div>
-  <div class="metric"><span>Mensalidades de referência</span><strong id="m-reference">—</strong><small>Estimativa, não receita recebida</small></div>
+<header><a href="../" class="brand"><span class="logo">↗</span><span>XR<strong>MOVI</strong><small>PROPRIETÁRIO</small></span></a><div class="actions"><a class="btn ghost" href="../v3/">Frota</a><button class="btn" id="refresh">Atualizar</button><button class="btn" id="signout">Sair</button></div></header>
+<main>
+ <div id="loading" class="screen"><h2>Validando administração</h2><p>Consultando permissões no Supabase…</p></div>
+ <div id="unauthorized" class="screen" hidden><h2>Acesso restrito</h2><p id="denied-text">Este usuário não é administrador do XRMOVI.</p><a class="btn" href="../">Voltar à landing</a></div>
+ <div id="content" hidden>
+  <div class="head"><div><div class="eyebrow">BI COMERCIAL · CLIENTES E FATURAMENTO</div><h1>Central do proprietário</h1><p>Controle a entrada de clientes, status de acesso, mensagens e movimentações financeiras.</p></div><div class="account-identity" id="user-label"></div></div>
+  <div class="kpis">
+   <div class="kpi"><span>Contas cadastradas</span><b id="k-accounts">—</b><small>Todos os titulares</small></div>
+   <div class="kpi"><span>Em avaliação</span><b id="k-trial">—</b><small>Período de teste vigente</small></div>
+   <div class="kpi"><span>Assinaturas ativas</span><b id="k-active">—</b><small>Situação registrada</small></div>
+   <div class="kpi warning"><span>Testes vencidos</span><b id="k-expired">—</b><small>Avaliações expiradas</small></div>
+   <div class="kpi blocked"><span>Bloqueados</span><b id="k-blocked">—</b><small>Acesso à frota suspenso</small></div>
+   <div class="kpi money"><span>Recebimentos confirmados</span><b id="k-paid">—</b><small>Histórico do banco</small></div>
+  </div>
+  <div id="feedback" class="status" role="status" aria-live="polite"></div>
+  <nav class="tabs" aria-label="Áreas da administração">
+   <button data-tab="overview" aria-selected="true">Visão executiva</button><button data-tab="customers" aria-selected="false">Clientes</button><button data-tab="messages" aria-selected="false">Mensagens <span id="nav-unread"></span></button><button data-tab="payments" aria-selected="false">Pagamentos</button><button data-tab="requests" aria-selected="false">Solicitações</button>
+  </nav>
+  <div id="view-overview" class="tab-view">
+   <div class="two-col">
+    <section class="panel"><div class="panel-head"><h2>Receita confirmada por mês</h2><small id="revenue-total"></small></div><div id="revenue-chart" class="chart" aria-label="Receita confirmada por mês"></div></section>
+    <section class="panel"><div class="panel-head"><h2>Carteira de clientes</h2><small>Contas e acessos</small></div><div style="padding:18px;display:grid;gap:13px" id="portfolio-breakdown"></div></section>
+   </div>
+   <section class="panel" style="margin-top:17px"><div class="panel-head"><h2>Últimos cadastros</h2><button class="btn ghost" data-goto="customers">Ver clientes</button></div><div class="table-wrap"><table><thead><tr><th>Cliente / empresa</th><th>Plano</th><th>Situação</th><th>Entrada</th></tr></thead><tbody id="recent-customers"></tbody></table></div></section>
+   <div class="notice">Os valores financeiros exibidos são os recebimentos efetivamente confirmados no histórico do banco. O painel não considera mensalidades previstas como dinheiro recebido. A ativação de cobrança está em preparação e depende de teste real.</div>
+  </div>
+  <section id="view-customers" class="panel tab-view" hidden><div class="panel-head"><h2>Clientes cadastrados</h2><input class="search" id="customer-search" placeholder="Buscar cliente ou empresa…" type="search"></div><div class="table-wrap"><table><thead><tr><th>Cliente / empresas</th><th>Plano</th><th>Assinatura</th><th>Veículos</th><th>Acesso</th><th>Entrada</th><th>Ações</th></tr></thead><tbody id="customers-body"></tbody></table></div></section>
+  <section id="view-messages" class="panel tab-view" hidden><div class="panel-head"><h2>Caixa de mensagens</h2><small>Conversa privada com o titular de cada conta</small></div><div class="inbox"><div class="contacts" id="contacts"></div><div class="conversation"><div class="conversation-top" id="thread-title">Selecione um cliente</div><div class="messages" id="thread-messages"><p class="empty">Escolha uma conta para conversar.</p></div><form class="compose" id="message-form"><textarea id="message-body" placeholder="Digite sua mensagem ao cliente…" maxlength="3000" required></textarea><button class="btn primary" type="submit">Enviar</button></form></div></div></section>
+  <section id="view-payments" class="panel tab-view" hidden><div class="panel-head"><h2>Recebimentos confirmados</h2><small>Não inclui tentativas sem confirmação</small></div><div class="table-wrap"><table><thead><tr><th>Data</th><th>Cliente</th><th>Valor</th><th>Provedor</th></tr></thead><tbody id="payments-body"></tbody></table></div></section>
+  <section id="view-requests" class="panel tab-view" hidden><div class="panel-head"><h2>Solicitações de plano</h2><small>Acompanhe os interessados</small></div><div class="table-wrap"><table><thead><tr><th>Data</th><th>Empresa</th><th>Plano solicitado</th><th>Estado</th></tr></thead><tbody id="requests-body"></tbody></table></div></section>
  </div>
- <nav class="tabs" aria-label="Áreas administrativas"><button type="button" data-tab="overview" aria-selected="true">Resumo</button><button type="button" data-tab="companies" aria-selected="false">Empresas</button><button type="button" data-tab="requests" aria-selected="false">Solicitações</button><button type="button" data-tab="plans" aria-selected="false">Planos</button></nav>
- <div id="view-overview" class="tab-view"><div class="overview-bottom"><section class="panel"><div class="panel-head"><h2>Empresas recentes</h2></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Empresa</th><th>Plano</th><th>Veículos</th></tr></thead><tbody id="recent-companies"></tbody></table></div></section><section class="panel"><div class="panel-head"><h2>Solicitações recentes</h2></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Empresa</th><th>Plano</th><th>Status</th></tr></thead><tbody id="recent-requests"></tbody></table></div></section></div><p class="notice">Indicadores comerciais são calculados a partir dos registros do Supabase. Mensalidades de referência não confirmam cobrança nem recebimento.</p></div>
- <section id="view-companies" class="panel tab-view hidden"><div class="panel-head"><h2>Empresas cadastradas</h2><input id="company-search" type="search" class="search" placeholder="Buscar empresa…" aria-label="Buscar empresa"></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Empresa</th><th>Plano</th><th>Assinatura</th><th>Veículos</th><th>Usuários</th><th>Cadastro</th></tr></thead><tbody id="all-companies"></tbody></table></div></section>
- <section id="view-requests" class="panel tab-view hidden"><div class="panel-head"><h2>Solicitações de planos</h2><small>Monitoramento de pedidos · sem contratação automática</small></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Empresa</th><th>Plano solicitado</th><th>Status</th><th>Data</th></tr></thead><tbody id="all-requests"></tbody></table></div></section>
- <section id="view-plans" class="panel tab-view hidden"><div class="panel-head"><h2>Catálogo de planos</h2><small>Valores cadastrados no Supabase</small></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Plano</th><th>Mensalidade</th><th>Veículos</th><th>Usuários</th><th>Situação</th></tr></thead><tbody id="all-plans"></tbody></table></div></section>
-</div></main><footer>XR MOVI · Acesso administrativo protegido · Nenhuma cobrança é executada por esta página</footer>
+</main><footer>XRMOVI · Administração comercial protegida · Bloqueios auditados no Supabase</footer>
 <script type="module">
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-const el=id=>document.getElementById(id);
-const show=id=>{for(const x of ['loading','unauthorized','content'])el(x).classList.toggle('hidden',x!==id)};
-const date=d=>d?new Date(d).toLocaleDateString('pt-BR'):'—';
-const money=n=>n==null?'Sob consulta':Number(n).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-const cell=(row,value)=>{const td=document.createElement('td');td.textContent=String(value??'—');row.append(td);return td};
-const badge=(row,value)=>{const td=cell(row,value||'—');const span=document.createElement('span');span.className='state'+(['active','ativa','paid'].includes(String(value).toLowerCase())?' active':['pending','requested','trialing'].includes(String(value).toLowerCase())?' pending':'');span.textContent=td.textContent;td.replaceChildren(span)};
-const rows=(id,items,render,empty='Nenhum registro encontrado.')=>{const root=el(id);root.replaceChildren();if(!items.length){const row=document.createElement('tr');const td=cell(row,empty);td.colSpan=12;root.append(row);return}items.forEach(item=>{const row=document.createElement('tr');render(row,item);root.append(row)})};
-const number=v=>Number(v||0).toLocaleString('pt-BR');
-let client,data;
+const el=id=>document.getElementById(id),number=n=>Number(n||0).toLocaleString('pt-BR'),money=n=>Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}),date=d=>d?new Date(d).toLocaleDateString('pt-BR'):'—';
+const node=(tag,text='',className='')=>{const n=document.createElement(tag);n.textContent=String(text??'');if(className)n.className=className;return n};
+const emptyRows=(body,cols,msg)=>{const tr=node('tr'),td=node('td',msg);td.colSpan=cols;tr.append(td);body.append(tr)};
+const cell=(tr,value)=>{tr.append(node('td',value??'—'))};
+const pill=(tr,text,tone='')=>{const td=node('td'),span=node('span',text,'pill '+tone);td.append(span);tr.append(td)};
+const show=id=>{for(const x of ['loading','unauthorized','content'])el(x).hidden=x!==id};
+let db,info={accounts:[],summary:{},revenue:[],payments:[],requests:[]},threadId=null,tab='overview';
+function status(text,type=''){el('feedback').textContent=text;el('feedback').className='status '+type}
+async function rpc(fn,args){const {data,error}=await db.rpc('xrmovi_'+fn,args);if(error)throw Error(error.message);return data}
+function rowCustomer(c,full=false){
+ const tr=node('tr');const first=node('td');const bold=node('b',c.email),companies=node('span',(c.companies||[]).map(x=>x.name).join(' · ')||'Sem empresa','sub');first.append(bold,companies);tr.append(first);
+ cell(tr,(c.plan||'—').toUpperCase()+(c.price?' · '+money(c.price):''));
+ const expired=c.status==='trial'&&c.trial_end&&Date.parse(c.trial_end)<Date.now();
+ pill(tr,expired?'Teste vencido':c.status||'—',expired?'blocked':c.status==='active'?'active':'trial');
+ if(full){cell(tr,number(c.vehicles));pill(tr,c.blocked?'Bloqueado':'Liberado',c.blocked?'blocked':'active')}
+ cell(tr,date(c.created_at));
+ if(full){const td=node('td');const actions=node('div','','actions');
+  const toggle=node('button',c.blocked?'Liberar':'Bloquear','btn '+(c.blocked?'primary':'danger'));toggle.type='button';toggle.onclick=()=>void changeAccess(c);const chat=node('button','Mensagem'+(c.unread?' ('+c.unread+')':''),'btn');chat.type='button';chat.onclick=()=>{threadId=c.id;openTab('messages');void loadThread()};
+  actions.append(toggle,chat);td.append(actions);tr.append(td)}
+ return tr;
+}
 function render(){
- const stats=data.stats||{};
- for(const [id,key] of [['m-companies','companies'],['m-members','members'],['m-vehicles','vehicles'],['m-active','active_subscriptions'],['m-pending','pending_requests']])el(id).textContent=number(stats[key]);
- el('m-reference').textContent=money(stats.plan_value_reference);
- const companies=data.companies||[], requests=data.requests||[],plans=data.plans||[];
- const companyRow=(r,c)=>{cell(r,c.name);cell(r,c.plan||'Sem plano');badge(r,c.subscription_status||'Sem assinatura');cell(r,number(c.vehicles));cell(r,number(c.members));cell(r,date(c.created_at))};
- const requestRow=(r,q)=>{cell(r,q.company);cell(r,q.requested_plan);badge(r,q.status);cell(r,date(q.created_at))};
- rows('recent-companies',companies.slice(0,5),(r,c)=>{cell(r,c.name);cell(r,c.plan||'Sem plano');cell(r,number(c.vehicles))});
- rows('recent-requests',requests.slice(0,5),(r,q)=>{cell(r,q.company);cell(r,q.requested_plan);badge(r,q.status)});
- rows('all-companies',companies,companyRow);
- rows('all-requests',requests,requestRow);
- rows('all-plans',plans,(r,p)=>{cell(r,p.name);cell(r,money(p.monthly_brl));cell(r,p.vehicle_limit??'Personalizado');cell(r,p.seat_limit??'Personalizado');badge(r,p.active?'Ativo':'Inativo')});
+ const s=info.summary||{};
+ for(const [key,id] of [['accounts','k-accounts'],['trial','k-trial'],['active','k-active'],['expired','k-expired'],['blocked','k-blocked']])el(id).textContent=number(s[key]);
+ el('k-paid').textContent=money(s.paid_total);
+ el('nav-unread').textContent=s.unread?'('+s.unread+')':'';
+ const chart=el('revenue-chart');chart.replaceChildren();
+ const monthly=new Map((info.revenue||[]).map(row=>[row.period,Number(row.amount)||0]));
+ const months=Array.from({length:12},(_,i)=>{const now=new Date();now.setDate(1);now.setMonth(now.getMonth()-(11-i));return now.toISOString().slice(0,7)});
+ const max=Math.max(1,...months.map(x=>monthly.get(x)||0));
+ for(const month of months){const value=monthly.get(month)||0;const col=node('div','','chart-col'),space=node('div','','chart-space'),bar=node('div','','chart-bar');bar.style.height=Math.max(2,value/max*100)+'%';bar.title=month+': '+money(value);space.append(bar);col.append(space,node('span',month.slice(5),'chart-label'),node('span',value?money(value):'—','chart-value'));chart.append(col)}
+ el('revenue-total').textContent='Total: '+money(s.paid_total);
+ const portfolio=el('portfolio-breakdown');portfolio.replaceChildren();
+ for(const [label,value,tone] of [['Contas em avaliação',s.trial,'trial'],['Assinaturas ativas',s.active,'active'],['Testes vencidos',s.expired,'blocked'],['Contas bloqueadas',s.blocked,'blocked'],['Mensagens não lidas',s.unread,'pending'],['Mensalidades de referência',money(s.mrr),'active']]){
+  const line=node('div');line.style.cssText='display:flex;justify-content:space-between;align-items:center;gap:12px';line.append(node('span',label),node('span',value,'pill '+tone));portfolio.append(line)
+ }
+ const recent=el('recent-customers');recent.replaceChildren();(info.accounts||[]).slice(0,7).forEach(c=>recent.append(rowCustomer(c)));if(!recent.children.length)emptyRows(recent,4,'Ainda não há clientes.');
+ renderCustomers();renderPayments();renderRequests();renderContacts();
 }
-function openTab(id){document.querySelectorAll('[data-tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===id)));document.querySelectorAll('.tab-view').forEach(n=>n.classList.toggle('hidden',n.id!=='view-'+id));}
-document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>openTab(b.dataset.tab));
-el('company-search').oninput=e=>{const q=e.target.value.toLocaleLowerCase('pt-BR');const list=(data?.companies||[]).filter(c=>String(c.name||'').toLocaleLowerCase('pt-BR').includes(q));rows('all-companies',list,(r,c)=>{cell(r,c.name);cell(r,c.plan||'Sem plano');badge(r,c.subscription_status||'Sem assinatura');cell(r,number(c.vehicles));cell(r,number(c.members));cell(r,date(c.created_at))})};
-async function refresh(){el('refresh').disabled=true;try{const result=await client.rpc('xrmovi_platform_admin_overview');if(result.error)throw result.error;data=result.data;render();show('content')}catch(e){show('unauthorized');el('access-message').textContent='Não foi possível consultar o painel administrativo: '+(e.message||'Acesso negado.')}finally{el('refresh').disabled=false}}
-async function start(){
+function renderCustomers(){
+ const root=el('customers-body');root.replaceChildren();const q=el('customer-search').value.toLocaleLowerCase('pt-BR');
+ const list=(info.accounts||[]).filter(c=>(c.email+' '+(c.companies||[]).map(x=>x.name).join(' ')).toLocaleLowerCase('pt-BR').includes(q));
+ for(const c of list)root.append(rowCustomer(c,true));if(!list.length)emptyRows(root,7,'Nenhum cliente encontrado.')
+}
+function renderPayments(){const root=el('payments-body');root.replaceChildren();for(const p of info.payments||[]){const r=node('tr');cell(r,date(p.date));cell(r,p.email);cell(r,money(p.amount));cell(r,p.provider);root.append(r)}if(!root.children.length)emptyRows(root,4,'Nenhum pagamento confirmado registrado.')}
+function renderRequests(){const root=el('requests-body');root.replaceChildren();for(const p of info.requests||[]){const r=node('tr');cell(r,date(p.date));cell(r,p.company);cell(r,p.plan);pill(r,p.status,p.status==='pending'?'pending':'');root.append(r)}if(!root.children.length)emptyRows(root,4,'Nenhuma solicitação registrada.')}
+function renderContacts(){
+ const root=el('contacts');root.replaceChildren();
+ const ordered=[...(info.accounts||[])].sort((a,b)=>Number(b.unread>0)-Number(a.unread>0)||Date.parse(b.last_message||b.created_at)-Date.parse(a.last_message||a.created_at));
+ for(const a of ordered){const b=node('button','','contact'+(a.id===threadId?' active':''));b.type='button';const title=node('b',a.email),desc=node('small',(a.companies||[]).map(x=>x.name).join(' · ')||'Sem empresa');b.append(title,desc);if(a.unread)b.append(node('span',a.unread+' nova(s)','unread'));b.onclick=()=>{threadId=a.id;renderContacts();void loadThread()};root.append(b)}
+ if(!ordered.length)root.append(node('p','Nenhuma conta cadastrada.','empty'));
+}
+async function changeAccess(c){
+ const action=c.blocked?'LIBERAR':'BLOQUEAR';
+ const reason=prompt(action+' o acesso à frota de '+c.email+'? Informe o motivo (mínimo 5 caracteres). O registro ficará na auditoria.');
+ if(reason===null)return;
+ if(reason.trim().length<5){status('Informe um motivo com pelo menos 5 caracteres.','error');return}
+ if(!confirm('Confirmar '+action+' para '+c.email+'?'))return;
+ try{await rpc('admin_client_access',{p_account:c.id,p_blocked:!c.blocked,p_reason:reason.trim()});status('Acesso de '+c.email+' atualizado e auditado.','success');await refresh()}
+ catch(e){status(e.message,'error')}
+}
+async function loadThread(){
+ const a=(info.accounts||[]).find(x=>x.id===threadId);if(!a){el('thread-title').textContent='Selecione um cliente';return}
+ el('thread-title').textContent=a.email+' · '+(a.companies||[]).map(x=>x.name).join(' / ');
+ const root=el('thread-messages');root.replaceChildren(node('p','Carregando mensagens…','empty'));
  try{
-  const response=await fetch('../v3/config.json',{cache:'no-store'});if(!response.ok)throw Error('Configuração indisponível.');
-  const config=await response.json();client=createClient(config.supabaseUrl,config.supabaseAnonKey);
-  const {data:auth,error}=await client.auth.getUser();
-  if(error||!auth?.user){location.replace('../?login=1');return}
-  el('admin-email').textContent='Conta: '+auth.user.email;
-  const access=await client.rpc('xrmovi_platform_is_admin');
-  if(access.error||access.data!==true){show('unauthorized');return}
-  await refresh();
- }catch(e){show('unauthorized');el('access-message').textContent=e.message||'Não foi possível verificar sua permissão.'}
+  const entries=await rpc('client_message_thread',{p_account:a.id});root.replaceChildren();
+  for(const m of entries||[]){const bubble=node('div',m.body,'bubble'+(m.mine?' mine':''));bubble.append(node('small',(m.mine?'Você':'Cliente')+' · '+new Date(m.date).toLocaleString('pt-BR')));root.append(bubble)}
+  if(!root.children.length)root.append(node('p','Ainda não há mensagens. Envie a primeira.','empty'));
+  root.scrollTop=root.scrollHeight;
+  a.unread=0;renderContacts();
+ }catch(e){root.replaceChildren(node('p',e.message,'empty'))}
 }
-el('refresh').onclick=refresh;
-el('signout').onclick=async()=>{if(client)await client.auth.signOut();location.replace('../?login=1')};
+async function refresh(){
+ const button=el('refresh');button.disabled=true;
+ try{info=await rpc('commercial_admin_overview');render();show('content');if(tab==='messages'&&threadId)await loadThread()}
+ catch(e){status('Erro ao consultar o BI: '+e.message,'error');if(el('content').hidden){show('unauthorized');el('denied-text').textContent=e.message}}
+ finally{button.disabled=false}
+}
+function openTab(name){
+ tab=name;document.querySelectorAll('[data-tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===name)));
+ document.querySelectorAll('.tab-view').forEach(view=>view.hidden=view.id!=='view-'+name);
+ if(name==='messages'&&threadId)void loadThread();
+}
+document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>openTab(b.dataset.tab));
+document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>openTab(b.dataset.goto));
+el('customer-search').oninput=renderCustomers;
+el('message-form').onsubmit=async event=>{
+ event.preventDefault();const a=(info.accounts||[]).find(x=>x.id===threadId);
+ const body=el('message-body').value.trim();if(!a){status('Selecione um cliente primeiro.','error');return}if(!body)return;
+ const button=el('message-form').querySelector('button');button.disabled=true;
+ try{await rpc('client_message_send',{p_account:a.id,p_body:body});el('message-body').value='';await loadThread();status('Mensagem enviada à caixa interna de '+a.email+'.','success');}
+ catch(e){status(e.message,'error')}
+ finally{button.disabled=false}
+};
+el('refresh').onclick=()=>void refresh();
+el('signout').onclick=async()=>{if(db)await db.auth.signOut();location.replace('../?login=1')};
+async function start(){
+ try{const cfg=await fetch('../v3/config.json',{cache:'no-store'});if(!cfg.ok)throw Error('Configuração indisponível');
+  const c=await cfg.json();db=createClient(c.supabaseUrl,c.supabaseAnonKey);
+  const {data,error}=await db.auth.getUser();if(error||!data?.user){location.replace('../?login=1');return}
+  el('user-label').textContent='Conectado como '+data.user.email;
+  const check=await rpc('platform_is_admin');if(check!==true)throw Error('Usuário não autorizado como administrador da plataforma.');
+  await refresh();
+ }catch(e){show('unauthorized');el('denied-text').textContent=e.message}
+}
 void start();
 </script></body></html>
