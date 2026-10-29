@@ -58,6 +58,7 @@ async function init(){
   if(!subscriptionPanel){
     subscriptionPanel=setupSubscriptionPanel({
       client:sb,getCompany:()=>company,
+      billingEnabled:config.billingEnabled===true,
       onCompanyCreated:async id=>{
         companies=await rpc('my_companies');
         company=companies.find(c=>c.id===id)||company;
