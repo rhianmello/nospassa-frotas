@@ -23,8 +23,8 @@ async function signed(request:Request,id:string,secret:string){
 Deno.serve(async(request:Request)=>{
  if(request.method!=="POST")return send({error:"Method not allowed"},405);
  if(Deno.env.get("XRMOVI_BILLING_ENABLED")!=="true")return send({error:"Billing disabled"},503);
- const token=Deno.env.get("MERCADOPAGO_ACCESS_TOKEN")||"";
- const secret=Deno.env.get("MERCADOPAGO_WEBHOOK_SECRET")||"";
+ const token=Deno.env.get("XRMOVI_MP_ACCESS_TOKEN")||"";
+ const secret=Deno.env.get("XRMOVI_MP_WEBHOOK_SECRET")||"";
  const supabaseUrl=Deno.env.get("SUPABASE_URL")||"";
  const serviceKey=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||"";
  if(!token.startsWith("APP_USR-")||secret.length<20||!supabaseUrl||!serviceKey)return send({error:"Billing unavailable"},503);
