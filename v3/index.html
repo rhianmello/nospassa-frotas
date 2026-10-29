@@ -24,17 +24,13 @@
         <a class="fleet-subnav" href="./operacoes.html#checklists" style="text-decoration:none"><i data-lucide="list-checks"></i><span>Checklists</span></a>
 <a class="fleet-subnav" href="./operacoes.html#almoxarifado" style="text-decoration:none"><i data-lucide="warehouse"></i><span>Almoxarifado</span></a>
 <a class="fleet-subnav" href="./operacoes.html#inspecoes" style="text-decoration:none"><i data-lucide="shield-check"></i><span>Inspeções</span></a>
-<a class="fleet-subnav" href="./operacoes.html#movimentacoes" style="text-decoration:none"><i data-lucide="arrow-left-right"></i><span>Movimentações</span></a>
 <a class="fleet-subnav" href="./os.html" style="text-decoration:none"><i data-lucide="clipboard-list"></i><span>Ordens de serviço</span></a>
         <button class="fleet-subnav" data-focus="maintenance"><i data-lucide="wrench"></i><span>Manutenção</span></button>
         <button class="fleet-subnav" data-focus="documents"><i data-lucide="file-check-2"></i><span>Documentação</span></button>
         <button class="fleet-subnav" data-view="alerts"><i data-lucide="bell"></i><span>Alertas</span><span id="nav-alert-count" class="fleet-nav-count">—</span></button>
         <button class="fleet-subnav" data-view="history"><i data-lucide="history"></i><span>Histórico</span></button>
-        <a class="fleet-subnav" href="./" style="text-decoration:none"><i data-lucide="calendar-days"></i><span>Programação semanal</span></a>
         <button class="fleet-subnav" data-fuel-report=""><i data-lucide="fuel"></i><span>Relatório de abastecimento</span></button>
-        <p class="nav-group-label fleet-admin-label">CONTROLE</p>
-        <button class="fleet-subnav fleet-subnav-muted" data-view="quality"><i data-lucide="shield-check"></i><span>Qualidade da base</span><span id="nav-quality-count" class="fleet-nav-count">—</span></button>
-      </nav>
+        </nav>
       <div class="fleet-sidebar-visual" aria-hidden="true">
         <div class="fleet-sidebar-visual-copy">
           <span>OPERAÇÃO CONECTADA</span>
@@ -52,9 +48,9 @@
         <div class="fleet-breadcrumb"><strong>Gestão de Frota</strong><span>/</span><span id="fleet-view-label">Visão Geral</span></div>
         <div class="fleet-top-actions">
           <span class="fleet-connection fleet-top-connection" id="connection-status" data-status="loading"><span class="fleet-dot"></span> Consultando banco</span>
-          <span class="fleet-mode" id="edit-mode"><i data-lucide="lock-keyhole"></i> Somente leitura</span>
+          
           <button class="fleet-icon-button" id="refresh-button" title="Atualizar dados do banco" aria-label="Atualizar dados do banco"><i data-lucide="refresh-cw"></i></button>
-          <button class="fleet-icon-button fleet-edit-button" id="unlock-button" title="Liberar edição" aria-label="Liberar edição" disabled title="Edição em migração para V3"><i data-lucide="pencil"></i></button>
+          
         </div>
       </header>
 
@@ -81,31 +77,13 @@
         </div>
 
         <section id="view-dashboard" class="fleet-view" role="tabpanel" aria-labelledby="tab-dashboard">
-          <section class="fleet-filterbar fleet-commandbar" aria-label="Filtros da frota">
-            <label class="fleet-search fleet-command-search"><i data-lucide="search"></i><input id="fleet-search" data-filter="search" type="search" placeholder="Buscar veículo, placa, modelo, PTRAN ou ISC..." aria-label="Busca global da frota"></label>
-            <label class="fleet-command-filter"><span>Tipo de ativo</span><select data-filter="tipo"><option value="">Todos</option></select></label>
-            <label class="fleet-command-filter"><span>Situação</span><select data-filter="situation"><option value="">Todas</option><option value="green">Regular</option><option value="yellow">Atenção</option><option value="red">Crítico</option><option value="gray">Inativo</option></select></label>
-            <label class="fleet-command-filter"><span>Responsável</span><select data-filter="responsavel_cpl"><option value="">Todos</option></select></label>
-            <label class="fleet-command-filter"><span>Vencimentos</span><select data-filter="expiry"><option value="">Todos</option><option value="expired">Vencidos</option><option value="7">Até 7 dias</option><option value="30">Até 30 dias</option><option value="60">Até 60 dias</option><option value="90">Até 90 dias</option></select></label>
-            <button class="fleet-icon-button fleet-filter-button" id="filter-toggle" aria-expanded="false" aria-controls="fleet-advanced-filters" title="Mais filtros"><i data-lucide="sliders-horizontal"></i><span id="active-filter-count" class="fleet-filter-count">0</span></button>
+          <section class="fleet-filterbar fleet-commandbar" aria-label="Filtros de veículos">
+            <label class="fleet-search fleet-command-search"><i data-lucide="search"></i><input id="fleet-search" type="search" placeholder="Buscar placa, marca, modelo ou unidade..." aria-label="Buscar veículos"></label>
+            <label class="fleet-command-filter"><span>Categoria</span><select id="xrm-filter-category"><option value="">Todas</option></select></label>
+            <label class="fleet-command-filter"><span>Situação</span><select id="xrm-filter-status"><option value="">Todas</option><option value="Ativo">Ativos</option><option value="Manutenção">Em manutenção</option><option value="alerta">Com revisão vencida</option></select></label>
+            <label class="fleet-command-filter"><span>Vencimento da revisão</span><select id="xrm-filter-expiry"><option value="">Todos</option><option value="overdue">Vencidas</option><option value="7">Até 7 dias</option><option value="30">Até 30 dias</option><option value="90">Até 90 dias</option></select></label>
+            <button class="fleet-button" id="xrm-clear-filters" type="button">Limpar</button>
           </section>
-
-          <div id="fleet-advanced-filters" class="fleet-advanced-filters fleet-panel hidden">
-            <label>Categoria<select data-filter="categoria"><option value="">Todas as categorias</option></select></label>
-            <label>Placa / identificador<input data-filter="placa_identificador" placeholder="Placa, serial ou patrimônio"></label>
-            <label>Modelo<select data-filter="modelo"><option value="">Todos os modelos</option></select></label>
-            <label>Gerência<select data-filter="gerencia"><option value="">Todas as gerências</option></select></label>
-            <label>Empresa<select data-filter="empresa"><option value="">Todas as empresas</option></select></label>
-            <label>Status operacional<select data-filter="status_operacional"><option value="">Todos os status</option></select></label>
-            <label>Status PTRAN<select data-filter="ptran_status"><option value="">Todos os status</option></select></label>
-            <label class="fleet-check"><input type="checkbox" data-filter="only_pending"> Somente pendências</label>
-            <div class="fleet-advanced-actions">
-              <button class="fleet-link-button" id="clear-filters"><i data-lucide="rotate-ccw"></i> Limpar filtros</button>
-              <button class="fleet-button" id="import-button" disabled title="Importação disponível na V1 até validação da V3"><i data-lucide="file-spreadsheet"></i> Importar Excel</button>
-              <button class="fleet-button primary hidden" id="pending-import-button" disabled title="Em migração"><i data-lucide="clipboard-list"></i> Revisar carga inicial</button>
-              <button class="fleet-button primary edit-only hidden" id="new-asset-button" disabled title="Cadastro disponível na V1 até validação da V3"><i data-lucide="plus"></i> Cadastrar ativo</button>
-            </div>
-          </div>
 
           <div class="fleet-section-label fleet-section-heading">
             <div><span>VISÃO EXECUTIVA</span><strong>O que precisa de atenção agora</strong></div>
