@@ -101,6 +101,7 @@ export function setupMileage({client,getCompany,getVehicles,getFilteredIds,onRel
     actions.append(btn('Salvar KM',()=>void saveOne(v.id,Number(input.value),input.value),'small'));
     actions.append(btn('Configurar',()=>onEditVehicle(v.id),'subtle small'));
     if(v.qr_token)actions.append(btn('QR Code',()=>showQr(v),'subtle small'));
+    actions.append(btn('Histórico KM',()=>void showReadingHistory(v),'subtle small'));
     if(v.interval_km)actions.append(btn('Concluir óleo',()=>showOil(v),'subtle small'));
     if(v.interval_km)actions.append(btn('Histórico de óleo',()=>void showOilHistory(v),'subtle small'));
    }
@@ -171,6 +172,24 @@ export function setupMileage({client,getCompany,getVehicles,getFilteredIds,onRel
    try{await rpc('oil_complete',{cid:companyId,vid:vehicle.id,p_meter:Number(meter.input.value),p_date:date.input.value,p_oil_type:oil.input.value,p_cost:Number(cost.input.value)||0,p_notes:notes.input.value});modal.close();await onReload();await refresh();status('Troca de óleo concluída. Próximo vencimento atualizado.')}
    catch(error){message.textContent=error.message;submit.disabled=false}
   },'primary');form.append(submit);modal.append(form);
+ }
+ async function showReadingHistory(vehicle){
+  const modal=makeDialog('Histórico do hodômetro · '+vehicle.plate);
+  const box=add('div','xrm-mileage-history');box.append(add('p','xrm-mileage-modal-help','Consultando leituras registradas…'));modal.append(box);
+  try{
+   const records=await rpc('mileage_readings',{cid:companyId,vid:vehicle.id});
+   box.replaceChildren();
+   if(!records?.length){box.append(add('p','xrm-mileage-modal-help','Nenhuma leitura registrada.'));return}
+   for(const record of records){
+    const row=add('div','xrm-mileage-history-row');
+    const readable=record.status==='accepted'?'Confirmada':record.status==='pending'?'Pendente':'Rejeitada';
+    row.append(add('strong','',km(record.applied_meter??record.meter)+' km · '+readable));
+    row.append(add('span','',day(record.submitted_at)+' · '+(record.driver_name||'Gestor')+' · '+(record.source==='qr'?'QR Code com foto':record.source==='bulk'?'Atualização em lote':'Painel')));
+    if(record.reason||record.review_note)row.append(add('span','',(record.reason||'')+(record.review_note?' · Revisão: '+record.review_note:'')));
+    if(record.photo)row.append(btn('Ver foto do hodômetro',()=>void openProof(record.photo),'subtle small'));
+    box.append(row);
+   }
+  }catch(error){box.textContent='Falha ao consultar histórico: '+error.message}
  }
  async function showOilHistory(vehicle){
   const modal=makeDialog('Trocas de óleo · '+vehicle.plate);
