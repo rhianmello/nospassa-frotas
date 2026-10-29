@@ -1,5 +1,11 @@
 # Motoristas e despesas da frota
 
+## Entrada dos lançamentos
+
+`Registrar despesa ou serviço` e `Programar manutenção` ficam sempre visíveis no topo do módulo. As abas inferiores servem para consultar os registros, sem esconder a ação de cadastro da outra aba. Despesas/serviços avulsos iniciam em `Outros serviços / despesas`, com descrição livre; exemplos: lavagem e borracharia. IPVA e as demais categorias continuam disponíveis. Custos de uma manutenção existente são registrados no próprio serviço para evitar duplicação no Financeiro.
+
+Depois de criar uma despesa ou serviço avulso, a consulta de despesas é aberta no mês informado para exibir o lançamento. Depois de programar manutenção, a consulta de serviços pendentes é aberta. Os filtros compartilhados de empresa/veículo/contrato continuam preservados.
+
 O menu `Manutenção / Despesas` contém dois controles: serviços de manutenção, com o fluxo e histórico existentes, e outras despesas dos veículos. `Motoristas` abre um cadastro operacional da empresa; não cria usuários nem contas de acesso.
 
 ## Motoristas e veículos

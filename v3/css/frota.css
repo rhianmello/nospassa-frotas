@@ -383,6 +383,13 @@
 .fleet-financial-cards button{display:grid;gap:10px;text-align:left;padding:18px;background:#102b3f;border:1px solid #35596e;border-radius:10px;cursor:pointer;color:#adc9dd}
 .fleet-financial-cards strong{font-size:25px;color:#42d5bd}.fleet-financial-cards button[aria-expanded="true"]{border-color:#42d5bd;background:#15374a}
 .fleet-workspace-tabs{display:flex;flex-wrap:wrap;gap:9px;margin:0 0 17px}.fleet-workspace-tabs button{padding:11px 16px;border-radius:8px;background:#102a3e;color:#b9d3e5;border:1px solid #36566c;cursor:pointer;font:600 12px system-ui}.fleet-workspace-tabs button[aria-pressed="true"]{background:#183e51;color:#78e6ce;border-color:#3dbda6}
+.fleet-entry-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:0 0 22px}
+.fleet-entry-actions>div{padding:16px;border:1px solid #35576b;border-radius:11px;background:#10283b;display:grid;justify-items:start;align-content:start;gap:10px}
+.fleet-entry-actions small{font-size:11px;color:#a0bbcf;line-height:1.6}
+.fleet-entry-actions .fleet-button{min-height:42px}
+.fleet-commandbar .fleet-button{white-space:normal;min-width:0}
+@media(min-width:1051px){.fleet-filterbar.fleet-commandbar{grid-template-columns:minmax(180px,1.5fr) repeat(3,minmax(90px,1fr)) minmax(75px,auto) minmax(110px,auto)}}
+@media(max-width:650px){.fleet-entry-actions{grid-template-columns:1fr;gap:9px}.fleet-entry-actions>div{padding:13px}.fleet-entry-actions .fleet-button{width:100%}}
 #driver-list .fleet-table,#expense-list .fleet-table{min-width:880px}#driver-list .fleet-workspace-note,#expense-list .fleet-workspace-note{padding:16px}
 #driver-new{white-space:nowrap}.fleet-page .fleet-commandbar.hidden,.fleet-page .xrm-header-contract.hidden{display:none!important}
 .fleet-financial-cards{grid-template-columns:repeat(4,minmax(0,1fr))}
