@@ -15,8 +15,8 @@ Deno.serve((request:Request)=>{
   return new Response(null,{status:204,headers});
  }
  if(request.method!=='GET')return new Response(JSON.stringify({enabled:false,error:'Method not allowed'}),{status:405,headers});
- const token=Deno.env.get('MERCADOPAGO_ACCESS_TOKEN')||'';
- const secret=Deno.env.get('MERCADOPAGO_WEBHOOK_SECRET')||'';
+ const token=Deno.env.get('XRMOVI_MP_ACCESS_TOKEN')||'';
+ const secret=Deno.env.get('XRMOVI_MP_WEBHOOK_SECRET')||'';
  const service=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')||'';
  const anon=Deno.env.get('SUPABASE_ANON_KEY')||'';
  const url=Deno.env.get('SUPABASE_URL')||'';
