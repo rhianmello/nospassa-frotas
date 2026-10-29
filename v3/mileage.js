@@ -4,6 +4,7 @@ export function setupMileage({client,getCompany,getVehicles,getFilteredIds,onRel
  const money=n=>Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
  const km=n=>Number(n||0).toLocaleString('pt-BR',{maximumFractionDigits:0});
  const day=date=>{if(!date)return 'Nunca';const text=String(date);return new Date(/^\d{4}-\d{2}-\d{2}$/.test(text)?text+'T12:00:00':text).toLocaleDateString('pt-BR')};
+ const dateTime=date=>date?new Date(date).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'}):'Não registrado';
  const days=['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
  let state=null,companyId=null,request=0,loadError='',busy=false,flash='',flashKind='';
  const rpc=async(name,args)=>{const {data,error}=await client.rpc('xrmovi_'+name,args);if(error)throw Error(error.message);return data};
@@ -63,7 +64,7 @@ export function setupMileage({client,getCompany,getVehicles,getFilteredIds,onRel
   root.replaceChildren();
   const header=add('div','xrm-mileage-heading');const copy=add('div');
   copy.append(add('span','xrm-mileage-eyebrow','CONTROLE DE HODÔMETRO'),add('h2','','Quilometragem, troca de óleo e QR Code'),add('p','','Registre KM total por veículo, programe revisões e confira leituras enviadas pelos motoristas.'));
-  header.append(copy,btn('Atualizar dados',()=>refresh(),'subtle'));
+  header.append(copy,btn('Histórico geral / origem',()=>void showAuditHistory(),'subtle'),btn('Atualizar dados',()=>refresh(),'subtle'));
   root.append(header);
   if(loadError){root.append(add('p','xrm-mileage-empty','Não foi possível carregar os dados: '+loadError));return}
   const toolbar=add('div','xrm-mileage-toolbar');
@@ -77,14 +78,14 @@ export function setupMileage({client,getCompany,getVehicles,getFilteredIds,onRel
   root.append(toolbar);
   const tools=add('div','xrm-mileage-bulk');
   tools.append(add('strong','','Atualização em lote'));
-  const common=add('label','xrm-mileage-common');common.append(add('span','','KM total igual para a seleção'),Object.assign(add('input'),{type:'number',min:'0',step:'1',placeholder:'Ex.: 18000',id:'xrm-mileage-common-km'}));
+  const common=add('label','xrm-mileage-common');common.append(add('span','','KM TOTAL (hodômetro, não acréscimo) igual para a seleção'),Object.assign(add('input'),{type:'number',min:'0',step:'1',placeholder:'Ex.: 18000',id:'xrm-mileage-common-km'}));
   const choices=add('div','xrm-mileage-actions');
   choices.append(btn('Selecionar todos',()=>{root.querySelectorAll('.xrm-mileage-selected').forEach(i=>{i.checked=true})},'subtle'),btn('Limpar seleção',()=>{root.querySelectorAll('.xrm-mileage-selected').forEach(i=>{i.checked=false})},'subtle'));
   choices.append(btn('Salvar KM dos selecionados',()=>void saveBulk(),'primary'));
   tools.append(common,choices,add('small','','Deixe o KM comum vazio para informar uma leitura diferente na coluna “Novo KM” de cada veículo.'));
   if(owned())root.append(tools);
   const wrap=add('div','xrm-mileage-table-wrap'),table=add('table','xrm-mileage-table'),thead=add('thead'),row=add('tr');
-  for(const label of ['','Veículo','KM atual','Troca de óleo','Próxima troca','Última leitura','Novo KM','Ações'])row.append(add('th','',label));
+  for(const label of ['','Veículo','KM atual','Troca de óleo','Próxima troca','Última leitura','Novo KM TOTAL','Ações'])row.append(add('th','',label));
   thead.append(row);table.append(thead);
   const tbody=add('tbody');
   for(const v of scoped()){
@@ -95,7 +96,7 @@ export function setupMileage({client,getCompany,getVehicles,getFilteredIds,onRel
    tr.append(add('td',toStatusClass(v),toStatus(v)));
    tr.append(add('td','',v.next_due_km==null?'—':km(v.next_due_km)+' km'));
    const last=add('td','',v.last_report_at?day(v.last_report_at):'Sem registro');if(weeklyDue(v))last.append(add('small','xrm-mileage-warn','Atualizar esta semana'));tr.append(last);
-   const reading=add('td');const input=add('input','xrm-mileage-input');input.type='number';input.min='0';input.step='1';input.placeholder='KM total';input.dataset.vid=v.id;input.disabled=!owned();reading.append(input);tr.append(reading);
+   const reading=add('td');const input=add('input','xrm-mileage-input');input.type='number';input.min='0';input.step='1';input.placeholder='KM TOTAL, não + KM';input.dataset.vid=v.id;input.disabled=!owned();reading.append(input);tr.append(reading);
    const actions=add('td','xrm-mileage-actions');
    if(owned()){
     actions.append(btn('Salvar KM',()=>void saveOne(v.id,Number(input.value),input.value),'small'));
@@ -114,7 +115,7 @@ export function setupMileage({client,getCompany,getVehicles,getFilteredIds,onRel
    const box=add('div','xrm-mileage-review');
    const head=add('div','xrm-mileage-review-head');
    head.append(add('h3','','Leituras suspeitas aguardando conferência'));
-   head.append(add('small','','Rejeitar remove da fila, mas preserva o registro no histórico.'));
+   head.append(add('small','','Rejeitar remove da fila, mas preserva o registro no histórico. Consulte a origem pelo botão ao lado de cada leitura.'));
    box.append(head);
    const toolbar=add('div','xrm-mileage-review-toolbar');
    const chooseAll=add('label','xrm-mileage-review-select-all');
@@ -157,6 +158,7 @@ export function setupMileage({client,getCompany,getVehicles,getFilteredIds,onRel
     line.append(info);
     const actions=add('div','xrm-mileage-review-actions');
     if(r.photo&&owned())actions.append(btn('Ver foto',()=>void openProof(r.photo),'subtle small'));
+    if(owned())actions.append(btn('Origem / histórico',()=>void showReadingHistory({id:r.vehicle_id,plate:r.plate}),'subtle small'));
     if(owned()){
      actions.append(btn('Rejeitar',()=>void rejectOne(r),'danger small'));
      actions.append(btn('Conferir',()=>showReview(r),'primary small'));
@@ -172,6 +174,12 @@ export function setupMileage({client,getCompany,getVehicles,getFilteredIds,onRel
  async function saveOne(vid,value,raw){
   if(!owned())return;
   if(raw===''||!Number.isFinite(value)||value<0){status('Informe o KM total do veículo.','error');return}
+  const current=Number(planFor(vid)?.meter??0);
+  if(value<current){
+   const total=current+value;
+   if(!window.confirm('ATENÇÃO: '+km(value)+' km é MENOR que o hodômetro confirmado ('+km(current)+' km).\n\nVocê quis informar um ACRÉSCIMO de +'+km(value)+' km?\n\nOK: somar e registrar '+km(total)+' km TOTAL.\nCancelar: não gravar nada.')){status('Operação cancelada. Nenhuma quilometragem foi alterada.','warn');return}
+   value=total;
+  }
   try{const data=await rpc('mileage_submit_admin',{cid:companyId,vid,p_meter:value,p_note:'Leitura registrada no painel'});status(data.status==='pending'?'Leitura acima do limite: enviada para conferência.':'Quilometragem atualizada.',data.status==='pending'?'warn':'');await onReload();await refresh()}
   catch(error){status(error.message,'error')}
  }
@@ -184,6 +192,11 @@ export function setupMileage({client,getCompany,getVehicles,getFilteredIds,onRel
    return {vid:input.dataset.vid,raw:shared!==''?shared:individual.value,plate:rows().find(v=>v.id===input.dataset.vid)?.plate||'Veículo'}
   });
   if(records.some(x=>x.raw===''||!Number.isFinite(Number(x.raw))||Number(x.raw)<0)){status('Informe o KM total de cada veículo selecionado ou preencha o KM comum.','error');return}
+  const lower=records.filter(x=>Number(x.raw)<Number(planFor(x.vid)?.meter??0));
+  if(lower.length){
+   status('BLOQUEADO: '+lower.map(x=>x.plate+' (digitado '+km(x.raw)+' / atual '+km(planFor(x.vid)?.meter)+')').join('; ')+'. Informe o KM TOTAL, não a quantidade percorrida. Nenhum veículo foi atualizado.','error');
+   return;
+  }
   if(shared!==''&&!confirm('Confirmar o mesmo KM total ('+km(shared)+') para '+records.length+' veículo(s)?'))return;
   busy=true;let saved=0,pending=0,failed=[];
   for(const x of records){
@@ -256,23 +269,82 @@ export function setupMileage({client,getCompany,getVehicles,getFilteredIds,onRel
    catch(error){message.textContent=error.message;submit.disabled=false}
   },'primary');form.append(submit);modal.append(form);
  }
+ const sourceName=r=>r.source==='qr'?'QR Code do veículo':r.source==='bulk'?'Lote pelo painel':r.source==='admin'?'Painel administrativo':r.source||'Origem não informada';
+ const statusName=r=>r.status==='accepted'?'Confirmada':r.status==='pending'?'Aguardando conferência':r.status==='rejected'?'Rejeitada':r.status||'Desconhecido';
+ function addReadingDetails(host,r){
+  const row=add('article','xrm-mileage-history-row xrm-audit-record');
+  const original=Number(r.meter);
+  const applied=r.applied_meter!=null?Number(r.applied_meter):null;
+  const label=add('strong','',String(r.plate||'Veículo')+' · '+km(original)+' km enviados · '+statusName(r));
+  row.append(label);
+  if(r.baseline_meter!=null)row.append(add('span','','KM antes do envio: '+km(r.baseline_meter)+' km'));
+  else row.append(add('span','xrm-audit-muted','KM antes do envio: não registrado na versão anterior.'));
+  if(r.review_from_meter!=null)row.append(add('span','','KM confirmado antes da decisão: '+km(r.review_from_meter)+' km'));
+  if(applied!==null)row.append(add('span','xrm-audit-applied','KM total aplicado: '+km(applied)+' km'+(applied!==original?' (corrigido de '+km(original)+' km)':'')));
+  if(r.status==='rejected')row.append(add('span','xrm-audit-rejected','Leitura rejeitada: não alterou o hodômetro.'));
+  const via=r.source==='qr'?(r.driver_name?'Motorista informado: '+r.driver_name:'Motorista não identificado'):
+    (r.submitter_email?'Usuário: '+r.submitter_email:'Usuário que enviou: não registrado no histórico antigo');
+  row.append(add('span','','Origem: '+sourceName(r)+' · '+via));
+  row.append(add('span','','Recebida em: '+dateTime(r.submitted_at)));
+  if(r.reviewed_at)row.append(add('span','','Decidida em: '+dateTime(r.reviewed_at)+' · '+(r.reviewer_email||'Responsável não registrado')));
+  if(r.reason)row.append(add('span','','Alerta original: '+r.reason));
+  if(r.review_note)row.append(add('span','','Observação / justificativa: '+r.review_note));
+  if(r.id)row.append(add('small','xrm-audit-muted','Referência de auditoria: '+r.id));
+  if(r.photo)row.append(btn('Ver comprovante original',()=>void openProof(r.photo),'subtle small'));
+  host.append(row);
+ }
  async function showReadingHistory(vehicle){
-  const modal=makeDialog('Histórico do hodômetro · '+vehicle.plate);
+  const modal=makeDialog('Histórico e origem do KM · '+vehicle.plate);
+  modal.classList.add('xrm-audit-modal');
   const box=add('div','xrm-mileage-history');box.append(add('p','xrm-mileage-modal-help','Consultando leituras registradas…'));modal.append(box);
   try{
    const records=await rpc('mileage_readings',{cid:companyId,vid:vehicle.id});
+   if(!modal.isConnected)return;
    box.replaceChildren();
+   box.append(add('p','xrm-mileage-modal-help','Leituras enviadas, aprovadas e rejeitadas. Registros anteriores podem não identificar o usuário ou KM inicial.'));
    if(!records?.length){box.append(add('p','xrm-mileage-modal-help','Nenhuma leitura registrada.'));return}
-   for(const record of records){
-    const row=add('div','xrm-mileage-history-row');
-    const readable=record.status==='accepted'?'Confirmada':record.status==='pending'?'Pendente':'Rejeitada';
-    row.append(add('strong','',km(record.applied_meter??record.meter)+' km · '+readable));
-    row.append(add('span','',day(record.submitted_at)+' · '+(record.driver_name||'Gestor')+' · '+(record.source==='qr'?'QR Code com foto':record.source==='bulk'?'Atualização em lote':'Painel')));
-    if(record.reason||record.review_note)row.append(add('span','',(record.reason||'')+(record.review_note?' · Revisão: '+record.review_note:'')));
-    if(record.photo)row.append(btn('Ver foto do hodômetro',()=>void openProof(record.photo),'subtle small'));
-    box.append(row);
-   }
+   for(const r of records)addReadingDetails(box,{...r,plate:vehicle.plate});
   }catch(error){box.textContent='Falha ao consultar histórico: '+error.message}
+ }
+ async function showAuditHistory(){
+  if(!owned()){status('Apenas o gestor pode consultar a auditoria das leituras.','error');return}
+  const modal=makeDialog('Histórico geral e origem das leituras');
+  modal.classList.add('xrm-audit-modal');
+  const box=add('div','xrm-mileage-history');
+  box.append(add('p','xrm-mileage-modal-help','Consultando até 200 registros recentes da empresa ativa no Supabase…'));
+  modal.append(box);
+  try{
+   const records=await rpc('mileage_audit',{cid:companyId,p_limit:200});
+   if(!modal.isConnected)return;
+   box.replaceChildren();
+   box.append(add('p','xrm-mileage-modal-help','Veja de onde veio cada informação, o KM original, correções, decisão, usuário e foto (quando houver). A consulta é limitada aos 200 registros mais recentes.'));
+   const controls=add('div','xrm-audit-filters');
+   const search=add('input');search.type='search';search.placeholder='Buscar placa, usuário, motorista ou referência…';search.setAttribute('aria-label','Pesquisar histórico');
+   const statusFilter=add('select');statusFilter.setAttribute('aria-label','Filtrar situação');
+   for(const [value,label] of [['','Todas as situações'],['accepted','Confirmadas'],['pending','Pendentes'],['rejected','Rejeitadas']]){
+    const opt=add('option','',label);opt.value=value;statusFilter.append(opt);
+   }
+   const sourceFilter=add('select');sourceFilter.setAttribute('aria-label','Filtrar origem');
+   for(const [value,label] of [['','Todas as origens'],['qr','QR Code'],['admin','Painel'],['bulk','Lote']]){
+    const opt=add('option','',label);opt.value=value;sourceFilter.append(opt);
+   }
+   controls.append(search,statusFilter,sourceFilter);box.append(controls);
+   const summary=add('p','xrm-mileage-modal-help');box.append(summary);
+   const listing=add('div','xrm-audit-results');box.append(listing);
+   function draw(){
+    const q=search.value.trim().toLocaleLowerCase('pt-BR');
+    const data=(records||[]).filter(r=>(!statusFilter.value||r.status===statusFilter.value)
+      &&(!sourceFilter.value||r.source===sourceFilter.value)
+      &&(!q||[r.plate,r.driver_name,r.submitter_email,r.reviewer_email,r.id,r.review_note,r.reason]
+       .some(value=>String(value||'').toLocaleLowerCase('pt-BR').includes(q))));
+    summary.textContent=data.length+' de '+(records||[]).length+' leitura(s) exibida(s).';
+    listing.replaceChildren();
+    if(!data.length)listing.append(add('p','xrm-mileage-modal-help','Nenhuma leitura encontrada para os filtros.'));
+    for(const r of data)addReadingDetails(listing,r);
+   }
+   for(const filter of [search,statusFilter,sourceFilter])filter.addEventListener('input',draw);
+   draw();
+  }catch(error){box.textContent='Não foi possível consultar a auditoria: '+error.message}
  }
  async function showOilHistory(vehicle){
   const modal=makeDialog('Trocas de óleo · '+vehicle.plate);
@@ -293,20 +365,56 @@ export function setupMileage({client,getCompany,getVehicles,getFilteredIds,onRel
  function showReview(record){
   const modal=makeDialog('Conferir leitura · '+record.plate);
   const form=add('div','xrm-mileage-modal-form');
-  form.append(add('p','xrm-mileage-modal-help','Registrado: '+km(record.meter)+' km · KM confirmado: '+km(record.current_meter)+' km. '+(record.reason||'')));
-  const value=labelInput('KM confirmado ou corrigido','number',record.meter),reason=labelInput('Motivo da decisão','text','');
-  value.input.min='0';reason.input.required=true;reason.input.minLength=4;
+  const original=Number(record.meter),current=Number(record.current_meter);
+  form.append(add('p','xrm-mileage-modal-help','Leitura recebida: '+km(original)+' km · KM TOTAL atualmente confirmado: '+km(current)+' km. '+(record.reason||'')));
+  const value=labelInput('Novo KM TOTAL confirmado (NÃO é acréscimo)','number',record.meter),reason=labelInput('Motivo da decisão / correção','text','');
+  value.input.min=String(current);value.input.max='10000000';value.input.step='1';value.input.required=true;
+  reason.input.required=true;reason.input.minLength=4;reason.input.maxLength=500;
   form.append(value.label,reason.label);
-  const message=add('p','xrm-mileage-modal-help','Aprovar atualiza o KM confirmado. Rejeitar preserva o KM anterior.');
+  const warning=add('div','xrm-mileage-guard');warning.setAttribute('role','alert');form.append(warning);
+  if(original<current){
+   const example=btn('Somar +'+km(original)+' km ao KM atual = '+km(current+original)+' km TOTAL',()=>{
+    value.input.value=String(current+original);validate();
+   },'subtle xrm-mileage-sum-example');
+   form.append(example);
+  }
+  const message=add('p','xrm-mileage-modal-help','Aprovar altera o KM total; rejeitar mantém o valor confirmado. Ambas as decisões ficam no histórico.');
   form.append(message);
   const actions=add('div','xrm-mileage-actions');
-  const act=async decision=>{
-   if(!reason.input.value.trim()||reason.input.value.trim().length<4){message.textContent='Informe o motivo da conferência.';return}
-   try{await rpc('mileage_review',{cid:companyId,p_report:record.id,p_decision:decision,p_corrected:decision==='accept'?Number(value.input.value):null,p_reason:reason.input.value.trim()});modal.close();await onReload();await refresh();status('Leitura conferida e registrada no histórico.')}
-   catch(error){message.textContent=error.message}
+  const reject=btn('Rejeitar',()=>void act('reject'),'subtle');
+  const accept=btn('Aprovar / corrigir',()=>void act('accept'),'primary');
+  const validate=()=>{
+   const raw=value.input.value.trim();
+   const typed=Number(raw);
+   const invalid=!raw||!Number.isFinite(typed)||typed<0||typed>10000000;
+   const lower=!invalid&&typed<current;
+   accept.disabled=invalid||lower||busy;
+   warning.className='xrm-mileage-guard'+(lower||invalid?' danger':' ok');
+   warning.textContent=lower?
+     'BLOQUEADO: '+km(typed)+' km é MENOR que os '+km(current)+' km confirmados. Se você quis dizer +'+km(typed)+' km percorridos, o novo KM TOTAL seria '+km(current+typed)+' km. Use o botão de soma acima ou digite o hodômetro correto.':
+     invalid?'Informe o KM TOTAL válido do hodômetro.':
+     'KM TOTAL a confirmar: '+km(typed)+' km · Variação: +'+km(typed-current)+' km. O valor anterior não será apagado do histórico.';
   };
-  actions.append(btn('Rejeitar',()=>void act('reject'),'subtle'),btn('Aprovar / corrigir',()=>void act('accept'),'primary'));
-  form.append(actions);modal.append(form);
+  value.input.addEventListener('input',validate);validate();
+  let saving=false;
+  async function act(decision){
+   if(saving)return;
+   if(!reason.input.value.trim()||reason.input.value.trim().length<4){message.textContent='Informe o motivo da conferência (mínimo 4 caracteres).';return}
+   const typed=Number(value.input.value),raw=value.input.value.trim();
+   if(decision==='accept'&&(!raw||!Number.isFinite(typed)||typed<current||typed>10000000)){
+    message.textContent='A aprovação foi bloqueada porque o KM TOTAL está inválido ou é menor que o confirmado.';
+    validate();return;
+   }
+   if(decision==='accept'&&!window.confirm('Confirmar '+km(typed)+' km TOTAIS para '+record.plate+'?\n\nAntes: '+km(current)+' km\nDepois: '+km(typed)+' km\nDiferença: +'+km(typed-current)+' km\n\nEsta decisão ficará registrada no histórico.'))return;
+   saving=true;accept.disabled=true;reject.disabled=true;
+   try{
+    await rpc('mileage_review',{cid:companyId,p_report:record.id,p_decision:decision,p_corrected:decision==='accept'?typed:null,p_reason:reason.input.value.trim()});
+    modal.close();await onReload();await refresh();
+    status(decision==='accept'?'Leitura conferida. KM TOTAL e histórico de origem atualizados.':'Leitura rejeitada. KM atual preservado no histórico.');
+   }catch(error){message.textContent='Não foi possível concluir: '+error.message}
+   finally{saving=false;if(modal.isConnected){reject.disabled=false;validate()}}
+  }
+  actions.append(reject,accept);form.append(actions);modal.append(form);
  }
  async function openProof(path){
   try{const {data,error}=await client.storage.from('xrmovi-odometer-proof').createSignedUrl(path,90);
