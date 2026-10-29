@@ -433,3 +433,19 @@
 
 /* Financial date range, responsive controls and document provenance. */
 .xrm-period-filters{display:flex;flex-wrap:wrap;align-items:end;gap:12px;padding:16px;margin:16px 0;background:#0d2438}.xrm-period-filters label{display:grid;gap:6px;min-width:130px;color:#a9c6da;font-size:12px}.xrm-period-filters select,.xrm-period-filters input{padding:10px;border-radius:8px;border:1px solid #345c77;background:#102b40;color:#eef8ff;min-height:40px}.xrm-period-filters input[readonly]{opacity:.75}.xrm-period-filters #xrm-report-range-label{color:#9fb9cb;font-size:11px}.xrm-documents-table{min-width:660px}.xrm-documents-table td{font-size:12px;overflow-wrap:anywhere}@media(max-width:700px){.xrm-period-filters label{flex:1 1 43%}.xrm-period-filters button{width:100%}}@media print{.fleet-page{background:#fff!important;color:#111!important}.fleet-topbar,.fleet-sidebar,.fleet-commandbar,.fleet-report-actions{display:none!important}}
+
+/* Compact vehicle filters integrated with company header. */
+.fleet-page .fleet-hero{display:flex;flex-wrap:wrap;align-items:center;gap:12px 18px;min-width:0}
+.fleet-page .fleet-hero-copy{flex:1 1 300px;min-width:180px}
+.fleet-page .xrm-hero-filters{flex:2 1 620px;min-width:0;align-self:center}
+.fleet-page .xrm-hero-filters .fleet-filterbar.fleet-commandbar{display:grid;grid-template-columns:minmax(135px,1.65fr) repeat(3,minmax(92px,1fr)) auto;gap:7px;margin:0;padding:9px 10px;border-radius:10px;align-items:end}
+.fleet-page .xrm-hero-filters .fleet-command-search{grid-column:auto!important;min-width:0}
+.fleet-page .xrm-hero-filters .fleet-command-filter{min-width:0}
+.fleet-page .xrm-hero-filters .fleet-command-filter span{font-size:8px}
+.fleet-page .xrm-hero-filters .fleet-filterbar input,.fleet-page .xrm-hero-filters .fleet-filterbar select{min-height:32px;height:32px;font-size:11px}
+.fleet-page .xrm-hero-filters .fleet-filterbar .fleet-button{min-height:32px;padding:6px 9px;font-size:10px}
+.fleet-page .fleet-hero .fleet-data-source{flex:0 1 150px;margin-left:auto}
+@media(max-width:1500px){.fleet-page .fleet-hero .fleet-data-source{display:none}}
+@media(max-width:1180px){.fleet-page .xrm-hero-filters{flex-basis:100%;order:3}.fleet-page .fleet-hero-copy{flex:1 1 240px}}
+@media(max-width:700px){.fleet-page .xrm-hero-filters .fleet-filterbar.fleet-commandbar{grid-template-columns:repeat(2,minmax(0,1fr))}.fleet-page .xrm-hero-filters .fleet-command-search{grid-column:1/-1!important}.fleet-page .xrm-hero-filters #xrm-clear-filters{grid-column:1/-1}.fleet-page .fleet-hero-copy{min-width:0}}
+@media(max-width:420px){.fleet-page .xrm-hero-filters .fleet-filterbar.fleet-commandbar{grid-template-columns:1fr}.fleet-page .xrm-hero-filters .fleet-command-search,.fleet-page .xrm-hero-filters #xrm-clear-filters{grid-column:auto!important}}
