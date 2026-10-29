@@ -17,7 +17,9 @@ Deno.serve((request:Request)=>{
  if(request.method!=='GET')return new Response(JSON.stringify({enabled:false,error:'Method not allowed'}),{status:405,headers});
  const token=Deno.env.get('MERCADOPAGO_ACCESS_TOKEN')||'';
  const secret=Deno.env.get('MERCADOPAGO_WEBHOOK_SECRET')||'';
- const service=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')||Deno.env.get('SUPABASE_SECRET_KEYS')||'';
- const enabled=Deno.env.get('XRMOVI_BILLING_ENABLED')==='true'&&token.startsWith('APP_USR-')&&secret.length>=20&&service.length>20;
+ const service=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')||'';
+ const anon=Deno.env.get('SUPABASE_ANON_KEY')||'';
+ const url=Deno.env.get('SUPABASE_URL')||'';
+ const enabled=Deno.env.get('XRMOVI_BILLING_ENABLED')==='true'&&token.startsWith('APP_USR-')&&secret.length>=20&&service.length>20&&anon.length>20&&url.startsWith('https://');
  return new Response(JSON.stringify({enabled,provider:'mercadopago',mode:enabled?'production':'not_ready'}),{status:200,headers});
 });
