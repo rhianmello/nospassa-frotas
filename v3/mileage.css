@@ -89,3 +89,61 @@
 .xrm-mileage-qr .xrm-mileage-modal-help{text-align:center;margin:0;color:#a9d3db}
 @media(max-width:1100px){.xrm-mileage-review-list{grid-template-columns:1fr}.xrm-mileage-review-actions{flex-shrink:1}}
 @media(max-width:580px){.xrm-mileage-review-toolbar{gap:8px}.xrm-mileage-review-toolbar>.xrm-mileage-btn{flex:1}.xrm-mileage-review-list .xrm-mileage-review-row{align-items:flex-start;flex-wrap:wrap}.xrm-mileage-review-actions{width:100%;padding-left:27px} .xrm-mileage-qr-display{width:280px;height:280px;padding:14px}}
+
+/* KM total guard and provenance audit — 2026-10-29 */
+.xrm-mileage-guard{
+ border:1px solid rgba(69,203,164,.38);
+ border-radius:10px;padding:12px 14px;
+ font:650 12px/1.55 system-ui;
+ background:rgba(29,93,80,.24);color:#a7f4da;
+ overflow-wrap:anywhere;
+}
+.xrm-mileage-guard.danger{
+ border-color:#e5a15c;background:rgba(130,67,30,.27);color:#ffe2b2;
+}
+.xrm-mileage-guard.ok{border-color:#3cae94}
+.xrm-mileage-sum-example{
+ white-space:normal!important;text-align:left;width:100%;
+ padding:11px 13px!important;line-height:1.4!important;
+ border-color:#f5bc71!important;color:#ffe2b0!important;
+}
+.xrm-mileage-modal.xrm-audit-modal{
+ width:min(890px,calc(100vw - 24px));
+ max-height:min(92dvh,1100px);
+ overflow-y:auto;
+ padding:clamp(14px,2.4vw,24px);
+}
+.xrm-audit-modal .xrm-mileage-history{display:grid;gap:12px;min-width:0}
+.xrm-audit-modal .xrm-audit-results{display:grid;gap:11px;min-width:0}
+.xrm-audit-modal .xrm-audit-filters{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(130px,.8fr) minmax(130px,.8fr);gap:9px}
+.xrm-audit-modal .xrm-audit-filters input,.xrm-audit-modal .xrm-audit-filters select{
+ width:100%;min-width:0;box-sizing:border-box;
+ padding:10px 11px;border-radius:9px;background:#0a2234;
+ border:1px solid #4a7688;color:#eefaff;font:12px system-ui;
+}
+.xrm-audit-modal .xrm-audit-record{
+ min-width:0;
+ display:grid;gap:7px;
+ padding:14px 15px;
+ border:1px solid #385b70;
+ border-radius:12px;background:#0e293b;
+ overflow-wrap:anywhere;
+}
+.xrm-audit-modal .xrm-audit-record strong{font-size:13px;color:#e9f8ff}
+.xrm-audit-modal .xrm-audit-record span{font-size:12px;line-height:1.45}
+.xrm-audit-modal .xrm-audit-record .xrm-audit-applied{color:#76e8c3;font-weight:750}
+.xrm-audit-modal .xrm-audit-record .xrm-audit-rejected{color:#ffbdbd;font-weight:700}
+.xrm-audit-modal .xrm-audit-record .xrm-audit-muted{color:#97bbcd}
+.xrm-audit-modal .xrm-audit-record .xrm-mileage-btn{
+ justify-self:start;max-width:100%;white-space:normal;
+}
+@media(max-width:740px){
+ .xrm-audit-modal .xrm-audit-filters{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .xrm-audit-modal .xrm-audit-filters input{grid-column:1/-1}
+}
+@media(max-width:480px){
+ .xrm-mileage-modal.xrm-audit-modal{max-height:94dvh}
+ .xrm-audit-modal .xrm-audit-filters{grid-template-columns:minmax(0,1fr)}
+ .xrm-audit-modal .xrm-audit-filters input{grid-column:auto}
+ .xrm-audit-modal .xrm-audit-record{padding:12px}
+}
