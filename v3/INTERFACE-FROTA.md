@@ -1,23 +1,37 @@
-# Interface de gestão de frotas
+# Navegação e ações da frota
 
-## Telas e manutenção
+Cada item do menu abre uma tela exclusiva no mesmo aplicativo, identificada por `#assets`, `#maintenance` etc. Voltar e recarregar preservam a navegação. No celular há um seletor de tela. Os módulos e registros existentes continuam disponíveis; os quatro atalhos retirados do menu não foram reintroduzidos.
 
-Cada item do menu abre uma tela exclusiva no mesmo aplicativo, identificada no endereço por `#assets`, `#maintenance` etc. O menu destaca a tela ativa; recarregar e voltar no navegador preservam a navegação. No celular, um seletor de tela substitui o menu lateral. Empresa, contrato e filtros de veículos permanecem compartilhados entre as telas. Visão Geral contém os indicadores e gráficos; os cadastros e registros ficam nas respectivas telas.
+## Ações no contexto
 
-Manutenção organiza o fluxo em programar um serviço por data ou KM/horímetro, acompanhar vencidas/próximas/programadas, registrar custos e confirmar a execução. A conclusão exige custo realizado e leitura na execução; o valor zero é permitido. A leitura fica vinculada à manutenção, conforme a API existente. Serviços concluídos continuam disponíveis na consulta e nos custos. Os filtros de manutenção combinam pesquisa por serviço/placa com situação e filtros compartilhados de veículos.
+- Um alerta específico na Visão Geral ou em Alertas abre os detalhes da manutenção pelo **ID**, em painel lateral, mantendo a tela de origem. `Ver todos` continua abrindo a lista geral de Alertas.
+- O mesmo painel é acessível por `Detalhes` na Manutenção e por `Ver manutenção` nos lançamentos financeiros. Exibe o veículo, serviço, vencimentos, custos, leitura e observações.
+- `owner` e `manager` podem editar a programação de serviços pendentes, registrar custos e concluir. Outros membros podem consultar os detalhes e o histórico.
+- Editar programação altera título, vencimento por data/KM e observações, exigindo motivo. Não altera o veículo, custos nem situação do serviço.
+- Registrar custos e concluir são ações distintas. A conclusão exige custo realizado e leitura na execução, aceita zero e grava custos e encerramento em uma única operação atômica.
+- Salvar atualiza listas e indicadores na origem. Uma versão desatualizada do registro é bloqueada, com opção de atualizar os detalhes antes de tentar novamente.
 
-As ações continuam restritas a `owner`/`manager`. Custos e conclusão utilizam as RPCs existentes em duas etapas; se a segunda falhar, a interface informa que os custos foram salvos e mantém a conclusão pendente para nova tentativa. Uma falha ao registrar o custo previsto após criar um serviço permite tentar novamente sem duplicar a manutenção. Esta entrega não altera schema nem registros no banco durante a implementação.
+## Filtros e cartões
 
-A V3 mantém veículos, abastecimentos, manutenção, OS de frota, checklists, inspeções, peças, documentação, alertas, histórico e custos. Os controles sem integração e módulos administrativos sem vínculo com frota foram retirados da interface.
+Empresa, contrato e filtros de veículos são compartilhados. O resumo visível identifica contrato, busca, categoria, situação e vencimento, além dos filtros locais e do período financeiro da tela atual.
 
-O contrato permanece no cabeçalho, ao lado de Visão Geral. Contrato, busca de veículo, categoria, situação e vencimento combinam-se e atualizam KPIs, gráficos, ativos, alertas, manutenção, documentos e custos dos veículos selecionados. Limpar também limpa o contrato. O filtro de dias usa vencimentos por data, sem converter quilômetros em dias.
+`Revisões pendentes` abre a Manutenção com situação `Pendentes` e pesquisa local vazia, preservando contrato e filtros de veículos. A navegação normal pelo menu preserva a consulta local. `Limpar filtros desta tela` mantém os filtros compartilhados; `Limpar todos` também limpa contrato e filtros de veículos e restaura os períodos padrão. A empresa ativa nunca é trocada por esses controles.
 
-O mês e a categoria de combustível filtram o ranking e os registros de abastecimento. O mês também define o período do resumo de custos de combustível e manutenção realizada. O histórico tem seu próprio intervalo visível e tipo de registro, combinado com os filtros de veículos. Exibe registros de manutenção e abastecimento; não representa um log completo de todas as alterações do sistema.
+Os filtros de dias usam datas, sem converter quilômetros em dias. O histórico de registros tem intervalo próprio. O mês financeiro é compartilhado por Abastecimentos e Financeiro, sempre identificado no resumo. A categoria do ranking afeta apenas o ranking e seus registros de combustível.
 
-Documentos são consultados pela API existente, por veículo. Abrir documento usa URL assinada curta do bucket privado. Nenhuma permissão de banco ou Storage foi alterada nesta limpeza.
+## Financeiro
 
-As OS exibem registros classificados como frota ou vinculados a veículos. Registros de outras categorias permanecem no banco. Busca e situação atualizam a tabela e seus contadores. Checklists, inspeções e almoxarifado atualizam contadores conforme a pesquisa. Movimentação e histórico de peças ficam dentro de cada item do Almoxarifado; a rota antiga `#movimentacoes` passa a abrir o Almoxarifado.
+Total, Combustível e Manutenção realizada são clicáveis. Cada valor mostra os lançamentos correspondentes ao período e aos veículos filtrados, com data, tipo, descrição e valor. Valores não informados aparecem explicitamente e não compõem o total. Abrir uma manutenção mantém a tela financeira como origem.
 
-Não houve migration, exclusão ou alteração de dados no Supabase nesta entrega. As consultas existentes continuam autenticadas; as ações de escrita já existentes mantêm os papéis autorizados.
+## Histórico e segurança
 
-Validação automatizada: `node --test v3/tests/fleet-interface.test.cjs v3/tests/company-branding.test.cjs`, com Playwright e Chromium disponíveis. Os testes simulam a API e não usam dados nem credenciais de clientes.
+A migration `20261029133949_maintenance_navigation_actions.sql` adiciona uma revisão técnica e a tabela privada `xrmovi.maintenance_changes`. Atualizações de manutenção passam a registrar valores anteriores/novos, autor, data e motivo quando disponível. O histórico começa com esta atualização; não se apresenta como reconstrução de alterações anteriores. A consulta do painel mostra as últimas 50 alterações por serviço.
+
+O histórico é protegido por RLS, sem acesso direto dos clientes, e tem bloqueio de atualização/exclusão. As RPCs verificam a associação atual à empresa e os papéis permitidos. As funções privilegiadas usam `search_path` vazio e não podem ser executadas por `anon`/`PUBLIC`, seguindo a fronteira já existente entre a API e o schema privado. A revisão impede sobrescrita concorrente. APIs legadas permanecem disponíveis e suas atualizações também são capturadas pelo trigger.
+
+Nenhum registro existente foi excluído. A criação inicial de serviço mantém sua recuperação de falha no custo previsto sem duplicar a manutenção. Documentos continuam no Storage privado e abrem por URL assinada.
+
+## Validação
+
+- Interface: `node --test v3/tests/fleet-interface.test.cjs v3/tests/company-branding.test.cjs`, com Playwright/Chromium disponíveis; usa API simulada, sem credenciais de clientes.
+- Banco: `supabase/tests/maintenance_navigation_actions.sql`; verifica histórico, concorrência, atomicidade, papéis e isolamento, sempre com `ROLLBACK` dos registros temporários.

@@ -362,4 +362,25 @@
 #financial-period-slot{display:flex;margin-bottom:16px}#financial-period-slot label{display:grid;gap:7px;color:#a0bbcf;font-size:12px}#financial-period-slot input{padding:9px;background:#10283c;color:#e7f3ff;border:1px solid #33566f;border-radius:7px}
 .fleet-topbar .fleet-mobile-navigation{display:none}
 .fleet-workspace-heading h2:focus{outline:none!important;box-shadow:none!important}
+
+/* Contextual actions stay on the originating workspace. */
+.fleet-filter-summary{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 17px}
+.fleet-filter-chip{max-width:100%;padding:6px 9px;border:1px solid #2b4a60;border-radius:6px;color:#a9c5d9;background:#0b2234;font-size:10px;overflow-wrap:anywhere}
+#view-clear-filters[hidden]{display:none!important}
+.fleet-dialog-open{overflow:hidden}
+#v3-edit-overlay[data-layout="drawer"]{place-items:stretch end;padding:0}
+#v3-edit-overlay[data-layout="drawer"] .v3-edit-dialog{width:min(620px,100vw);height:100dvh;max-height:100dvh;border-radius:0;padding:25px;box-shadow:-20px 0 70px #0007}
+.fleet-maintenance-details{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:8px 0 20px}
+.fleet-maintenance-details dt{font-size:11px;color:#8faec5;margin-bottom:6px}.fleet-maintenance-details dd{font-size:14px;margin:0;line-height:1.5;overflow-wrap:anywhere}
+.fleet-detail-actions{display:flex;flex-wrap:wrap;gap:8px}.v3-edit-dialog .fleet-detail-actions button{flex:1 1 150px;grid-column:auto!important}
+.v3-edit-dialog .fleet-detail-actions button{background:#173f55;color:#e0f0fb;border:1px solid #436b81}
+.v3-edit-dialog .fleet-detail-actions button[data-action="maintenance-complete"]{background:#34cdb5;color:#052128;border-color:#34cdb5}
+.v3-edit-dialog form .fleet-history-toggle{background:#14384f;color:#cfe6f7;border:1px solid #436b81}
+.fleet-change-history{font-size:12px;line-height:1.6;color:#bdd3e3;overflow-wrap:anywhere}.fleet-change-history details{padding:12px 0;border-bottom:1px solid #31506b}.fleet-change-history summary{cursor:pointer;color:#d3eafa}
+.fleet-financial-caption{padding:10px 18px;color:#9eb9ce;font-size:12px;line-height:1.6}
+#xrm-contract-finance>h2,#financial-entries>h3{padding:18px 18px 0;margin:0;color:#e5f2fc}
+.fleet-financial-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:10px 18px 18px}
+.fleet-financial-cards button{display:grid;gap:10px;text-align:left;padding:18px;background:#102b3f;border:1px solid #35596e;border-radius:10px;cursor:pointer;color:#adc9dd}
+.fleet-financial-cards strong{font-size:25px;color:#42d5bd}.fleet-financial-cards button[aria-expanded="true"]{border-color:#42d5bd;background:#15374a}
+@media(max-width:530px){.fleet-maintenance-details,.fleet-financial-cards{grid-template-columns:1fr}#v3-edit-overlay[data-layout="drawer"] .v3-edit-dialog{padding:18px}.fleet-financial-cards{gap:8px}.fleet-detail-actions{display:grid;grid-template-columns:1fr;width:100%}}
 @media(max-width:760px){.fleet-maintenance-summary{grid-template-columns:repeat(2,minmax(0,1fr));padding:12px;gap:8px}.fleet-maintenance-filters{padding:0 12px 12px}.fleet-maintenance-filters label{min-width:0;flex:1 1 100%}.fleet-workspace-heading h2{font-size:22px}.fleet-topbar .fleet-mobile-navigation{display:flex;gap:7px;align-items:center;font-size:10px;color:#a0bbcf}.fleet-mobile-navigation select{max-width:160px;background:#10283c;color:#e7f3ff;border:1px solid #33566f;border-radius:6px}.fleet-topbar{height:auto;min-height:60px;flex-wrap:wrap;gap:10px;padding-block:10px}.fleet-breadcrumb{width:100%}}
