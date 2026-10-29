@@ -84,8 +84,8 @@
 .xrm-mileage-review-info small{font-size:10px;line-height:1.5}
 .xrm-mileage-review-info .xrm-review-lower{color:#ffd4a8;font-weight:700}
 .xrm-mileage-review-actions{display:flex;justify-content:flex-end;gap:6px;flex-wrap:wrap;flex-shrink:0}
-.xrm-mileage-qr-display{display:grid;place-items:center;background:#fff;border-radius:12px;padding:10px;width:280px;height:280px;max-width:100%;margin:0 auto;overflow:hidden}
+.xrm-mileage-qr-display{display:grid;place-items:center;background:#fff;border-radius:12px;padding:24px;width:304px;height:304px;max-width:100%;margin:0 auto;overflow:hidden}
 .xrm-mileage-qr-display img,.xrm-mileage-qr-display canvas{display:block;max-width:100%;height:auto;image-rendering:pixelated}
 .xrm-mileage-qr .xrm-mileage-modal-help{text-align:center;margin:0;color:#a9d3db}
 @media(max-width:1100px){.xrm-mileage-review-list{grid-template-columns:1fr}.xrm-mileage-review-actions{flex-shrink:1}}
-@media(max-width:580px){.xrm-mileage-review-toolbar{gap:8px}.xrm-mileage-review-toolbar>.xrm-mileage-btn{flex:1}.xrm-mileage-review-list .xrm-mileage-review-row{align-items:flex-start;flex-wrap:wrap}.xrm-mileage-review-actions{width:100%;padding-left:27px}.xrm-mileage-qr-display{width:260px;height:260px}}
+@media(max-width:580px){.xrm-mileage-review-toolbar{gap:8px}.xrm-mileage-review-toolbar>.xrm-mileage-btn{flex:1}.xrm-mileage-review-list .xrm-mileage-review-row{align-items:flex-start;flex-wrap:wrap}.xrm-mileage-review-actions{width:100%;padding-left:27px} .xrm-mileage-qr-display{width:280px;height:280px;padding:14px}}
