@@ -300,3 +300,17 @@
   .fleet-drawer-head-visual{grid-template-columns:64px minmax(0,1fr) auto!important}
   .fleet-drawer-vehicle{width:64px;height:50px}
 }
+
+
+/* XRMOVI: executive KPIs fill the available row, responsive to actual card count. */
+.fleet-kpis.fleet-kpis-executive{
+  display:grid;
+  grid-template-columns:repeat(var(--xrmovi-kpi-cols,4),minmax(0,1fr));
+  gap:clamp(8px,1vw,14px);
+  width:100%;
+  max-width:none;
+}
+.fleet-kpis.fleet-kpis-executive>.fleet-kpi{width:100%;min-width:0;margin:0}
+@media(max-width:1050px){.fleet-kpis.fleet-kpis-executive{grid-template-columns:repeat(min(3,var(--xrmovi-kpi-count,4)),minmax(0,1fr))}}
+@media(max-width:650px){.fleet-kpis.fleet-kpis-executive{grid-template-columns:repeat(min(2,var(--xrmovi-kpi-count,4)),minmax(0,1fr))}}
+@media(max-width:390px){.fleet-kpis.fleet-kpis-executive{grid-template-columns:minmax(0,1fr)}}
