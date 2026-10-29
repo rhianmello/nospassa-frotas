@@ -28,9 +28,73 @@ header .nav{align-items:center!important}
 header .nav-actions{align-self:center!important;margin:0!important;display:flex;align-items:center;justify-content:flex-end}
 header .nav-actions .btn{margin:0!important;align-self:center;vertical-align:middle}
 </style></head><body>
-<header><div class="shell nav"><a class="brand" href="#inicio" aria-label="XRMOVI início"><span class="mark">↗</span><span>XR<strong>MOVI</strong></span></a><nav class="links"><a href="#recursos">Recursos</a><a href="#planos">Planos</a><a href="#personalizacao">Personalização</a><a href="#contato">Contato</a></nav><div class="actions nav-actions"><a class="btn small" href="/?login=1">Entrar / Criar conta</a></div></div></header>
-<main id="inicio"><div class="hero"><div class="shell hero-grid"><div><div class="eyebrow">Gestão inteligente de frotas</div><h1>Sua frota em movimento. <em>Sua gestão no controle.</em></h1><p class="lead">Centralize abastecimentos, despesas, manutenções, documentos e indicadores dos seus veículos em um só lugar. Menos planilhas. Mais decisões.</p><div class="actions"><button class="btn" data-demo>Explorar demonstração →</button><a class="btn outline" href="#recursos">Conhecer recursos</a></div><p class="v2-availability"><a href="/?login=1">Acesse sua conta XRMOVI →</a> <span>Controle sua frota em um só lugar.</span></p><p class="v2-availability"><a href="/?login=1">Conheça a plataforma XRMOVI →</a> <span>Acesso seguro para empresas cadastradas.</span></p><div class="checks"><span>Para pequenas e médias empresas</span><span>Acesso pelo celular e computador</span><span>Implantação em preparação</span></div></div>
-<div class="mock" role="img" aria-label="Prévia ilustrativa de painel de gestão de frota"><div class="mock-top"><strong>XRMOVI / VISÃO GERAL</strong><span class="dots">● ● ●</span></div><div class="mini-grid"><div class="mini-card"><span>Veículos</span><b>18</b></div><div class="mini-card"><span>Gasto mensal</span><b>R$ 8,4 mil</b></div><div class="mini-card"><span>Alertas</span><b style="color:var(--gold)">03</b></div></div><div class="chartbox"><div class="micro">Custos por período · dados ilustrativos</div><div class="bars"><i style="height:43%"></i><i style="height:64%"></i><i style="height:53%"></i><i style="height:80%"></i><i style="height:59%"></i><i style="height:95%"></i><i style="height:69%"></i></div></div><div class="vehicles"><div class="vehicle"><span>Veículo 001 · Manutenção</span><b style="color:var(--gold)">Próxima revisão</b></div><div class="vehicle"><span>Veículo 002 · Documentação</span><b class="ok">Em dia</b></div></div></div></div></div>
+<header><div class="shell nav"><a class="brand" href="#inicio" aria-label="XRMOVI início"><span class="mark">↗</span><span>XR<strong>MOVI</strong></span></a><nav class="links"><a href="#qr-frota">QR Code</a><a href="#recursos">Recursos</a><a href="#planos">Planos</a><a href="#personalizacao">Personalização</a><a href="#contato">Contato</a></nav><div class="actions nav-actions"><a class="btn small" href="/?login=1">Entrar / Criar conta</a></div></div></header>
+<main id="inicio">
+<div class="hero xrm-qr-hero">
+ <div class="shell xrm-qr-hero-grid">
+  <div class="xrm-qr-hero-copy">
+   <div class="xrm-qr-hero-eyebrow"><span class="xrm-qr-signal" aria-hidden="true"></span> GESTÃO DE FROTA COM QR CODE</div>
+   <h1>O motorista informa.<br><em>Você tem o controle.</em></h1>
+   <p class="xrm-qr-hero-lead">Um QR Code para cada veículo. O motorista escaneia, informa a quilometragem total e envia uma foto do painel. Você acompanha as leituras, identifica variações suspeitas e recebe alertas de troca de óleo no XRMOVI.</p>
+   <div class="actions xrm-qr-hero-actions">
+    <a class="btn xrm-qr-action-primary" href="/?login=1">Começar com o XRMOVI <span aria-hidden="true">↗</span></a>
+    <a class="btn outline" href="#qr-frota">Ver como funciona <span aria-hidden="true">↓</span></a>
+   </div>
+   <div class="xrm-qr-hero-details">
+    <span><span aria-hidden="true">✓</span> Sem aplicativo para o motorista</span>
+    <span><span aria-hidden="true">✓</span> Foto do hodômetro</span>
+    <span><span aria-hidden="true">✓</span> Alertas por KM no painel</span>
+   </div>
+   <p class="xrm-qr-hero-trust">Já tem conta? <a href="/?login=1">Entrar no painel</a> · <button type="button" data-demo>Explorar prévia interativa</button></p>
+  </div>
+  <div class="xrm-qr-hero-showcase" aria-label="Exemplo ilustrativo do registro de quilometragem por QR Code">
+   <div class="xrm-qr-showcase-top"><span><span class="xrm-qr-live-dot" aria-hidden="true"></span> FLUXO DE QUILOMETRAGEM</span><span>DEMONSTRAÇÃO</span></div>
+   <div class="xrm-qr-showcase-main">
+    <div class="xrm-qr-vehicle-tag"><span class="xrm-qr-vehicle-icon" aria-hidden="true">▦</span><div><strong>FRT-007</strong><small>QR individual do veículo</small></div><span class="xrm-qr-tag-ready">ATIVO</span></div>
+    <div class="xrm-qr-showcase-center">
+     <div class="xrm-qr-print">
+      <div class="xrm-qr-print-label">ESCANEIE PARA ATUALIZAR O KM</div>
+      <div id="xrm-sales-qr" class="xrm-sales-qr-code" aria-label="QR Code demonstrativo que direciona para a apresentação do recurso"><span class="xrm-qr-placeholder">QR</span></div>
+      <div class="xrm-qr-print-foot">FRT-007 · Exemplo</div>
+     </div>
+     <div class="xrm-qr-showcase-arrow" aria-hidden="true">→</div>
+     <div class="xrm-qr-phone">
+      <div class="xrm-qr-phone-head"><span class="xrm-qr-phone-notch"></span><span>XRMOVI · KM</span></div>
+      <span class="xrm-qr-phone-kicker">HODÔMETRO ATUAL</span>
+      <strong class="xrm-qr-phone-km">18.420 <small>km</small></strong>
+      <div class="xrm-qr-phone-proof"><span aria-hidden="true">▧</span><div><strong>Foto do painel</strong><small>Comprovante anexado</small></div><span class="xrm-qr-phone-tick" aria-hidden="true">✓</span></div>
+      <div class="xrm-qr-phone-submit">Enviar leitura <span aria-hidden="true">↗</span></div>
+     </div>
+    </div>
+    <div class="xrm-qr-management">
+     <div class="xrm-qr-management-head"><span>NO PAINEL DO GESTOR</span><span class="xrm-qr-management-pill"><span aria-hidden="true">●</span> Atualização recebida</span></div>
+     <div class="xrm-qr-management-stats"><div><small>KM INFORMADO</small><strong>18.420 km</strong></div><div><small>PRÓXIMA TROCA</small><strong>20.000 km</strong></div></div>
+     <div class="xrm-qr-management-alert"><span aria-hidden="true">◷</span> <span>Troca de óleo próxima · Alerta configurável</span></div>
+    </div>
+   </div>
+   <div class="xrm-qr-showcase-note">Fluxo ilustrativo com dados fictícios. O QR de exemplo leva a esta apresentação, não ao cadastro de um veículo.</div>
+  </div>
+ </div>
+</div>
+<section class="section xrm-qr-product" id="qr-frota" aria-labelledby="xrm-qr-title">
+ <div class="shell">
+  <div class="xrm-qr-section-intro">
+   <div class="eyebrow">UM QR CODE. MENOS PLANILHAS.</div>
+   <h2 id="xrm-qr-title">Sua frota registra o KM direto da rua. <span>Sua gestão enxerga tudo no painel.</span></h2>
+   <p>Você não precisa solicitar a quilometragem de cada veículo manualmente. Imprima ou compartilhe o QR Code individual e deixe o motorista informar a leitura pelo celular, com foto do painel como evidência.</p>
+  </div>
+  <div class="xrm-qr-steps">
+   <article><span class="xrm-qr-step-number">01</span><span class="xrm-qr-step-icon" aria-hidden="true">▦</span><h3>Um QR para cada veículo</h3><p>O gestor gera um código exclusivo para imprimir, colar no veículo ou enviar ao responsável.</p></article>
+   <article><span class="xrm-qr-step-number">02</span><span class="xrm-qr-step-icon" aria-hidden="true">▣</span><h3>KM + foto pelo celular</h3><p>O motorista abre o link na câmera, identifica o veículo e informa o KM total com uma foto legível.</p></article>
+   <article><span class="xrm-qr-step-number">03</span><span class="xrm-qr-step-icon" aria-hidden="true">◈</span><h3>Histórico e conferência</h3><p>As leituras ficam registradas no Supabase. Variações suspeitas vão para aprovação ou rejeição do gestor.</p></article>
+   <article><span class="xrm-qr-step-number">04</span><span class="xrm-qr-step-icon" aria-hidden="true">◷</span><h3>Óleo e revisões em alerta</h3><p>Configure a troca a cada tantos quilômetros, receba avisos no painel e conclua o serviço com histórico.</p></article>
+  </div>
+  <div class="xrm-qr-benefits">
+   <div class="xrm-qr-benefits-copy"><span class="xrm-qr-benefits-eyebrow">FEITO PARA A ROTINA REAL DA FROTA</span><h3>Mais visibilidade. Menos cobrança de KM no WhatsApp.</h3><p>Atualização individual ou em lote, lembrete semanal com dia escolhido pelo gestor e registro de serviços. Uma leitura incomum não sobrescreve automaticamente o KM confirmado: ela é separada para conferência.</p></div>
+   <div class="xrm-qr-benefits-actions"><a class="btn" href="#planos">Conhecer os planos <span aria-hidden="true">↗</span></a><button class="btn outline" type="button" data-demo>Ver demonstração</button></div>
+  </div>
+ </div>
+</section>
 <section class="section xrm-features-section" id="recursos" aria-labelledby="xrm-features-title">
  <div class="shell">
   <div class="xrm-features-intro">
@@ -39,7 +103,7 @@ header .nav-actions .btn{margin:0!important;align-self:center;vertical-align:mid
     <h2 id="xrm-features-title">Muito mais que um cadastro de veículos.</h2>
     <p>Do primeiro abastecimento ao relatório financeiro: conheça os principais controles que já fazem parte do painel de gestão da frota.</p>
    </div>
-   <div class="xrm-features-count" aria-label="12 funcionalidades em destaque"><strong>12</strong><span>funcionalidades<br>em destaque</span></div>
+   <div class="xrm-features-count" aria-label="14 funcionalidades em destaque"><strong>14</strong><span>funcionalidades<br>em destaque</span></div>
   </div>
   <div class="cards xrm-features-grid">
    <article class="feature"><div class="xrm-feature-top"><span class="ico" aria-hidden="true">📊</span><span class="xrm-feature-index">01</span></div><h3>Painel gerencial</h3><p>Indicadores da frota, situação operacional, ações imediatas e vencimentos em uma visão executiva.</p></article>
@@ -54,6 +118,8 @@ header .nav-actions .btn{margin:0!important;align-self:center;vertical-align:mid
    <article class="feature"><div class="xrm-feature-top"><span class="ico" aria-hidden="true">🕘</span><span class="xrm-feature-index">10</span></div><h3>Histórico da frota</h3><p>Consulte lançamentos de abastecimento, serviços e despesas em uma linha do tempo por período.</p></article>
    <article class="feature"><div class="xrm-feature-top"><span class="ico" aria-hidden="true">🔎</span><span class="xrm-feature-index">11</span></div><h3>Filtros e contratos</h3><p>Analise a frota por contrato, categoria, situação do veículo e outras condições operacionais.</p></article>
    <article class="feature"><div class="xrm-feature-top"><span class="ico" aria-hidden="true">🔐</span><span class="xrm-feature-index">12</span></div><h3>Acesso por empresa</h3><p>Organize dados por empresa, com login e permissões de acesso conforme o perfil autorizado.</p></article>
+   <article class="feature"><div class="xrm-feature-top"><span class="ico" aria-hidden="true">▦</span><span class="xrm-feature-index">13</span></div><h3>QR Code por veículo</h3><p>Motorista informa KM pelo celular com foto do painel; gestor acompanha e confere as leituras suspeitas.</p></article>
+   <article class="feature"><div class="xrm-feature-top"><span class="ico" aria-hidden="true">🛢️</span><span class="xrm-feature-index">14</span></div><h3>Óleo por quilometragem</h3><p>Defina intervalos e avisos por ativo, conclua a troca e acompanhe histórico, lembretes e KM em lote.</p></article>
   </div>
   <div class="xrm-features-footer"><div><strong>Quer conhecer a experiência?</strong><span>Explore os indicadores e os módulos em uma prévia com dados fictícios.</span></div><div class="xrm-features-actions"><button type="button" class="btn" data-demo>Explorar demonstração</button><a class="btn outline" href="#planos">Ver planos</a></div></div>
  </div>
@@ -149,6 +215,8 @@ header .nav-actions .btn{margin:0!important;align-self:center;vertical-align:mid
    <details><summary>Qual é a diferença entre login, empresa e contrato?</summary><p>O login identifica quem acessa o sistema. A empresa representa uma organização cadastrada. O contrato organiza os veículos dessa empresa por cliente, obra ou operação. Os limites de empresas e de usuários são independentes: no Pro, por exemplo, são até 3 empresas e até 3 usuários no total, podendo um usuário autorizado acessar mais de uma empresa.</p></details>
    <details><summary>No Pro, posso ter uma única empresa com 15 veículos?</summary><p>Sim. A proposta do Pro permite até 15 veículos no total. Uma empresa poderá usar os 15, inclusive divididos entre 3 contratos, por exemplo, com 5 veículos em cada um.</p></details>
    <details><summary>E se eu cadastrar 3 empresas no Pro?</summary><p>Você terá 15 veículos para distribuir. Uma divisão igual seria 5 veículos em cada empresa. Também poderá distribuir de outra forma, como 8, 4 e 3, desde que o total não ultrapasse 15.</p></details>
+   <details><summary>O motorista precisa instalar aplicativo ou criar uma conta para informar o KM?</summary><p>Não. O gestor gera um QR Code exclusivo para cada veículo. Ao escanear, o motorista abre uma página móvel para informar seu nome, a quilometragem total e anexar uma foto do painel. O link do QR deve ser compartilhado apenas com pessoas autorizadas. O gestor pode revogar e substituir o código.</p></details>
+   <details><summary>O que acontece se alguém informar um KM errado?</summary><p>Se o valor for menor que o KM confirmado ou exceder o limite semanal configurado, a leitura fica pendente para conferência. O gestor pode abrir a foto, corrigir, aprovar ou rejeitar, preservando o histórico. A verificação da foto é humana, não uma leitura automática do painel por IA.</p></details>
    <details><summary>Posso testar o sistema antes de contratar?</summary><p>Sim. Novos cadastros podem começar com 14 dias de avaliação no Start, incluindo 1 empresa, 1 usuário, 1 contrato e até 5 veículos. A criação da conta não ativa cobrança recorrente; a contratação paga está em preparação.</p></details>
    <details><summary>Um contrato pode ficar vazio enquanto estou cadastrando?</summary><p>Sim. Você pode criar primeiro um contrato e depois vincular seus veículos. Um contrato sem veículos continua ocupando uma vaga de contrato no plano, mas não ocupa vaga de veículo.</p></details>
    <details><summary>O Pro realmente aceita até 15 contratos?</summary><p>Essa é a regra comercial proposta: até 15 contratos, com no mínimo 1 veículo por contrato ativo. Assim, é possível ter 15 contratos com 1 veículo cada ou menos contratos reunindo os mesmos 15 veículos.</p></details>
