@@ -3,9 +3,9 @@ export function setupMileage({client,getCompany,getVehicles,getFilteredIds,onRel
  const id=x=>document.getElementById(x);
  const money=n=>Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
  const km=n=>Number(n||0).toLocaleString('pt-BR',{maximumFractionDigits:0});
- const day=date=>date?new Date(date).toLocaleDateString('pt-BR'):'Nunca';
+ const day=date=>{if(!date)return 'Nunca';const text=String(date);return new Date(/^\\d{4}-\\d{2}-\\d{2}$/.test(text)?text+'T12:00:00':text).toLocaleDateString('pt-BR')};
  const days=['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
- let state=null,companyId=null,request=0,loadError='',busy=false;
+ let state=null,companyId=null,request=0,loadError='',busy=false,flash='',flashKind='';
  const rpc=async(name,args)=>{const {data,error}=await client.rpc('xrmovi_'+name,args);if(error)throw Error(error.message);return data};
  const add=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e};
  const btn=(label,fn,cls='')=>{const b=add('button','xrm-mileage-btn '+cls,label);b.type='button';b.onclick=fn;return b};
@@ -17,7 +17,7 @@ export function setupMileage({client,getCompany,getVehicles,getFilteredIds,onRel
  const weekStart=()=>{const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-(d.getDay()-(state?.weekday??1)+7)%7);return d};
  const weeklyDue=v=>{const latest=v.last_report_at||v.last_meter_at;return !latest||new Date(latest)<weekStart()};
  const owned=()=>!!canWrite();
- function status(message,type=''){const notice=id('xrm-mileage-message');if(notice){notice.textContent=message;notice.dataset.type=type}}
+ function status(message,type=''){flash=message;flashKind=type;const notice=id('xrm-mileage-message');if(notice){notice.textContent=message;notice.dataset.type=type}}
  async function refresh(cid=company()?.id){
   if(!cid)return;
   const current=++request;companyId=cid;
@@ -121,7 +121,7 @@ export function setupMileage({client,getCompany,getVehicles,getFilteredIds,onRel
    }
    root.append(box);
   }
-  root.append(add('p','xrm-mileage-message',''));const notice=root.lastChild;notice.id='xrm-mileage-message';
+  root.append(add('p','xrm-mileage-message',flash));const notice=root.lastChild;notice.id='xrm-mileage-message';notice.dataset.type=flashKind;
  }
  async function saveOne(vid,value,raw){
   if(!owned())return;
