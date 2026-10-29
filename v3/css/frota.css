@@ -424,3 +424,9 @@
 @media(min-width:761px) and (max-width:1020px){#view-dashboard .fleet-overview-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}#view-dashboard .fleet-action-panel{grid-column:1/-1;grid-row:1}#view-dashboard .fleet-status-panel{grid-column:1;grid-row:2}#view-dashboard .fleet-expiry-panel{grid-column:2;grid-row:2}}
 @media(max-width:760px){#view-dashboard .fleet-overview-grid{display:flex;flex-direction:column}#view-dashboard .fleet-status-panel .fleet-donut-layout{padding:14px}#view-dashboard #v3-situation-donut{width:150px!important}}
 @media(prefers-reduced-motion:reduce){#view-dashboard .fleet-overview-grid>.fleet-panel,#view-dashboard .fleet-kpi,#view-dashboard .xrm-status-legend-item{transition:none!important;transform:none!important}}
+
+/* Expired items have a distinct executive card, retaining responsive grid behavior. */
+#fleet-kpis .fleet-kpi[data-tone="red"]{border-color:rgba(251,113,133,.46);background:linear-gradient(145deg,rgba(112,25,45,.24),rgba(8,22,35,.95))}
+#fleet-kpis .fleet-kpi[data-tone="red"] .fleet-kpi-label{color:#fda4af}
+#fleet-kpis .fleet-kpi.xrm-overdue-active{box-shadow:inset 0 2px 0 rgba(251,113,133,.72)}
+#fleet-kpis .fleet-kpi[data-tone="red"]:focus-visible{outline:2px solid #fda4af;outline-offset:3px}
