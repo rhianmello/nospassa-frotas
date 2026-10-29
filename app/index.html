@@ -177,6 +177,27 @@ main{max-width:none;padding:0 22px 16px}
 #workspaceContent{padding-top:12px}
 #tabTitle{margin-bottom:10px!important}
 @media(max-width:720px){#executiveDashboard>.executive-head{gap:10px!important;padding:4px 0 10px!important}#executiveDashboard>.executive-head h2{font-size:18px!important}#executiveDashboard>.executive-head:before{width:34px!important;height:34px!important}}
+/* KPIs CPL-EPC15 — apresentação original adaptada aos valores XRMOVI */
+#executiveDashboard>.kpi-grid.fleet-kpis-executive{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:12px 0 14px}
+#executiveDashboard .fleet-kpi{--tone-color:#38bdf8;display:flex;flex-direction:column;align-items:stretch;text-align:left;min-width:0;min-height:126px;padding:15px 16px 13px;background:linear-gradient(165deg,#0f243a,#081726);border:1px solid rgba(139,167,201,.20)!important;border-top:2px solid var(--tone-color)!important;border-radius:12px;position:relative;overflow:hidden;box-shadow:inset 0 1px rgba(255,255,255,.025)}
+#executiveDashboard>.kpi-grid .fleet-kpi{cursor:pointer;transition:transform .16s ease,border-color .16s ease,background .16s ease}
+#executiveDashboard>.kpi-grid .fleet-kpi:hover{transform:translateY(-2px);background:#122b43;border-color:var(--tone-color)!important}
+#executiveDashboard>.kpi-grid .fleet-kpi:focus-visible{outline:2px solid var(--tone-color);outline-offset:3px}
+#executiveDashboard .fleet-kpi[data-tone="cyan"]{--tone-color:#28bde2}
+#executiveDashboard .fleet-kpi[data-tone="green"]{--tone-color:#20d4b5}
+#executiveDashboard .fleet-kpi[data-tone="yellow"]{--tone-color:#ffc338}
+#executiveDashboard .fleet-kpi[data-tone="red"]{--tone-color:#fb748e}
+#executiveDashboard .fleet-kpi[data-tone="purple"]{--tone-color:#af93f5}
+#executiveDashboard .fleet-kpi-label{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:28px;color:var(--tone-color);font-size:12px;line-height:1.35;font-weight:600}
+#executiveDashboard .fleet-kpi-label svg{width:20px;height:20px;stroke:var(--tone-color);opacity:.95}
+#executiveDashboard .fleet-kpi-value{display:block;color:#f0f6ff!important;font-size:clamp(26px,2.7vw,37px)!important;line-height:1.15!important;letter-spacing:-.055em;font-weight:800;margin:10px 0 5px!important;overflow-wrap:anywhere}
+#executiveDashboard .fleet-kpi-sub{font-size:10px;color:#7999b4;line-height:1.35;margin-top:auto}
+#executiveDashboard .fleet-kpis-alerts{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:10px!important}
+#executiveDashboard .fleet-kpis-alerts .fleet-kpi{min-height:103px;padding:12px 14px;border-top-width:2px!important}
+#executiveDashboard .fleet-kpis-alerts .fleet-kpi-value{font-size:28px!important;margin:5px 0 2px!important}
+@media(max-width:1000px){#executiveDashboard>.kpi-grid.fleet-kpis-executive{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){#executiveDashboard .fleet-kpis-alerts{grid-template-columns:1fr!important}#executiveDashboard .fleet-kpi{padding:12px;min-height:110px}#executiveDashboard .fleet-kpi-value{font-size:26px!important}}
+@media(prefers-reduced-motion:reduce){#executiveDashboard>.kpi-grid .fleet-kpi{transition:none}}
 </style></head><body><main>
 <header id="appHeader"><div class="logo">XR<span>MOVI</span></div><div id="headerAccount" class="hidden"><div id="accountCard"><div class="header-identity"><strong>Minha frota</strong><span id="account"></span></div><div id="planMount"></div></div><button class="secondary" id="logout">Sair</button></div><a class="back-home" href="/">← Voltar ao site</a></header>
 <div class="box" id="setup"><h1>Portal de clientes em preparação</h1><p class="sub">O aplicativo já está preparado para autenticação e gestão de veículos. O cadastro será liberado após configurar o banco de dados exclusivo da plataforma.</p><div class="notice">Nenhum cadastro ou dado comercial é salvo nesta demonstração.</div></div>
@@ -200,6 +221,37 @@ const executive=document.getElementById('executiveDashboard');
 const alerts=document.getElementById('maintenanceDashboard');
 const insights=document.getElementById('insightsSection');
 if(executive&&alerts&&insights){alerts.classList.add('alerts-compact');executive.insertBefore(alerts,insights)}
+// Replica a apresentação dos KPIs da CPL mantendo os valores calculados existentes.
+const kpiIcons={
+truck:'<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9m10 0h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>',
+wallet:'<rect x="2" y="5" width="20" height="15" rx="2"/><path d="M16 14h6M2 9h20"/>',
+folder:'<path d="M3 7V5a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v12H3z"/>',
+alert:'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4m0 4h.01"/>',
+calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18"/>',
+wrench:'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>'
+};
+function kpiGlyph(name){return '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+kpiIcons[name]+'</svg>'}
+const kpiItems=[
+{value:'executiveVehicles',name:'Frota Total',sub:'Ativos cadastrados',tone:'cyan',icon:'truck',page:'veiculos'},
+{value:'executiveSpend',name:'Gastos 30 dias',sub:'Despesas por contrato',tone:'green',icon:'wallet',page:'relatorios'},
+{value:'executiveContracts',name:'Contratos',sub:'Centros de custo',tone:'yellow',icon:'folder',page:'contratos'},
+{value:'executiveAlerts',name:'Em alerta',sub:'Revisões que exigem atenção',tone:'red',icon:'alert',page:'alertas'}
+];
+function transformKpis(){
+const root=document.querySelector('#executiveDashboard > .kpi-grid');
+if(!root)return;
+root.classList.add('fleet-kpis-executive');
+for(const item of kpiItems){const value=document.getElementById(item.value);if(!value)continue;const card=value.closest('.kpi');if(!card)continue;
+const label=document.createElement('div');label.className='fleet-kpi-label';const span=document.createElement('span');span.textContent=item.name;label.append(span);
+const icon=document.createElement('span');icon.innerHTML=kpiGlyph(item.icon);label.append(icon);
+const desc=document.createElement('div');desc.className='fleet-kpi-sub';desc.textContent=item.sub;
+card.className='fleet-kpi';card.dataset.tone=item.tone;card.dataset.pageTarget=item.page;card.tabIndex=0;card.setAttribute('role','button');card.setAttribute('aria-label',item.name+' — abrir '+item.page);
+value.className='fleet-kpi-value';card.replaceChildren(label,value,desc);
+}}
+function transformAlertKpis(){const root=document.querySelector('#maintenanceDashboard .metrics');if(!root)return;root.classList.add('fleet-kpis-alerts');
+const defs=[{id:'overdueMaintenance',name:'Revisões vencidas',sub:'Prazo ultrapassado',tone:'red',icon:'alert'},{id:'dueMaintenance',name:'Próximas revisões',sub:'Até 30 dias ou 1.000 km',tone:'yellow',icon:'calendar'},{id:'openMaintenance',name:'Programadas',sub:'Serviços em aberto',tone:'purple',icon:'wrench'}];
+for(const item of defs){const value=document.getElementById(item.id),card=value?.closest('.metric');if(!card)continue;const label=document.createElement('div');label.className='fleet-kpi-label';label.innerHTML='<span>'+item.name+'</span><span>'+kpiGlyph(item.icon)+'</span>';const desc=document.createElement('div');desc.className='fleet-kpi-sub';desc.textContent=item.sub;card.className='fleet-kpi';card.dataset.tone=item.tone;value.className='fleet-kpi-value';card.replaceChildren(label,value,desc)}}
+transformKpis();transformAlertKpis();
 const workspace=document.createElement('div');workspace.id='workspace';const nav=document.createElement('nav');nav.id='sideNav';nav.setAttribute('aria-label','Navegação da gestão de frotas');const navHead=document.createElement('div');navHead.className='nav-title';navHead.textContent='NAVEGAÇÃO';const brand=document.createElement('div');brand.className='fleetInspiredBrand';brand.innerHTML='<span aria-hidden="true">▱</span><div><strong>XRMOVI Fleet</strong><small>Operação, manutenção<br>e inteligência</small></div>';nav.append(brand,navHead);
 const content=document.createElement('div');content.id='workspaceContent';const pageTitle=document.createElement('h2');pageTitle.id='tabTitle';content.append(pageTitle);
 const pages=[
@@ -233,7 +285,7 @@ const companySwitcher=[...fleet.children].find(el=>el.classList.contains('box')&
 const docIntro=document.createElement('div');docIntro.id='documentationIntro';docIntro.className='box';docIntro.innerHTML='<h2>Documentação dos veículos</h2><p class="sub">Os documentos ficam vinculados ao veículo e protegidos por empresa. Para anexar ou consultar, abra o módulo Ativos e use o botão Documentos na linha correspondente.</p><button type="button" id="goVehiclesForDocs">Abrir veículos e documentos</button>';
 const panes={};for(const page of pages){const btn=document.createElement('button');btn.type='button';btn.innerHTML=makeIcon(page.icon)+'<span>'+page.label+'</span>';btn.dataset.page=page.id;const pane=document.createElement('section');pane.className='workspace-pane';pane.dataset.page=page.id;for(const id of page.elements){const el=id==='vehicleOperations'?wrap:document.getElementById(id);if(el)pane.append(el)}if(page.id==='assinatura'){const note=document.createElement('div');note.className='box';note.textContent='Seu plano está disponível no cabeçalho. Use “Escolher ou alterar plano” para ver as opções.';pane.append(note)}btn.addEventListener('click',()=>showWorkspacePage(page.id));nav.append(btn);content.append(pane);panes[page.id]=pane}
 const foot=document.createElement('div');foot.className='sidebar-meta';foot.innerHTML='<div class="sidebarScene" aria-hidden="true"><span>OPERAÇÃO CONECTADA</span><strong>Frota eficiente move grandes resultados.</strong></div><small>XRMOVI Fleet · Gestão integrada</small>';nav.append(foot);
-workspace.append(nav,content);fleet.prepend(workspace);document.getElementById('goVehiclesForDocs')?.addEventListener('click',()=>showWorkspacePage('veiculos'));
+workspace.append(nav,content);fleet.prepend(workspace);document.querySelectorAll('#executiveDashboard [data-page-target]').forEach(card=>{const go=()=>showWorkspacePage(card.dataset.pageTarget);card.addEventListener('click',go);card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}})});document.getElementById('goVehiclesForDocs')?.addEventListener('click',()=>showWorkspacePage('veiculos'));
 function showWorkspacePage(id){if(!panes[id])id='painel';for(const p of pages){panes[p.id].classList.toggle('active',p.id===id);const button=nav.querySelector('[data-page="'+p.id+'"]');button.setAttribute('aria-current',p.id===id?'page':'false')}pageTitle.textContent=pages.find(p=>p.id===id).label;const anchor=document.getElementById('workspaceContent');if(anchor)anchor.scrollIntoView({block:'start',behavior:'instant'});try{history.replaceState(null,'','#'+id)}catch{}}
 showWorkspacePage((location.hash||'').slice(1));window.addEventListener('hashchange',()=>showWorkspacePage((location.hash||'').slice(1)));
 document.querySelectorAll('.nav-pills a').forEach(a=>{a.addEventListener('click',e=>{const page={'#contractsSection':'contratos','#maintenanceDashboard':'painel','#fuelSection':'abastecimentos','#reportsSection':'relatorios'}[a.getAttribute('href')];if(page){e.preventDefault();showWorkspacePage(page)}})});
