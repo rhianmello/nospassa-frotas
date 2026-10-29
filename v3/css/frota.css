@@ -468,3 +468,21 @@
 @media(max-width:1250px){.fleet-page .fleet-hero.xrm-company-header{grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto auto}.fleet-page .xrm-company-header .fleet-hero-copy{grid-column:2;grid-row:1}.fleet-page .xrm-company-header .fleet-data-source{grid-column:2;grid-row:2}.fleet-page .xrm-company-header .xrm-hero-filters{grid-column:1/-1;grid-row:3;margin-top:8px}.fleet-page .xrm-company-header .xrm-hero-filters .fleet-command-search{grid-column:auto!important}}
 @media(max-width:700px){.fleet-page .xrm-company-header .xrm-hero-filters .fleet-filterbar.fleet-commandbar{grid-template-columns:repeat(2,minmax(0,1fr))!important}.fleet-page .xrm-company-header .xrm-hero-filters .fleet-command-search{grid-column:1/-1!important}.fleet-page .xrm-company-header .xrm-hero-filters #xrm-clear-filters{grid-column:1/-1}.fleet-page .xrm-company-header .fleet-data-source{flex-wrap:wrap}}
 @media(max-width:420px){.fleet-page .xrm-company-header .xrm-hero-filters .fleet-filterbar.fleet-commandbar{grid-template-columns:1fr!important}.fleet-page .xrm-company-header .xrm-hero-filters .fleet-command-search,.fleet-page .xrm-company-header .xrm-hero-filters #xrm-clear-filters{grid-column:1!important}}
+
+
+/* Header tuning: compact identity, generous filters and fluid company names. */
+@media(min-width:1251px){
+.fleet-page .fleet-hero.xrm-company-header{grid-template-columns:88px minmax(230px,clamp(255px,25vw,415px)) minmax(0,1fr)!important;column-gap:clamp(8px,.7vw,14px)!important}
+.fleet-page .xrm-company-header .fleet-hero-copy{width:100%;min-width:0!important}
+.fleet-page .xrm-company-header #company-name{font-size:clamp(15px,1.25vw,21px)!important;line-height:1.18;overflow-wrap:anywhere;word-break:normal;hyphens:auto}
+.fleet-page .xrm-company-header .xrm-hero-filters{min-width:0!important;width:100%}
+.fleet-page .xrm-company-header .xrm-hero-filters .fleet-filterbar.fleet-commandbar{grid-template-columns:minmax(165px,1.65fr) repeat(3,minmax(105px,1fr)) auto!important;gap:8px!important;padding:9px 11px!important}
+.fleet-page .xrm-company-header .xrm-hero-filters input,.fleet-page .xrm-company-header .xrm-hero-filters select{height:38px!important;min-height:38px!important;font-size:12px!important;padding-inline:9px!important}
+.fleet-page .xrm-company-header .xrm-hero-filters .fleet-command-filter span{font-size:9px!important}
+.fleet-page .xrm-company-header .xrm-hero-filters .fleet-button{min-height:38px!important;font-size:11px!important;padding:8px 11px!important}
+}
+@media(min-width:1251px) and (max-width:1530px){
+.fleet-page .fleet-hero.xrm-company-header{grid-template-columns:80px minmax(205px,22vw) minmax(0,1fr)!important}
+.fleet-page .xrm-company-header .xrm-hero-filters .fleet-filterbar.fleet-commandbar{grid-template-columns:minmax(130px,1.5fr) repeat(3,minmax(83px,1fr)) auto!important;gap:6px!important}
+.fleet-page .xrm-company-header .xrm-hero-filters input,.fleet-page .xrm-company-header .xrm-hero-filters select{font-size:11px!important}
+}
