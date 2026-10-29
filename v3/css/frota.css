@@ -430,3 +430,6 @@
 #fleet-kpis .fleet-kpi[data-tone="red"] .fleet-kpi-label{color:#fda4af}
 #fleet-kpis .fleet-kpi.xrm-overdue-active{box-shadow:inset 0 2px 0 rgba(251,113,133,.72)}
 #fleet-kpis .fleet-kpi[data-tone="red"]:focus-visible{outline:2px solid #fda4af;outline-offset:3px}
+
+/* Financial date range, responsive controls and document provenance. */
+.xrm-period-filters{display:flex;flex-wrap:wrap;align-items:end;gap:12px;padding:16px;margin:16px 0;background:#0d2438}.xrm-period-filters label{display:grid;gap:6px;min-width:130px;color:#a9c6da;font-size:12px}.xrm-period-filters select,.xrm-period-filters input{padding:10px;border-radius:8px;border:1px solid #345c77;background:#102b40;color:#eef8ff;min-height:40px}.xrm-period-filters input[readonly]{opacity:.75}.xrm-period-filters #xrm-report-range-label{color:#9fb9cb;font-size:11px}.xrm-documents-table{min-width:660px}.xrm-documents-table td{font-size:12px;overflow-wrap:anywhere}@media(max-width:700px){.xrm-period-filters label{flex:1 1 43%}.xrm-period-filters button{width:100%}}@media print{.fleet-page{background:#fff!important;color:#111!important}.fleet-topbar,.fleet-sidebar,.fleet-commandbar,.fleet-report-actions{display:none!important}}
