@@ -32,3 +32,9 @@ A migration `20261029140157_drivers_vehicle_expenses.sql` cria os cadastros priv
 As novas tabelas têm RLS e não recebem acesso direto dos clientes. As RPCs verificam associação atual à empresa e papel; funções privilegiadas têm `search_path` vazio, execução revogada de `PUBLIC`/`anon` e filtros explícitos de empresa. Atribuir motorista não altera acesso ao sistema nem consome assento de usuário.
 
 Validação do banco em `supabase/tests/drivers_vehicle_expenses.sql`, sempre com `ROLLBACK`, cobrindo papéis, privacidade, isolamento, vínculos atômicos, motorista inativo, validação da assinatura, pagamento, total financeiro, concorrência e auditoria. Os testes de interface usam a API simulada em `v3/tests/fleet-interface.test.cjs`.
+
+## Alertas de CNH
+
+Motoristas ativos com validade da CNH vencida ou nos próximos 30 dias entram nos alertas, na prévia da Visão Geral e nos respectivos contadores. O alerta abre o cadastro do motorista na própria tela; owner/manager podem corrigir a validade e o alerta é recalculado após salvar. Motoristas inativos e cadastros sem validade informada não geram alerta de vencimento.
+
+Sem filtros de veículos, são considerados todos os motoristas ativos da empresa, inclusive sem veículo vinculado. Com contrato ou outro filtro de veículos aplicado, entram apenas os motoristas vinculados aos veículos correspondentes. A prévia prioriza alertas de CNH e mantém o limite de seis itens; a tela Alertas apresenta a lista completa. Não há alteração de tabelas nem de dados existentes.
