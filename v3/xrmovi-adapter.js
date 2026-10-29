@@ -118,6 +118,21 @@ else if(kind==='vehicle'){form.append(field('plate','Placa / identificação','t
  const hint=document.createElement('small');hint.className='wide';hint.textContent='Exemplo: óleo a cada 2.000 km e próxima troca aos 20.000 km; o alerta inicia aos 18.000 km. Use o intervalo recomendado para este veículo e este óleo.';details.append(hint);
  const sync=()=>{const on=enabled.querySelector('select').value==='yes';details.hidden=!on;for(const input of details.querySelectorAll('input'))input.disabled=!on;interval.querySelector('input').required=on;next.querySelector('input').required=on};
  enabled.querySelector('select').onchange=sync;form.append(details);sync();
+ const odometerInput=form.elements.odometer;
+ if(record?.id&&odometerInput){
+  odometerInput.readOnly=true;odometerInput.title='Atualize o KM pela área de Quilometragem e QR Code';
+  const notice=document.createElement('p');notice.className='wide xrm-oil-vehicle-note';
+  notice.textContent='A quilometragem confirmada não pode ser alterada na edição do cadastro. Use o controle de KM abaixo da lista de ativos para registrar ou corrigir leituras com histórico.';
+  form.insertBefore(notice,enabled);
+ }
+ const warningInput=warn.querySelector('input'),intervalInput=interval.querySelector('input');
+ let warningEdited=Boolean(rule?.interval_km);
+ warningInput.addEventListener('input',()=>{warningEdited=true});
+ intervalInput.addEventListener('input',()=>{
+  if(warningEdited)return;
+  const value=Number(intervalInput.value);
+  if(value>0)warningInput.value=String(Math.min(2000,Math.max(100,Math.round(value*.2))));
+ });
 }
 else{const opts=vehicles.map(v=>[v.id,v.plate+' — '+v.model]);if(!opts.length){put('v3-edit-feedback','Cadastre primeiro um veículo na tela Ativos / Veículos.');v3Overlay.hidden=false;return}form.append(pick('vehicle','Veículo',opts,record?.vehicle_id));if(kind==='maintenance'){form.append(field('title','Serviço de manutenção','text','',true),field('due_date','Próxima data','date'),field('due_meter','Próxima KM/H','number'),field('estimate','Custo previsto (R$)','number'),field('notes','Observações','text'))}else{form.append(field('date','Data','date',new Date().toISOString().slice(0,10),true),field('liters','Litros','number','',true),field('cost','Valor total (R$)','number','',true),field('meter','KM/H no abastecimento','number'),field('station','Posto','text'),field('notes','Observações','text'))}}
 if(['driver','vehicle','maintenance','maintenance-cost','maintenance-complete','fuel','expense'].includes(kind)){const label=document.createElement('label');label.className='wide';label.textContent=kind==='driver'?'Anexar CNH (PDF ou imagem)':kind==='vehicle'?'Anexar CRLV / documento do veículo':kind==='fuel'?'Anexar comprovante do abastecimento':kind==='expense'?'Anexar nota fiscal / comprovante':kind==='maintenance'?'Anexar documento da manutenção':'Anexar nota fiscal da manutenção';const file=document.createElement('input');file.type='file';file.name='record_attachment';file.accept='.pdf,.jpg,.jpeg,.png,.webp';label.append(file);const hint=document.createElement('small');hint.textContent='Opcional · Máximo 10 MB · PDF, JPG, PNG ou WEBP. O arquivo será vinculado ao cadastro salvo.';label.append(hint);form.append(label)}
