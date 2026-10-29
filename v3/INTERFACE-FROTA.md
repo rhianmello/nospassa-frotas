@@ -1,5 +1,13 @@
 # Interface de gestão de frotas
 
+## Telas e manutenção
+
+Cada item do menu abre uma tela exclusiva no mesmo aplicativo, identificada no endereço por `#assets`, `#maintenance` etc. O menu destaca a tela ativa; recarregar e voltar no navegador preservam a navegação. No celular, um seletor de tela substitui o menu lateral. Empresa, contrato e filtros de veículos permanecem compartilhados entre as telas. Visão Geral contém os indicadores e gráficos; os cadastros e registros ficam nas respectivas telas.
+
+Manutenção organiza o fluxo em programar um serviço por data ou KM/horímetro, acompanhar vencidas/próximas/programadas, registrar custos e confirmar a execução. A conclusão exige custo realizado e leitura na execução; o valor zero é permitido. A leitura fica vinculada à manutenção, conforme a API existente. Serviços concluídos continuam disponíveis na consulta e nos custos. Os filtros de manutenção combinam pesquisa por serviço/placa com situação e filtros compartilhados de veículos.
+
+As ações continuam restritas a `owner`/`manager`. Custos e conclusão utilizam as RPCs existentes em duas etapas; se a segunda falhar, a interface informa que os custos foram salvos e mantém a conclusão pendente para nova tentativa. Uma falha ao registrar o custo previsto após criar um serviço permite tentar novamente sem duplicar a manutenção. Esta entrega não altera schema nem registros no banco durante a implementação.
+
 A V3 mantém veículos, abastecimentos, manutenção, OS de frota, checklists, inspeções, peças, documentação, alertas, histórico e custos. Os controles sem integração e módulos administrativos sem vínculo com frota foram retirados da interface.
 
 O contrato permanece no cabeçalho, ao lado de Visão Geral. Contrato, busca de veículo, categoria, situação e vencimento combinam-se e atualizam KPIs, gráficos, ativos, alertas, manutenção, documentos e custos dos veículos selecionados. Limpar também limpa o contrato. O filtro de dias usa vencimentos por data, sem converter quilômetros em dias.

@@ -37,10 +37,13 @@ async function open({ role = 'owner', existing = false, viewport = { width: 1440
       ]
     };
     const today=new Date().toLocaleDateString('en-CA'),old='2020-01-01';
-    state.costRequests=[];state.costError=false;state.costMultiplier=1;state.fixture={vehicles:[{id:'v1',plate:'AAA1111',category:'Leve',contract_id:'c1',status:'Ativo',odometer_value:100},{id:'v2',plate:'BBB2222',category:'Caminhão',contract_id:'c2',status:'Manutenção',odometer_value:100}],maintenance:[{id:'m1',vehicle_id:'v1',plate:'AAA1111',title:'Revisão A',due_date:old,status:'open',created_at:today},{id:'m2',vehicle_id:'v2',plate:'BBB2222',title:'Revisão B',due_date:old,status:'open',created_at:today}],fuel:[{vehicle_id:'v1',fueled_on:today,liters:10,total_cost:100},{vehicle_id:'v2',fueled_on:today,liters:20,total_cost:200}]};
+    state.writes=[];state.failCost=false;state.failComplete=false;state.costRequests=[];state.costError=false;state.costMultiplier=1;state.fixture={vehicles:[{id:'v1',plate:'AAA1111',category:'Leve',contract_id:'c1',status:'Ativo',odometer_value:100},{id:'v2',plate:'BBB2222',category:'Caminhão',contract_id:'c2',status:'Manutenção',odometer_value:100}],maintenance:[{id:'m1',vehicle_id:'v1',plate:'AAA1111',title:'Revisão A',due_date:old,status:'open',created_at:today},{id:'m2',vehicle_id:'v2',plate:'BBB2222',title:'Revisão B',due_date:old,status:'open',created_at:today}],fuel:[{vehicle_id:'v1',fueled_on:today,liters:10,total_cost:100},{vehicle_id:'v2',fueled_on:today,liters:20,total_cost:200}]};
     state.client = {
       auth: { getUser: async () => ({ data: { user: { id: 'test-user' } } }) },
       rpc: async (name, args) => {
+        if(name==='xrmovi_maintenance_save'){state.writes.push({name,args});const id='m'+(state.fixture.maintenance.length+1);state.fixture.maintenance.push({id,vehicle_id:args.vid,plate:state.fixture.vehicles.find(v=>v.id===args.vid)?.plate,title:args.task_title,due_date:args.deadline,due_meter:args.deadline_meter,status:'open'});return {data:id};}
+        if(name==='xrmovi_maintenance_set_cost'){state.writes.push({name,args});if(state.failCost)return {error:{message:'Custo indisponível'}};Object.assign(state.fixture.maintenance.find(m=>m.id===args.tid),{estimated_cost:args.forecast,actual_cost:args.spent,completed_meter:args.final_meter});return {data:null};}
+        if(name==='xrmovi_maintenance_complete'){state.writes.push({name,args});if(state.failComplete)return {error:{message:'Conclusão indisponível'}};state.fixture.maintenance.find(m=>m.id===args.task_id).status='done';return {data:null};}
         if(name==='xrmovi_my_vehicles')return {data:state.fixture.vehicles};
         if(name==='xrmovi_maintenance_list')return {data:state.fixture.maintenance};
         if(name==='xrmovi_contracts_list')return {data:[{id:'c1',name:'Contrato A'},{id:'c2',name:'Contrato B'}]};
@@ -116,12 +119,12 @@ async function waitIdle(page) {
 }
 
 test('fleet controls have no legacy modules or dead exports',async()=>{
- const {page,errors}=await open();await page.waitForSelector('#fleet-table-body tr');
+ const {page,errors}=await open();await page.waitForSelector('#fleet-table-body tr',{state:'attached'});
  assert.equal(await page.locator('#view-quality,#analytics-toggle,#export-button,#table-next,#fleet-import-file').count(),0);
  assert.doesNotMatch(await page.locator('body').innerText(),/CPL|Somente leitura|senha master|Qualidade da Base/i);
  assert.equal(await page.locator('.fleet-breadcrumb #xrm-contract-filter').count(),1);
  assert.match(await page.locator('.fleet-main-nav').innerText(),/Relatórios financeiros/);
- await page.locator('[data-focus="maintenance"]').click();assert.equal(await page.locator('#maintenance-panel').isVisible(),true);
+ await page.locator('[data-view="maintenance"]').click();assert.equal(await page.locator('#maintenance-panel').isVisible(),true);
  assert.deepEqual(errors,[]);await page.close();
 });
 
@@ -150,7 +153,7 @@ test('order search updates counters and excludes unrelated categories without de
 });
 
 test('financial period reloads both costs and records; failure never retains another period totals',async()=>{
- const {page,errors}=await open();await page.waitForSelector('#fleet-fuel-records tbody tr');await page.selectOption('#xrm-contract-filter','c1');
+ const {page,errors}=await open();await page.waitForSelector('#fleet-fuel-records tbody tr',{state:'attached'});await page.locator('[data-view="fuel"]').click();await page.selectOption('#xrm-contract-filter','c1');
  await page.evaluate(()=>{brandingTest.costMultiplier=3});
  await page.locator('#fuel-ranking-month').fill('2026-09');await page.locator('#fuel-ranking-month').dispatchEvent('change');
  await page.waitForFunction(()=>document.querySelector('#xrm-contract-finance').innerText.includes('350,00'));
@@ -167,5 +170,51 @@ test('stock movements remain inside the warehouse and search scopes counters',as
  await page.locator('#search').fill('Pneu');assert.equal(await page.locator('#total').innerText(),'1');assert.equal(await page.locator('#attention').innerText(),'0');
  await page.getByText('Histórico de movimentações',{exact:true}).click();assert.match(await page.locator('dialog[open]').innerText(),/entrada/);
  assert.deepEqual(errors,[]);await page.close();
+});
+
+test('each navigation button opens one dedicated workspace with hash, active item and browser back',async()=>{
+ const {page,errors}=await open();await page.waitForSelector('#fleet-table-body tr',{state:'attached'});
+ for(const name of ['assets','maintenance','documents','alerts','history','fuel','financial','dashboard']){
+  await page.locator('.fleet-main-nav [data-view="'+name+'"]').click();
+  assert.equal(await page.locator('.fleet-view:visible').count(),1);
+  assert.equal(await page.locator('#view-'+name).isVisible(),true);
+  assert.equal(await page.locator('.fleet-main-nav [aria-current="page"]').getAttribute('data-view'),name);
+  assert.equal(new URL(page.url()).hash,'#'+name);
+  assert.equal(await page.evaluate(()=>window.scrollY),0);
+  assert.equal(await page.locator('.fleet-hero').isVisible(),name==='dashboard');if(output&&['assets','maintenance'].includes(name)){fs.mkdirSync(output,{recursive:true});await page.screenshot({path:path.join(output,'xrmovi-'+name+'-desktop.png'),fullPage:false})}
+ }
+ await page.locator('[data-view="assets"]').click();await page.locator('[data-view="maintenance"]').click();await page.goBack();await page.waitForFunction(()=>!document.querySelector('#view-assets').classList.contains('hidden'));
+ await page.reload();await page.waitForFunction(()=>document.querySelector('.fleet-main-nav [aria-current="page"]')?.dataset.view==='assets');assert.equal(await page.locator('#view-assets').isVisible(),true);
+ assert.deepEqual(errors,[]);await page.close();
+});
+
+test('maintenance schedule, register costs, conclude and view completed services',async()=>{
+ const {page,errors}=await open();await page.locator('[data-view="maintenance"]').click();
+ await page.locator('#maintenance-new').click();const form=page.locator('#v3-edit-form');await form.locator('[name="title"]').fill('Troca de óleo');await form.locator('[name="due_meter"]').fill('250');await form.locator('[name="estimate"]').fill('120');await form.locator('button[type="submit"]').click();await page.waitForFunction(()=>document.querySelector('#v3-edit-overlay').hidden);
+ await page.locator('#maintenance-search').fill('Troca de óleo');assert.equal(await page.locator('#v3-maintenance-list tbody tr').count(),1);
+ await page.getByRole('button',{name:'Registrar custos',exact:true}).click();await form.locator('[name="actual"]').fill('110');await form.locator('[name="completed_meter"]').fill('250');await form.locator('button[type="submit"]').click();await page.waitForFunction(()=>document.querySelector('#v3-edit-overlay').hidden);
+ await page.getByRole('button',{name:'Concluir serviço',exact:true}).click();await form.locator('button[type="submit"]').click();await page.waitForFunction(()=>document.querySelector('#v3-edit-overlay').hidden);
+ await page.selectOption('#maintenance-status','done');assert.equal(await page.locator('#v3-maintenance-list tbody tr').count(),1);assert.match(await page.locator('#v3-maintenance-list').innerText(),/110,00/);
+ const writes=await page.evaluate(()=>brandingTest.writes);assert.equal(writes.filter(w=>w.name==='xrmovi_maintenance_save').length,1);assert.equal(writes.at(-1).name,'xrmovi_maintenance_complete');
+ assert.deepEqual(errors,[]);await page.close();
+});
+
+test('maintenance failed cost save can be retried without creating a duplicate task; viewers cannot write',async()=>{
+ const {page,errors}=await open();await page.locator('[data-view="maintenance"]').click();await page.evaluate(()=>brandingTest.failCost=true);await page.locator('#maintenance-new').click();const form=page.locator('#v3-edit-form');await form.locator('[name="title"]').fill('Serviço de teste');await form.locator('[name="due_meter"]').fill('1000');await form.locator('[name="estimate"]').fill('30');await form.locator('button[type="submit"]').click();await page.waitForFunction(()=>document.querySelector('#v3-edit-feedback').innerText.includes('serviço foi criado'));
+ await page.evaluate(()=>brandingTest.failCost=false);await form.locator('button[type="submit"]').click();await page.waitForFunction(()=>document.querySelector('#v3-edit-overlay').hidden);assert.equal(await page.evaluate(()=>brandingTest.writes.filter(w=>w.name==='xrmovi_maintenance_save').length),1);
+ assert.deepEqual(errors,[]);await page.close();
+ const viewer=await open({role:'viewer'});await viewer.page.locator('[data-view="maintenance"]').click();assert.equal(await viewer.page.locator('#maintenance-new').isVisible(),false);assert.equal(await viewer.page.getByRole('button',{name:'Concluir serviço',exact:true}).count(),0);assert.equal(await viewer.page.evaluate(()=>brandingTest.writes.length),0);assert.deepEqual(viewer.errors,[]);await viewer.page.close();
+});
+
+test('failed completion explains partial save and allows retry without falsely marking the service done',async()=>{
+ const {page,errors}=await open();await page.locator('[data-view="maintenance"]').click();await page.evaluate(()=>brandingTest.failComplete=true);
+ await page.locator('[data-task-id="m1"]').getByRole('button',{name:'Concluir serviço'}).click();const form=page.locator('#v3-edit-form');await form.locator('[name="actual"]').fill('80');await form.locator('[name="completed_meter"]').fill('100');await form.locator('button[type="submit"]').click();await page.waitForFunction(()=>document.querySelector('#v3-edit-feedback').innerText.includes('conclusão não foi confirmada'));
+ assert.equal(await page.evaluate(()=>brandingTest.fixture.maintenance[0].status),'open');await page.evaluate(()=>brandingTest.failComplete=false);await form.locator('button[type="submit"]').click();await page.waitForFunction(()=>document.querySelector('#v3-edit-overlay').hidden);assert.equal(await page.evaluate(()=>brandingTest.fixture.maintenance[0].status),'done');assert.deepEqual(errors,[]);await page.close();
+});
+
+test('mobile navigation opens maintenance and keeps its controls usable',async()=>{
+ const {page,errors}=await open({viewport:{width:390,height:844}});await page.selectOption('#fleet-mobile-view','maintenance');assert.equal(await page.locator('#view-maintenance').isVisible(),true);assert.equal(await page.locator('#maintenance-new').isVisible(),true);assert.equal(await page.locator('#view-dashboard').isVisible(),false);
+ assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+ if(output){fs.mkdirSync(output,{recursive:true});await page.screenshot({path:path.join(output,'xrmovi-maintenance-mobile.png'),fullPage:false})}assert.deepEqual(errors,[]);await page.close();
 });
 
