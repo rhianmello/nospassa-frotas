@@ -12,6 +12,8 @@
 5. Habilite os eventos subscription_authorized_payment, subscription_preapproval e payment quando disponíveis.
 6. Salve e obtenha a assinatura secreta do webhook; ela é diferente do Access Token.
 
+**Atenção:** a documentação do Mercado Pago informa que o modo de configuração de notificações para Assinaturas pode ser diferente da configuração padrão de Webhooks em Suas integrações. Antes de habilitar clientes pagantes, confirme na própria aplicação que os tópicos de assinatura chegam à URL configurada, com assinatura válida. Se sua integração não disponibilizar esses tópicos por esse painel, mantenha XRMOVI_BILLING_ENABLED desativado e siga o procedimento indicado pelo Mercado Pago para assinaturas.
+
 Documentação oficial:
 - https://www.mercadopago.com.br/developers/pt/docs/subscriptions/integration-configuration/subscription-no-associated-plan/pending-payments
 - https://www.mercadopago.com.br/developers/pt/docs/subscriptions/additional-content/your-integrations/notifications/webhooks
