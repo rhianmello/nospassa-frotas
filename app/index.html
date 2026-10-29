@@ -102,6 +102,58 @@ main{padding-top:10px}
 #executiveDashboard #maintenanceAlerts{padding:6px 10px;margin:8px 0 0;border:0;background:#082433;border-radius:8px;max-height:94px;overflow:auto}
 #executiveDashboard #maintenanceAlerts p{font-size:11px;margin:4px 0}
 @media(max-width:750px){#executiveDashboard{padding:12px}#executiveDashboard .kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#executiveDashboard .alerts-compact .metrics{grid-template-columns:repeat(3,minmax(0,1fr))}#executiveDashboard .alerts-compact .metric{padding:8px}#executiveDashboard .alerts-compact .metric small{font-size:10px}}
+/* Identidade visual baseada no painel de frota CPL-EPC15: somente apresentação */
+:root{--bg:#07111f;--card:#0c1d30;--line:#243c54;--mint:#43d9bd;--txt:#e9f3ff;--muted:#8ca7bf}
+body{background:radial-gradient(ellipse at 75% 4%,#10354a 0%,#07111f 42%,#060f1c 100%);color:var(--txt);font-family:Inter,system-ui,Segoe UI,sans-serif}
+main{max-width:none;padding:0 22px 16px}
+#appHeader{background:#091727;border-bottom:1px solid #20384c;padding:10px 10px!important;margin:0 -22px 0;gap:18px!important}
+#appHeader .logo{letter-spacing:-.6px;font-weight:900}
+#accountCard{background:#0c2234;border-color:#263f56;box-shadow:none}
+#workspace{grid-template-columns:236px minmax(0,1fr);gap:0;margin:0 -22px}
+#sideNav{position:sticky;top:0;height:calc(100vh - 10px);max-height:none;overflow-y:auto;background:#081523;border:0;border-right:1px solid #1d3447;border-radius:0;padding:16px 12px;align-self:start;scrollbar-width:thin;scrollbar-color:#344f62 transparent}
+#workspaceContent{padding:20px 26px 12px;min-width:0}
+#sideNav .fleetInspiredBrand{display:flex;align-items:center;gap:12px;padding:2px 2px 22px;margin-bottom:15px;border-bottom:1px solid #1d3146}
+#sideNav .fleetInspiredBrand>span{height:48px;width:48px;border-radius:12px;display:grid;place-items:center;flex-shrink:0;background:linear-gradient(140deg,#ffb513,#ffdf49);color:#14253b;font-size:30px;box-shadow:0 0 0 1px #f3c14266}
+#sideNav .fleetInspiredBrand strong{display:block;font-size:14px;line-height:1.2;color:#e7f0ff}
+#sideNav .fleetInspiredBrand small{display:block;font-size:10px;letter-spacing:1px;color:#829bb5;line-height:1.45;margin-top:4px}
+#sideNav .nav-title{padding:4px 5px 10px;color:#5c7895;font-size:10px}
+#sideNav button{font-size:12px;color:#9fb5cb;border:1px solid transparent;border-radius:9px;padding:11px 11px;min-height:43px;letter-spacing:0;transition:background .18s,border-color .18s}
+#sideNav button:hover{background:#12283b}
+#sideNav button[aria-current="page"]{color:#ffcf54;background:linear-gradient(90deg,#31301f,#0d2132);border-color:#6b5420;border-left:3px solid #ffb91e}
+#sideNav .sidebar-company{background:#0a1d2e;border-color:#253e54;margin:10px 0 18px}
+#sideNav .sidebar-meta{padding:0;margin-top:20px;border:0}
+.sidebarScene{min-height:180px;border-radius:12px;background:radial-gradient(circle at 75% 28%,#e4a9274d,transparent 27%),linear-gradient(156deg,#15283a,#091526);display:flex;flex-direction:column;justify-content:flex-end;padding:15px;gap:6px;margin-bottom:10px;position:relative;overflow:hidden}
+.sidebarScene:before{content:'◆';font-size:67px;position:absolute;right:26px;top:5px;color:#ffc6338f;text-shadow:0 0 33px #ffb615}
+.sidebarScene span{font-size:9px;font-weight:800;letter-spacing:1.1px;color:#ffc53a}
+.sidebarScene strong{font-size:12px;max-width:165px;color:#f7f8ff}
+#tabTitle{font-size:12px;margin:0 0 18px;color:#8ea7bc;font-weight:600;letter-spacing:.3px}
+#executiveDashboard{background:transparent;border:0;box-shadow:none;padding:0;margin:0}
+#executiveDashboard>.executive-head{padding:12px 0 16px;margin-bottom:9px;border-bottom:1px solid #1b344a}
+#executiveDashboard>.executive-head:before{content:'▱';display:grid;place-items:center;width:51px;height:51px;border:1px solid #664d1d;border-radius:12px;background:#142c37;color:#ffb71c;font-size:33px}
+#executiveDashboard>.executive-head h2{font-size:24px;line-height:1.2;font-weight:850;color:#eff6ff}
+#executiveDashboard>.executive-head small{color:#f5af26!important;letter-spacing:1.4px!important;font-weight:800}
+#executiveDashboard>.executive-head .sub{font-size:11px;color:#91abc1}
+#executiveDashboard>.kpi-grid{gap:12px;margin:14px 0}
+#executiveDashboard .kpi{background:linear-gradient(165deg,#10283d,#071624);border:1px solid #294b66;border-radius:12px;padding:18px 16px;min-height:106px}
+#executiveDashboard>.kpi-grid .kpi:nth-child(2){border-top:2px solid #25c9b6}
+#executiveDashboard>.kpi-grid .kpi:nth-child(3){border-top:2px solid #ffbe32}
+#executiveDashboard>.kpi-grid .kpi:nth-child(4){border-top:2px solid #ec647e}
+#executiveDashboard .kpi small{color:#8daac3}
+#executiveDashboard .kpi strong{font-size:28px;line-height:1.25;color:#eaf3ff}
+#executiveDashboard>.kpi-grid .kpi:nth-child(2) strong{color:#54dbc8}
+#executiveDashboard>.kpi-grid .kpi:nth-child(3) strong{color:#ffc13b}
+#executiveDashboard>.kpi-grid .kpi:nth-child(4) strong{color:#f186a0}
+#executiveDashboard .dashboard-surface{background:#0b1b2d;border:1px solid #233c54;border-radius:12px;padding:15px}
+#executiveDashboard #maintenanceDashboard.alerts-compact{background:#0b1b2d;border:1px solid #29435b;border-radius:12px}
+#executiveDashboard #maintenanceDashboard.alerts-compact .metric{background:#0c2234}
+#executiveDashboard #maintenanceDashboard.alerts-compact .metric:nth-child(1){border-top:2px solid #f36b85}
+#executiveDashboard #maintenanceDashboard.alerts-compact .metric:nth-child(2){border-top:2px solid #fbc143}
+#executiveDashboard #maintenanceDashboard.alerts-compact .metric:nth-child(3){border-top:2px solid #24cbb5}
+#executiveDashboard .bar-fill{background:linear-gradient(90deg,#1d72b5,#24cee0)}
+#workspaceContent>.workspace-pane .box{border-color:#253e54}
+#portalFooter{margin-left:236px}
+@media(max-width:880px){#workspace{grid-template-columns:190px minmax(0,1fr)}#workspaceContent{padding:16px}#portalFooter{margin-left:190px}#sideNav .fleetInspiredBrand strong{font-size:12px}}
+@media(max-width:720px){#workspace{display:block;margin:0 -12px}#sideNav{height:auto;max-height:none;position:relative;display:flex;overflow-x:auto;align-items:center;border-bottom:1px solid #263f57;border-right:0;padding:8px 12px}#sideNav .fleetInspiredBrand,#sideNav .sidebarScene,#sideNav .nav-title,#sideNav .sidebar-meta{display:none}#sideNav .sidebar-company{min-width:155px;flex:0 0 155px;margin:0 8px 0 0;padding:4px}#workspaceContent{padding:16px 12px}#portalFooter{margin-left:0}#executiveDashboard>.executive-head:before{display:none}#executiveDashboard>.kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style></head><body><main>
 <header id="appHeader"><div class="logo">XR<span>MOVI</span></div><div id="headerAccount" class="hidden"><div id="accountCard"><div class="header-identity"><strong>Minha frota</strong><span id="account"></span></div><div id="planMount"></div></div><button class="secondary" id="logout">Sair</button></div><a class="back-home" href="/">← Voltar ao site</a></header>
 <div class="box" id="setup"><h1>Portal de clientes em preparação</h1><p class="sub">O aplicativo já está preparado para autenticação e gestão de veículos. O cadastro será liberado após configurar o banco de dados exclusivo da plataforma.</p><div class="notice">Nenhum cadastro ou dado comercial é salvo nesta demonstração.</div></div>
@@ -125,11 +177,11 @@ const executive=document.getElementById('executiveDashboard');
 const alerts=document.getElementById('maintenanceDashboard');
 const insights=document.getElementById('insightsSection');
 if(executive&&alerts&&insights){alerts.classList.add('alerts-compact');executive.insertBefore(alerts,insights)}
-const workspace=document.createElement('div');workspace.id='workspace';const nav=document.createElement('nav');nav.id='sideNav';nav.setAttribute('aria-label','Navegação da gestão de frotas');const navHead=document.createElement('div');navHead.className='nav-title';navHead.textContent='MENU PRINCIPAL';nav.append(navHead);
+const workspace=document.createElement('div');workspace.id='workspace';const nav=document.createElement('nav');nav.id='sideNav';nav.setAttribute('aria-label','Navegação da gestão de frotas');const navHead=document.createElement('div');navHead.className='nav-title';navHead.textContent='NAVEGAÇÃO';const brand=document.createElement('div');brand.className='fleetInspiredBrand';brand.innerHTML='<span aria-hidden="true">▱</span><div><strong>XRMOVI Fleet</strong><small>Operação, manutenção<br>e inteligência</small></div>';nav.append(brand,navHead);
 const content=document.createElement('div');content.id='workspaceContent';const pageTitle=document.createElement('h2');pageTitle.id='tabTitle';content.append(pageTitle);
 const pages=[
-{id:'painel',label:'◫ Painel',elements:['executiveDashboard','maintenanceDashboard']},
-{id:'veiculos',label:'▣ Veículos',elements:['vehicleOperations']},
+{id:'painel',label:'⌂ Visão Geral',elements:['executiveDashboard','maintenanceDashboard']},
+{id:'veiculos',label:'▣ Ativos',elements:['vehicleOperations']},
 {id:'contratos',label:'▤ Contratos',elements:['contractsSection']},
 {id:'manutencao',label:'⚒ Manutenção',elements:['maintenanceSection']},
 {id:'abastecimentos',label:'◈ Abastecimentos',elements:['fuelSection']},
@@ -140,7 +192,7 @@ const pages=[
 const wrap=document.createElement('div');wrap.id='vehicleOperations';const metric=fleet.querySelector(':scope > .metrics');const vehicleSplit=[...fleet.children].find(el=>el.classList.contains('split'));if(metric)wrap.append(metric);if(vehicleSplit)wrap.append(vehicleSplit);
 const companySwitcher=[...fleet.children].find(el=>el.classList.contains('box')&&el.querySelector('#companySelect'));if(companySwitcher){companySwitcher.id='companySwitcher';companySwitcher.classList.add('sidebar-company');nav.append(companySwitcher)}
 const panes={};for(const page of pages){const btn=document.createElement('button');btn.type='button';btn.textContent=page.label;btn.dataset.page=page.id;const pane=document.createElement('section');pane.className='workspace-pane';pane.dataset.page=page.id;for(const id of page.elements){const el=id==='vehicleOperations'?wrap:document.getElementById(id);if(el)pane.append(el)}if(page.id==='assinatura'){const note=document.createElement('div');note.className='box';note.textContent='Seu plano está disponível no cabeçalho. Use “Escolher ou alterar plano” para ver as opções.';pane.append(note)}btn.addEventListener('click',()=>showWorkspacePage(page.id));nav.append(btn);content.append(pane);panes[page.id]=pane}
-const foot=document.createElement('div');foot.className='sidebar-meta';foot.textContent='XRMOVI Fleet • Gestão integrada';nav.append(foot);
+const foot=document.createElement('div');foot.className='sidebar-meta';foot.innerHTML='<div class="sidebarScene" aria-hidden="true"><span>OPERAÇÃO CONECTADA</span><strong>Frota eficiente move grandes resultados.</strong></div><small>XRMOVI Fleet · Gestão integrada</small>';nav.append(foot);
 workspace.append(nav,content);fleet.prepend(workspace);
 function showWorkspacePage(id){if(!panes[id])id='painel';for(const p of pages){panes[p.id].classList.toggle('active',p.id===id);const button=nav.querySelector('[data-page="'+p.id+'"]');if(p.id===id)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current')}pageTitle.textContent=pages.find(p=>p.id===id).label.replace(/^[^A-Za-zÀ-ÿ]+/,'');try{history.replaceState(null,'','#'+id)}catch{}}
 showWorkspacePage((location.hash||'').slice(1));
