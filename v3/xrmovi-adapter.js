@@ -109,7 +109,7 @@ function applyVehicleFilters(){
  const preview=el('alert-preview');if(preview){preview.replaceChildren();for(const m of scopedMaintenance.filter(m=>['overdue','soon'].includes(alertKind(m))).slice(0,6)){const item=document.createElement('button');item.type='button';item.className='fleet-ptran-entry';item.textContent=(m.plate||oldVehicles.find(v=>v.id===m.vehicle_id)?.plate||'Ativo')+' — '+m.title;item.onclick=()=>openMaintenanceDetails(m.id);preview.append(item)}if(!preview.children.length)preview.textContent='Nenhuma manutenção em atenção para o filtro selecionado.'}
  put('alert-preview-count',overdue+upcoming);
  const root=el('fleet-table-body');if(root){root.replaceChildren();for(const v of filtered){const tr=document.createElement('tr');for(const value of [v.plate,v.category||'Veículo',v.driver_name||'Não vinculado',v.status||'—',nextRevision(v.id),Number(v.odometer_value||0).toLocaleString('pt-BR')]){const td=document.createElement('td');td.textContent=value;tr.append(td)}const action=document.createElement('td');if(canWrite()){const edit=document.createElement('button');edit.className='fleet-button';edit.textContent='Editar';edit.onclick=()=>openWrite('vehicle',v);action.append(edit)}tr.append(action);root.append(tr)}}
- put('table-count',filtered.length);put('table-page-info',filtered.length+' de '+vehicles.length+' ativos');const caption=el('filter-result');if(caption)caption.textContent=filtered.length+' de '+vehicles.length+' veículos exibidos';renderContractFinance(filtered);renderFuelBars();renderFleetHistory();renderVehicleDocuments(filtered);put('nav-alert-count',overdue+upcoming);put('alerts-total',overdue+upcoming);renderRegistries();appendExpenseAlerts();appendDriverAlerts();renderFilterSummary();
+ put('table-count',filtered.length);put('table-page-info',filtered.length+' de '+vehicles.length+' ativos');const caption=el('filter-result');if(caption)caption.textContent=filtered.length+' de '+vehicles.length+' veículos exibidos';renderContractFinance(filtered);renderFuelBars();renderFleetHistory();renderVehicleDocuments(filtered);window.xrmRefreshDocumentUploader?.();put('nav-alert-count',overdue+upcoming);put('alerts-total',overdue+upcoming);renderRegistries();appendExpenseAlerts();appendDriverAlerts();renderFilterSummary();
 }
 for(const id of ['fleet-search','xrm-filter-category','xrm-filter-status','xrm-filter-expiry']){const control=el(id);if(control)control.addEventListener(id==='fleet-search'?'input':'change',applyVehicleFilters)}
 if(el('xrm-clear-filters'))el('xrm-clear-filters').onclick=()=>{for(const id of ['fleet-search','xrm-filter-category','xrm-filter-status','xrm-filter-expiry','xrm-contract-filter','fuel-ranking-category','maintenance-search','driver-search','expense-search','expense-category'])if(el(id))el(id).value='';el('maintenance-status').value='open';el('driver-status').value='active';el('expense-status').value='all';el('expense-month').value=localDay(new Date()).slice(0,7);const month=el('fuel-ranking-month'),changed=month.value!==localDay(new Date()).slice(0,7);month.value=localDay(new Date()).slice(0,7);el('history-filters').reset();applyVehicleFilters();if(changed)void updateFuelMonth()};
@@ -129,7 +129,7 @@ async function loadFleetDocuments(id){
  if(company?.id!==id||request!==documentRequest)return;
  documentRows=results.filter(r=>r.status==='fulfilled').flatMap(r=>(r.value.documents||[]).map(d=>({...d,vehicle_id:r.value.vehicleId})));
  const root=el('vehicle-documents');if(root)root.dataset.failed=String(results.some(r=>r.status==='rejected'));
- renderVehicleDocuments(vehicles.filter(v=>!filteredVehicleIds||filteredVehicleIds.has(v.id)));
+ renderVehicleDocuments(vehicles.filter(v=>!filteredVehicleIds||filteredVehicleIds.has(v.id)));window.xrmRefreshDocumentUploader?.();
 }
 function renderVehicleDocuments(selected){
  const root=el('vehicle-documents');if(!root)return;root.replaceChildren();const ids=new Set(selected.map(v=>v.id));
@@ -288,3 +288,36 @@ if(el('financial-print'))el('financial-print').onclick=()=>{
  renderContractFinance(vehicles.filter(v=>!filteredVehicleIds||filteredVehicleIds.has(v.id)));
  window.print();
 };
+
+/* Vehicle document upload: private bucket, company/vehicle-scoped path, validated RPC registration. */
+function setupDocumentUploader(){
+ const view=el('view-documents');if(!view||el('xrm-document-upload'))return;
+ const box=document.createElement('section');box.id='xrm-document-upload';box.className='fleet-panel';box.style.cssText='padding:18px;margin:14px 0;display:grid;gap:12px';
+ const heading=document.createElement('h3');heading.textContent='Anexar documento ao veículo';
+ const form=document.createElement('form');form.style.cssText='display:flex;align-items:end;gap:12px;flex-wrap:wrap';
+ const pickVehicle=document.createElement('label');pickVehicle.textContent='Veículo';pickVehicle.style.cssText='display:grid;gap:7px';
+ const select=document.createElement('select');select.name='vehicle';select.required=true;select.style.cssText='padding:10px;background:#10283c;color:#e7f3ff;border:1px solid #33566f;border-radius:8px;min-width:190px';pickVehicle.append(select);
+ const pickFile=document.createElement('label');pickFile.textContent='Arquivo PDF ou imagem (até 10 MB)';pickFile.style.cssText='display:grid;gap:7px';
+ const file=document.createElement('input');file.type='file';file.required=true;file.accept='.pdf,.jpg,.jpeg,.png,.webp';file.style.maxWidth='300px';pickFile.append(file);
+ const submit=document.createElement('button');submit.type='submit';submit.className='fleet-button primary';submit.textContent='Anexar e salvar';
+ const notice=document.createElement('p');notice.setAttribute('role','status');notice.style.margin='0';notice.style.color='#a4c8d9';
+ form.append(pickVehicle,pickFile,submit);box.append(heading,form,notice);
+ const listing=el('vehicle-documents');listing?.before(box);
+ function update(){box.hidden=!canWrite();const current=select.value;select.replaceChildren();for(const v of vehicles.filter(x=>!filteredVehicleIds||filteredVehicleIds.has(x.id))){const o=document.createElement('option');o.value=v.id;o.textContent=v.plate+' — '+(v.model||v.category||'Veículo');select.append(o)}if([...select.options].some(o=>o.value===current))select.value=current;submit.disabled=!select.options.length;}
+ form.onsubmit=async event=>{
+  event.preventDefault();if(!canWrite()||!company){notice.textContent='Sem permissão para anexar arquivos.';return}
+  const vehicleId=select.value,chosen=file.files?.[0],cid=company.id;
+  const types={'application/pdf':'pdf','image/jpeg':'jpg','image/png':'png','image/webp':'webp'};
+  if(!vehicles.some(v=>v.id===vehicleId)||!chosen||!types[chosen.type]||chosen.size<1||chosen.size>10485760||chosen.name.length>200){notice.textContent='Selecione um veículo e um PDF/JPG/PNG/WEBP válido de até 10 MB.';return}
+  const path=cid+'/'+vehicleId+'/'+crypto.randomUUID()+'.'+types[chosen.type];
+  submit.disabled=true;notice.textContent='Enviando documento…';
+  try{
+   const {error}=await sb.storage.from('xrmovi-vehicle-docs').upload(path,chosen,{contentType:chosen.type,upsert:false});if(error)throw error;
+   await rpc('register_vehicle_document',{cid,vid:vehicleId,p_path:path,p_name:chosen.name,p_type:chosen.type,p_size:chosen.size});
+   notice.textContent='Documento salvo com sucesso.';form.reset();await loadFleetDocuments(cid);
+  }catch(e){notice.textContent='Falha ao salvar: '+(e.message||String(e))}
+  finally{update()}
+ };
+ const originalApply=update;window.xrmRefreshDocumentUploader=originalApply;update();
+}
+setupDocumentUploader();
