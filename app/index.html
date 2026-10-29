@@ -167,6 +167,16 @@ main{max-width:none;padding:0 22px 16px}
 #workspaceContent #tabTitle:before{content:'Gestão de Frota / ';color:#d1e2f0;white-space:pre}
 @keyframes panelReveal{from{opacity:.65;transform:translateY(4px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){#workspaceContent .workspace-pane.active{animation:none}}
+/* Hero operacional compacto e alinhado */
+#executiveDashboard>.executive-head{display:flex!important;justify-content:flex-start!important;align-items:center!important;gap:13px!important;min-height:0!important;margin:0 0 12px!important;padding:5px 0 13px!important;border-bottom:1px solid #20384b}
+#executiveDashboard>.executive-head:before{width:39px!important;height:39px!important;font-size:23px!important;flex-shrink:0}
+#executiveDashboard>.executive-head>div:first-child{flex:1;min-width:0}
+#executiveDashboard>.executive-head h2{font-size:20px!important;margin:2px 0!important;line-height:1.2!important;letter-spacing:-.35px}
+#executiveDashboard>.executive-head small{font-size:9px!important;letter-spacing:1px!important}
+#executiveDashboard>.executive-head .sub{font-size:11px!important;line-height:1.35!important;margin:2px 0 0!important}
+#workspaceContent{padding-top:12px}
+#tabTitle{margin-bottom:10px!important}
+@media(max-width:720px){#executiveDashboard>.executive-head{gap:10px!important;padding:4px 0 10px!important}#executiveDashboard>.executive-head h2{font-size:18px!important}#executiveDashboard>.executive-head:before{width:34px!important;height:34px!important}}
 </style></head><body><main>
 <header id="appHeader"><div class="logo">XR<span>MOVI</span></div><div id="headerAccount" class="hidden"><div id="accountCard"><div class="header-identity"><strong>Minha frota</strong><span id="account"></span></div><div id="planMount"></div></div><button class="secondary" id="logout">Sair</button></div><a class="back-home" href="/">← Voltar ao site</a></header>
 <div class="box" id="setup"><h1>Portal de clientes em preparação</h1><p class="sub">O aplicativo já está preparado para autenticação e gestão de veículos. O cadastro será liberado após configurar o banco de dados exclusivo da plataforma.</p><div class="notice">Nenhum cadastro ou dado comercial é salvo nesta demonstração.</div></div>
