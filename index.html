@@ -124,6 +124,16 @@ body.xrm-auth-open{overflow:hidden}
  }
  document.querySelectorAll('a[href*="login=1"],a[href="#acesso"]').forEach(a=>a.addEventListener('click',openAuth));
  close.addEventListener('click',closeAuth);
+ // Navigating from the auth modal must dismiss the overlay before scrolling.
+ modal.querySelectorAll('a[href^="#"]').forEach(link=>link.addEventListener('click',event=>{
+  const hash=link.getAttribute('href');
+  const target=hash&&hash.length>1?document.getElementById(hash.slice(1)):null;
+  if(!target)return;
+  event.preventDefault();
+  closeAuth();
+  if(location.hash!==hash)history.pushState(null,'',hash);
+  target.scrollIntoView({behavior:'smooth',block:'start'});
+ }));
  modal.addEventListener('click',e=>{if(e.target===modal)closeAuth()});
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))closeAuth()});
  if(new URLSearchParams(location.search).has('login')||location.hash==='#acesso'){openAuth();if(location.hash==='#acesso')window.scrollTo(0,0)}
