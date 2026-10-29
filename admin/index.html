@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#071626"><title>XRMOVI | Administração da plataforma</title>
+<style>
+:root{color-scheme:dark;--bg:#061423;--panel:#0d2739;--card:#102d42;--line:#2b4b5d;--muted:#9ebacb;--mint:#48d9b8;--white:#edf9ff}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 95% 0,#104050 0,transparent 35%),var(--bg);color:var(--white);font:14px/1.5 Inter,system-ui,-apple-system,Segoe UI,sans-serif}button,input{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none}.hidden,[hidden]{display:none!important}
+header{min-height:72px;border-bottom:1px solid var(--line);background:#061726ed;display:flex;align-items:center;gap:18px;justify-content:space-between;padding:13px clamp(18px,3vw,44px);flex-wrap:wrap;position:sticky;top:0;z-index:3;backdrop-filter:blur(15px)}.brand{display:flex;align-items:center;gap:12px;font-size:17px;font-weight:850;letter-spacing:-.5px}.brand-mark{width:37px;height:37px;display:grid;place-items:center;background:#143d42;border:1px solid #38837e;color:var(--mint);border-radius:11px;font-size:22px}.brand strong{color:var(--mint)}.header-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.button{border:1px solid #3b6170;border-radius:10px;padding:10px 14px;background:#132e44;color:#dcf0f9;font-weight:650;font-size:12px}.button:hover{border-color:#51daba}.button.primary{background:var(--mint);border-color:var(--mint);color:#062b31}.button:disabled{opacity:.5;cursor:wait}
+main{width:min(1460px,100%);margin:auto;padding:clamp(20px,3vw,42px)}.eyebrow{color:var(--mint);font-size:11px;letter-spacing:1.8px;font-weight:850}.page-head{display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap;margin-bottom:22px}.page-head h1{font-size:clamp(26px,3vw,38px);letter-spacing:-1px;margin:8px 0 5px;line-height:1.18}.page-head p{color:var(--muted);margin:0;font-size:13px}.session{color:#b4cfda;font-size:11px;overflow-wrap:anywhere}
+.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin-bottom:22px}.metric{padding:18px;background:linear-gradient(150deg,#11324a,#0b2132);border:1px solid #284e64;border-radius:15px;min-width:0}.metric span{color:#9cbccc;text-transform:uppercase;letter-spacing:.75px;font-size:10px;font-weight:750}.metric strong{display:block;font-size:clamp(24px,3vw,34px);font-variant-numeric:tabular-nums;line-height:1.3;margin-top:9px;color:#f1fbff}.metric:last-child{border-color:#316957}.metric small{display:block;color:#92adbd;font-size:10px;margin-top:4px}
+nav.tabs{display:flex;gap:8px;border-bottom:1px solid #2b4e5f;padding-bottom:12px;flex-wrap:wrap;margin-bottom:19px}.tabs button{border:1px solid transparent;padding:10px 15px;color:#b4cfda;border-radius:10px;background:transparent;font-size:12px;font-weight:700}.tabs button[aria-selected=true]{background:#17443f;color:#82eccc;border-color:#297a6c}.tabs button:hover{border-color:#3d6c74}.panel{background:#0d273a;border:1px solid #2b4e62;border-radius:17px;overflow:hidden;margin-bottom:20px}.panel-head{padding:17px 20px;border-bottom:1px solid #284b60;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.panel h2{font-size:16px;margin:0}.panel-head small{font-size:11px;color:var(--muted)}.table-wrap{overflow:auto}.data-table{width:100%;border-collapse:collapse;min-width:680px}.data-table th{font-size:10px;letter-spacing:.5px;text-align:left;text-transform:uppercase;color:#8fbbd0;background:#102c42;padding:13px 17px;font-weight:750}.data-table td{font-size:12px;padding:14px 17px;border-top:1px solid #233f51;color:#d1e6f0;white-space:nowrap}.data-table tbody tr:hover{background:#143249}.empty{padding:25px 20px;color:#a6bdc9;margin:0;font-size:13px}.search{width:min(280px,100%);background:#071b2d;border:1px solid #376279;border-radius:10px;padding:10px 13px;color:#eafaff;outline-offset:2px}.state{font-size:10px;color:#a0c2d2;padding:5px 9px;background:#19394c;border-radius:99px}.state.active{color:#75e6c3;background:#16413e}.state.pending{color:#f5c27f;background:#413421}.notice{padding:13px 18px;border:1px solid #4b5244;background:#2a2924;color:#f4dcad;font-size:12px;border-radius:11px;margin-top:18px}.error{border-color:#935e59;background:#42282e;color:#ffd7d2}.loading{min-height:50vh;display:grid;place-content:center;text-align:center;gap:12px;color:#b7d2df}.loading strong{font-size:21px;color:#f1fbff}.overview-bottom{display:grid;grid-template-columns:1fr 1fr;gap:16px}.overview-bottom .panel{margin:0}footer{padding:0 30px 25px;color:#7e9eae;text-align:center;font-size:11px}
+@media(max-width:930px){.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.overview-bottom{grid-template-columns:1fr}}@media(max-width:570px){header{padding:12px 14px}main{padding:21px 14px}.metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.metric{padding:13px}.metric strong{font-size:22px}.data-table{min-width:620px}.panel-head{padding:14px}nav.tabs button{padding:8px 10px}}
+</style></head><body>
+<header><a class="brand" href="../"><span class="brand-mark">↗</span><span>XR<strong>MOVI</strong> <small>ADMIN</small></span></a><div class="header-actions"><a href="../v3/" class="button">Painel operacional</a><button type="button" class="button" id="refresh">Atualizar</button><button type="button" class="button" id="signout">Sair</button></div></header>
+<main><div id="loading" class="loading"><strong>Validando acesso administrativo</strong><span>Verificando sua sessão e permissões no Supabase…</span></div>
+<div id="unauthorized" class="loading hidden" role="alert"><strong>Acesso restrito</strong><span id="access-message">Esta conta não possui permissão de administrador da plataforma.</span><a href="../" class="button primary">Voltar ao site</a></div>
+<div id="content" class="hidden">
+ <div class="page-head"><div><div class="eyebrow">ADMINISTRAÇÃO DA PLATAFORMA</div><h1>Central administrativa XRMOVI</h1><p>Empresas, assinaturas, planos e solicitações em uma visão exclusiva.</p></div><div class="session" id="admin-email"></div></div>
+ <div class="metrics" aria-label="Indicadores administrativos">
+  <div class="metric"><span>Empresas cadastradas</span><strong id="m-companies">—</strong><small>Total da plataforma</small></div>
+  <div class="metric"><span>Usuários vinculados</span><strong id="m-members">—</strong><small>Usuários em empresas XRMOVI</small></div>
+  <div class="metric"><span>Veículos cadastrados</span><strong id="m-vehicles">—</strong><small>Em todas as empresas</small></div>
+  <div class="metric"><span>Assinaturas ativas</span><strong id="m-active">—</strong><small>Conforme status no cadastro</small></div>
+  <div class="metric"><span>Solicitações pendentes</span><strong id="m-pending">—</strong><small>Pedidos de plano</small></div>
+  <div class="metric"><span>Mensalidades de referência</span><strong id="m-reference">—</strong><small>Estimativa, não receita recebida</small></div>
+ </div>
+ <nav class="tabs" aria-label="Áreas administrativas"><button type="button" data-tab="overview" aria-selected="true">Resumo</button><button type="button" data-tab="companies" aria-selected="false">Empresas</button><button type="button" data-tab="requests" aria-selected="false">Solicitações</button><button type="button" data-tab="plans" aria-selected="false">Planos</button></nav>
+ <div id="view-overview" class="tab-view"><div class="overview-bottom"><section class="panel"><div class="panel-head"><h2>Empresas recentes</h2></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Empresa</th><th>Plano</th><th>Veículos</th></tr></thead><tbody id="recent-companies"></tbody></table></div></section><section class="panel"><div class="panel-head"><h2>Solicitações recentes</h2></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Empresa</th><th>Plano</th><th>Status</th></tr></thead><tbody id="recent-requests"></tbody></table></div></section></div><p class="notice">Indicadores comerciais são calculados a partir dos registros do Supabase. Mensalidades de referência não confirmam cobrança nem recebimento.</p></div>
+ <section id="view-companies" class="panel tab-view hidden"><div class="panel-head"><h2>Empresas cadastradas</h2><input id="company-search" type="search" class="search" placeholder="Buscar empresa…" aria-label="Buscar empresa"></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Empresa</th><th>Plano</th><th>Assinatura</th><th>Veículos</th><th>Usuários</th><th>Cadastro</th></tr></thead><tbody id="all-companies"></tbody></table></div></section>
+ <section id="view-requests" class="panel tab-view hidden"><div class="panel-head"><h2>Solicitações de planos</h2><small>Monitoramento de pedidos · sem contratação automática</small></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Empresa</th><th>Plano solicitado</th><th>Status</th><th>Data</th></tr></thead><tbody id="all-requests"></tbody></table></div></section>
+ <section id="view-plans" class="panel tab-view hidden"><div class="panel-head"><h2>Catálogo de planos</h2><small>Valores cadastrados no Supabase</small></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Plano</th><th>Mensalidade</th><th>Veículos</th><th>Usuários</th><th>Situação</th></tr></thead><tbody id="all-plans"></tbody></table></div></section>
+</div></main><footer>XR MOVI · Acesso administrativo protegido · Nenhuma cobrança é executada por esta página</footer>
+<script type="module">
+import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
+const el=id=>document.getElementById(id);
+const show=id=>{for(const x of ['loading','unauthorized','content'])el(x).classList.toggle('hidden',x!==id)};
+const date=d=>d?new Date(d).toLocaleDateString('pt-BR'):'—';
+const money=n=>n==null?'Sob consulta':Number(n).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const cell=(row,value)=>{const td=document.createElement('td');td.textContent=String(value??'—');row.append(td);return td};
+const badge=(row,value)=>{const td=cell(row,value||'—');const span=document.createElement('span');span.className='state'+(['active','ativa','paid'].includes(String(value).toLowerCase())?' active':['pending','requested','trialing'].includes(String(value).toLowerCase())?' pending':'');span.textContent=td.textContent;td.replaceChildren(span)};
+const rows=(id,items,render,empty='Nenhum registro encontrado.')=>{const root=el(id);root.replaceChildren();if(!items.length){const row=document.createElement('tr');const td=cell(row,empty);td.colSpan=12;root.append(row);return}items.forEach(item=>{const row=document.createElement('tr');render(row,item);root.append(row)})};
+const number=v=>Number(v||0).toLocaleString('pt-BR');
+let client,data;
+function render(){
+ const stats=data.stats||{};
+ for(const [id,key] of [['m-companies','companies'],['m-members','members'],['m-vehicles','vehicles'],['m-active','active_subscriptions'],['m-pending','pending_requests']])el(id).textContent=number(stats[key]);
+ el('m-reference').textContent=money(stats.plan_value_reference);
+ const companies=data.companies||[], requests=data.requests||[],plans=data.plans||[];
+ const companyRow=(r,c)=>{cell(r,c.name);cell(r,c.plan||'Sem plano');badge(r,c.subscription_status||'Sem assinatura');cell(r,number(c.vehicles));cell(r,number(c.members));cell(r,date(c.created_at))};
+ const requestRow=(r,q)=>{cell(r,q.company);cell(r,q.requested_plan);badge(r,q.status);cell(r,date(q.created_at))};
+ rows('recent-companies',companies.slice(0,5),(r,c)=>{cell(r,c.name);cell(r,c.plan||'Sem plano');cell(r,number(c.vehicles))});
+ rows('recent-requests',requests.slice(0,5),(r,q)=>{cell(r,q.company);cell(r,q.requested_plan);badge(r,q.status)});
+ rows('all-companies',companies,companyRow);
+ rows('all-requests',requests,requestRow);
+ rows('all-plans',plans,(r,p)=>{cell(r,p.name);cell(r,money(p.monthly_brl));cell(r,p.vehicle_limit??'Personalizado');cell(r,p.seat_limit??'Personalizado');badge(r,p.active?'Ativo':'Inativo')});
+}
+function openTab(id){document.querySelectorAll('[data-tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===id)));document.querySelectorAll('.tab-view').forEach(n=>n.classList.toggle('hidden',n.id!=='view-'+id));}
+document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>openTab(b.dataset.tab));
+el('company-search').oninput=e=>{const q=e.target.value.toLocaleLowerCase('pt-BR');const list=(data?.companies||[]).filter(c=>String(c.name||'').toLocaleLowerCase('pt-BR').includes(q));rows('all-companies',list,(r,c)=>{cell(r,c.name);cell(r,c.plan||'Sem plano');badge(r,c.subscription_status||'Sem assinatura');cell(r,number(c.vehicles));cell(r,number(c.members));cell(r,date(c.created_at))})};
+async function refresh(){el('refresh').disabled=true;try{const result=await client.rpc('xrmovi_platform_admin_overview');if(result.error)throw result.error;data=result.data;render();show('content')}catch(e){show('unauthorized');el('access-message').textContent='Não foi possível consultar o painel administrativo: '+(e.message||'Acesso negado.')}finally{el('refresh').disabled=false}}
+async function start(){
+ try{
+  const response=await fetch('../v3/config.json',{cache:'no-store'});if(!response.ok)throw Error('Configuração indisponível.');
+  const config=await response.json();client=createClient(config.supabaseUrl,config.supabaseAnonKey);
+  const {data:auth,error}=await client.auth.getUser();
+  if(error||!auth?.user){location.replace('../?login=1');return}
+  el('admin-email').textContent='Conta: '+auth.user.email;
+  const access=await client.rpc('xrmovi_platform_is_admin');
+  if(access.error||access.data!==true){show('unauthorized');return}
+  await refresh();
+ }catch(e){show('unauthorized');el('access-message').textContent=e.message||'Não foi possível verificar sua permissão.'}
+}
+el('refresh').onclick=refresh;
+el('signout').onclick=async()=>{if(client)await client.auth.signOut();location.replace('../?login=1')};
+void start();
+</script></body></html>
