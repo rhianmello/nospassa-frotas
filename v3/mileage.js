@@ -111,15 +111,60 @@ export function setupMileage({client,getCompany,getVehicles,getFilteredIds,onRel
   table.append(tbody);wrap.append(table);root.append(wrap);
   const pending=state?.pending||[];
   if(pending.length){
-   const box=add('div','xrm-mileage-review');box.append(add('h3','','Leituras suspeitas aguardando conferência'));
+   const box=add('div','xrm-mileage-review');
+   const head=add('div','xrm-mileage-review-head');
+   head.append(add('h3','','Leituras suspeitas aguardando conferência'));
+   head.append(add('small','','Rejeitar remove da fila, mas preserva o registro no histórico.'));
+   box.append(head);
+   const toolbar=add('div','xrm-mileage-review-toolbar');
+   const chooseAll=add('label','xrm-mileage-review-select-all');
+   const allBox=add('input');allBox.type='checkbox';
+   allBox.setAttribute('aria-label','Selecionar todas as leituras pendentes');
+   chooseAll.append(allBox,add('span','','Selecionar todas'));
+   const selectionSummary=add('span','xrm-mileage-review-summary','0 selecionadas');
+   const approve=btn('Aprovar selecionadas',()=>void reviewSelected('accept'),'primary');
+   const reject=btn('Rejeitar selecionadas',()=>void reviewSelected('reject'),'danger');
+   approve.disabled=true;reject.disabled=true;
+   toolbar.append(chooseAll,selectionSummary,approve,reject);
+   if(owned())box.append(toolbar);
+   const list=add('div','xrm-mileage-review-list');
+   const updateSelection=()=>{
+    const all=[...list.querySelectorAll('.xrm-review-selected')],selected=all.filter(check=>check.checked);
+    const invalid=selected.filter(check=>{
+     const record=pending.find(r=>String(r.id)===check.dataset.reportId);
+     return record&&Number(record.meter)<Number(record.current_meter);
+    });
+    const checked=selected.length;
+    allBox.checked=checked>0&&checked===all.length;
+    allBox.indeterminate=checked>0&&checked<all.length;
+    selectionSummary.textContent=checked+' selecionada(s)'+(invalid.length?' · '+invalid.length+' abaixo do KM confirmado':'');
+    approve.disabled=!owned()||checked===0||busy;
+    reject.disabled=!owned()||checked===0||busy;
+    approve.title=invalid.length?'Leituras abaixo do KM atual precisam ser corrigidas individualmente ou rejeitadas.':'Aprovar quilometragens selecionadas';
+   };
+   allBox.onchange=()=>{list.querySelectorAll('.xrm-review-selected').forEach(check=>{check.checked=allBox.checked});updateSelection()};
    for(const r of pending){
     const line=add('div','xrm-mileage-review-row');
-    const info=add('div');info.append(add('strong','',r.plate+' · '+km(r.meter)+' km'),add('small','',r.reason||'Leitura pendente'),add('small','',(r.driver_name||'')+' · '+day(r.submitted_at)));
+    if(owned()){
+     const selector=add('input','xrm-review-selected');
+     selector.type='checkbox';selector.dataset.reportId=r.id;
+     selector.setAttribute('aria-label','Selecionar leitura '+r.plate+' de '+km(r.meter)+' km');
+     selector.onchange=updateSelection;line.append(selector);
+    }
+    const info=add('div','xrm-mileage-review-info');
+    info.append(add('strong','',r.plate+' · '+km(r.meter)+' km'),add('small','',r.reason||'Leitura pendente'),add('small','',(r.driver_name||'Enviado pelo painel')+' · '+day(r.submitted_at)));
+    if(Number(r.meter)<Number(r.current_meter))info.append(add('small','xrm-review-lower','KM confirmado: '+km(r.current_meter)+' — menor leitura exige conferência individual'));
     line.append(info);
-    if(r.photo&&owned())line.append(btn('Ver foto',()=>void openProof(r.photo),'subtle small'));
-    if(owned())line.append(btn('Conferir',()=>showReview(r),'primary small'));
-    box.append(line);
+    const actions=add('div','xrm-mileage-review-actions');
+    if(r.photo&&owned())actions.append(btn('Ver foto',()=>void openProof(r.photo),'subtle small'));
+    if(owned()){
+     actions.append(btn('Rejeitar',()=>void rejectOne(r),'danger small'));
+     actions.append(btn('Conferir',()=>showReview(r),'primary small'));
+    }
+    line.append(actions);list.append(line);
    }
+   box.append(list);
+   if(owned())updateSelection();
    root.append(box);
   }
   root.append(add('p','xrm-mileage-message',flash));const notice=root.lastChild;notice.id='xrm-mileage-message';notice.dataset.type=flashKind;
@@ -149,6 +194,44 @@ export function setupMileage({client,getCompany,getVehicles,getFilteredIds,onRel
   busy=false;
   await onReload();await refresh();
   status(saved+' confirmada(s), '+pending+' pendente(s) de conferência.'+(failed.length?' Erros: '+failed.join(' / '):''),failed.length?'error':pending?'warn':'');
+ }
+ async function reviewSelected(decision){
+  if(!owned()||busy)return;
+  const chosen=[...id('xrm-mileage-console').querySelectorAll('.xrm-review-selected:checked')];
+  if(!chosen.length){status('Selecione uma ou mais conferências.','error');return}
+  const records=chosen.map(node=>(state?.pending||[]).find(row=>String(row.id)===node.dataset.reportId)).filter(Boolean);
+  if(records.length!==chosen.length){status('A lista de conferências mudou. Atualize antes de continuar.','error');return}
+  if(decision==='accept'){
+   const lower=records.filter(r=>Number(r.meter)<Number(r.current_meter));
+   if(lower.length){
+    status('Não é seguro aprovar em lote: '+lower.length+' leitura(s) informam KM menor que o confirmado. Rejeite-as em lote ou use Conferir para corrigir uma por uma. Nenhum KM foi alterado.','error');
+    return;
+   }
+  }
+  const label=decision==='accept'?'APROVAR':'REJEITAR';
+  const message=decision==='reject'?'As leituras sairão da fila, mas continuarão no histórico.':'A quilometragem dos veículos será atualizada com os valores selecionados.';
+  if(!confirm(label+' '+records.length+' leitura(s)? '+message))return;
+  busy=true;
+  try{
+   const result=await rpc('mileage_bulk_review',{
+    cid:companyId,report_ids:records.map(r=>r.id),p_decision:decision,
+    p_reason:decision==='reject'?'Leituras descartadas pelo gestor em conferência em lote':'Leituras aprovadas pelo gestor em conferência em lote'
+   });
+   await onReload();await refresh();
+   status((result?.reviewed??records.length)+' leitura(s) '+(decision==='reject'?'rejeitadas e removidas das pendências':'aprovadas e aplicadas')+'. O histórico foi preservado.');
+  }catch(error){status('Falha na operação em lote: '+error.message,'error')}
+  finally{busy=false}
+ }
+ async function rejectOne(record){
+  if(!owned()||busy)return;
+  if(!confirm('Rejeitar a leitura de '+km(record.meter)+' km do veículo '+record.plate+'? Ela sairá das pendências e permanecerá no histórico.'))return;
+  busy=true;
+  try{
+   await rpc('mileage_review',{cid:companyId,p_report:record.id,p_decision:'reject',p_corrected:null,p_reason:'Leitura rejeitada pelo gestor na fila de conferência'});
+   await onReload();await refresh();
+   status('Leitura de '+record.plate+' rejeitada e removida das pendências. Histórico preservado.');
+  }catch(error){status('Não foi possível rejeitar: '+error.message,'error')}
+  finally{busy=false}
  }
  function makeDialog(title){
   const modal=add('dialog','xrm-mileage-modal');
@@ -232,21 +315,62 @@ export function setupMileage({client,getCompany,getVehicles,getFilteredIds,onRel
   }catch(error){status('Não foi possível abrir foto: '+error.message,'error')}
  }
  function showQr(vehicle){
-  const token=vehicle.qr_token;if(!token)return status('Cadastre as configurações do veículo para gerar o QR.','warn');
+  const token=vehicle.qr_token;
+  if(!token)return status('Cadastre as configurações do veículo para gerar o QR.','warn');
   const url=new URL('/km/',location.origin);url.searchParams.set('token',token);
   const modal=makeDialog('QR Code · '+vehicle.plate);
   const content=add('div','xrm-mileage-qr');
-  const canvas=add('canvas');canvas.width=260;canvas.height=260;content.append(canvas);
+  const qrHost=add('div','xrm-mileage-qr-display');
+  qrHost.setAttribute('role','img');qrHost.setAttribute('aria-label','QR Code de '+vehicle.plate);
+  content.append(qrHost);
+  const help=add('p','xrm-mileage-modal-help','Gerando QR Code seguro…');
+  content.append(help);
   content.append(add('p','',vehicle.plate+' · Acesso para motorista informar KM com foto.'));
-  const link=labelInput('Link de leitura','text',url.href);link.input.readOnly=true;content.append(link.label);
+  const link=labelInput('Link de leitura','text',url.href);
+  link.input.readOnly=true;content.append(link.label);
   const actions=add('div','xrm-mileage-actions');
-  const draw=()=>{if(window.QRCode?.toCanvas)window.QRCode.toCanvas(canvas,url.href,{width:260,margin:1,color:{dark:'#072433',light:'#ffffff'}},err=>{if(err)status('Falha ao gerar QR Code.','error')});else content.append(add('p','xrm-mileage-modal-help','Biblioteca de QR Code indisponível. Copie o link para enviar.'))};
-  draw();
-  actions.append(btn('Copiar link',async()=>{try{await navigator.clipboard.writeText(url.href)}catch{link.input.select();document.execCommand('copy')}}));
-  actions.append(btn('Baixar QR',()=>{const a=add('a');a.download='xrmovi-'+vehicle.plate+'-qr.png';a.href=canvas.toDataURL('image/png');a.click()},'primary'));
-  actions.append(btn('Imprimir',()=>{const popup=window.open('','_blank');if(!popup)return status('Permita pop-ups para imprimir.','error');const pic=canvas.toDataURL('image/png');popup.document.write('<html><head><title>QR - '+vehicle.plate+'</title></head><body style="text-align:center;font-family:sans-serif"><h1>'+vehicle.plate.replace(/[&<>"']/g,'')+'</h1><img alt="QR Code" src="'+pic+'"><p>Escaneie para atualizar o KM no XRMOVI.</p></body></html>');popup.document.close();popup.onload=()=>popup.print()}));
-  actions.append(btn('Revogar e gerar outro',async()=>{if(!confirm('O QR Code anterior deixará de funcionar. Continuar?'))return;try{await rpc('mileage_qr_rotate',{cid:companyId,vid:vehicle.id});modal.close();await refresh();status('QR Code substituído. Imprima o novo código.')}catch(error){status(error.message,'error')}},'subtle'));
+  const copy=btn('Copiar link',async()=>{
+   try{await navigator.clipboard.writeText(url.href);help.textContent='Link copiado para compartilhar com o motorista.'}
+   catch{link.input.select();const copied=document.execCommand('copy');help.textContent=copied?'Link copiado.':'Selecione e copie o link manualmente.'}
+  });
+  const download=btn('Baixar QR',()=>{const data=imageData();if(!data){help.textContent='O QR Code ainda não está disponível. Não é possível baixar uma imagem em branco.';return}
+   const a=add('a');a.download='xrmovi-'+vehicle.plate.replace(/[^a-z0-9-]/gi,'')+'-qr.png';a.href=data;a.click();
+  },'primary');
+  const print=btn('Imprimir',()=>{
+   const data=imageData();if(!data){help.textContent='O QR Code ainda não está pronto para impressão.';return}
+   const popup=window.open('','_blank');if(!popup){help.textContent='Permita pop-ups para imprimir.';return}
+   const title=vehicle.plate.replace(/[^a-zA-Z0-9 -]/g,'');
+   popup.document.write('<!doctype html><html><head><title>QR - '+title+'</title></head><body style="text-align:center;font-family:sans-serif"><h1>'+title+'</h1><img alt="QR Code" width="260" height="260" src="'+data+'"><p>Escaneie para atualizar a quilometragem no XRMOVI.</p></body></html>');
+   popup.document.close();popup.onload=()=>popup.print();
+  });
+  const imageData=()=>{
+   const img=qrHost.querySelector('img');
+   if(img?.src?.startsWith('data:image/'))return img.src;
+   const canvas=qrHost.querySelector('canvas');
+   try{return canvas?.toDataURL('image/png')||''}catch{return ''}
+  };
+  download.disabled=true;print.disabled=true;
+  actions.append(copy,download,print);
+  actions.append(btn('Revogar e gerar outro',async()=>{
+   if(!confirm('O QR Code anterior deixará de funcionar. Continuar?'))return;
+   try{await rpc('mileage_qr_rotate',{cid:companyId,vid:vehicle.id});modal.close();await refresh();status('QR Code substituído. Imprima o novo código.')}
+   catch(error){help.textContent=error.message}
+  },'subtle'));
   content.append(actions);modal.append(content);
+  try{
+   if(typeof window.QRCode!=='function')throw Error('O módulo de geração não carregou. O link acima continua funcionando.');
+   new window.QRCode(qrHost,{
+    text:url.href,width:256,height:256,colorDark:'#061726',colorLight:'#ffffff',
+    correctLevel:window.QRCode.CorrectLevel.M
+   });
+   window.requestAnimationFrame(()=>{
+    if(!modal.isConnected)return;
+    const data=imageData();
+    if(data&&data.length>80){download.disabled=false;print.disabled=false;help.textContent='QR Code pronto para baixar, imprimir ou compartilhar.'}
+    else help.textContent='Não foi possível desenhar o QR Code. Copie o link ou atualize a página.';
+   });
+  }catch(error){help.textContent='Falha ao gerar o QR Code: '+error.message+' O link continua disponível.'}
  }
+
  return {refresh,render,planFor};
 }
