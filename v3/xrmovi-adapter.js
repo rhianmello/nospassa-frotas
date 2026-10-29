@@ -169,13 +169,33 @@ async function loadFleetDocuments(id){
  if(company?.id!==id||request!==documentRequest)return;
  documentRows=results.filter(r=>r.status==='fulfilled').flatMap(r=>(r.value.documents||[]).map(d=>({...d,vehicle_id:r.value.vehicleId})));
  const root=el('vehicle-documents');if(root)root.dataset.failed=String(results.some(r=>r.status==='rejected'));
- renderVehicleDocuments(vehicles.filter(v=>!filteredVehicleIds||filteredVehicleIds.has(v.id)));
+ renderVehicleDocuments(vehicles.filter(v=>!filteredVehicleIds||filteredVehicleIds.has(v.id)));void xrmLoadDocumentCatalog(id);
+}
+let xrmDocumentCatalog=[],xrmDocumentCatalogRequest=0;
+async function xrmLoadDocumentCatalog(cid){
+ const req=++xrmDocumentCatalogRequest;
+ try{const rows=await rpc('company_document_catalog',{cid});if(company?.id!==cid||req!==xrmDocumentCatalogRequest)return;xrmDocumentCatalog=rows||[];renderVehicleDocuments(vehicles.filter(v=>!filteredVehicleIds||filteredVehicleIds.has(v.id)))}catch(error){if(req===xrmDocumentCatalogRequest)msg('Não foi possível atualizar os anexos: '+error.message)}
 }
 function renderVehicleDocuments(selected){
- const root=el('vehicle-documents');if(!root)return;root.replaceChildren();const ids=new Set(selected.map(v=>v.id));
- for(const row of documentRows.filter(d=>ids.has(d.vehicle_id))){const link=document.createElement('button');link.className='fleet-button';link.textContent=(selected.find(v=>v.id===row.vehicle_id)?.plate||'Veículo')+' · '+row.name;link.onclick=async()=>{try{const {data,error}=await sb.storage.from('xrmovi-vehicle-docs').createSignedUrl(row.path,60);if(error)throw error;const url=new URL(data.signedUrl);if(url.protocol!=='https:')throw Error('URL inválida');window.open(url.href,'_blank','noopener,noreferrer')}catch(e){msg('Não foi possível abrir o documento: '+e.message)}};root.append(link)}
- const companyId=company?.id;if(companyId){for(const vehicle of selected){const target=vehicle.id;void showXrmRecordAttachments(companyId,'vehicle',target,root).then(()=>{if(root.children.length&&root.firstChild?.nodeType===3)root.firstChild.remove()}).catch(()=>{})}}
-if(!root.children.length)root.textContent=root.dataset.failed==='true'?'Não foi possível consultar todos os documentos. Atualize para tentar novamente.':'Nenhum documento cadastrado para os veículos filtrados.';
+ const root=el('vehicle-documents');if(!root)return;root.replaceChildren();
+ const ids=new Set(selected.map(v=>v.id));
+ const rows=[
+  ...documentRows.filter(d=>ids.has(d.vehicle_id)).map(d=>({...d,kind:'vehicle',name:d.name,legacy:true,created_at:d.created_at||''})),
+  ...xrmDocumentCatalog.filter(d=>d.vehicle_id&&ids.has(d.vehicle_id))
+ ];
+ const names={vehicle:'Cadastro do veículo',maintenance:'Manutenção',fuel:'Abastecimento',expense:'Outras despesas'};
+ if(!rows.length){root.textContent=root.dataset.failed==='true'?'Não foi possível consultar todos os documentos. Atualize para tentar novamente.':'Nenhum documento cadastrado para os veículos filtrados.';return}
+ const table=document.createElement('table');table.className='fleet-table xrm-documents-table';
+ const head=document.createElement('thead'),hr=document.createElement('tr');
+ for(const name of ['Veículo','Origem do anexo','Arquivo','Data','Ação']){const th=document.createElement('th');th.textContent=name;hr.append(th)}head.append(hr);
+ const body=document.createElement('tbody');
+ for(const doc of rows){
+  const vehicle=selected.find(v=>v.id===doc.vehicle_id),tr=document.createElement('tr');
+  for(const value of [vehicle?.plate||doc.plate||'Veículo',names[doc.kind]||'Cadastro',doc.name||'Documento',doc.created_at?new Date(doc.created_at).toLocaleDateString('pt-BR'):'—']){const td=document.createElement('td');td.textContent=value;tr.append(td)}
+  const action=document.createElement('td'),button=document.createElement('button');button.className='fleet-button';button.type='button';button.textContent='Visualizar';
+  button.onclick=async()=>{try{const {data,error}=await sb.storage.from(doc.legacy?'xrmovi-vehicle-docs':'xrmovi-record-attachments').createSignedUrl(doc.path,60);if(error)throw error;const url=new URL(data.signedUrl);if(url.protocol!=='https:')throw Error('Link inválido');window.open(url.href,'_blank','noopener,noreferrer')}catch(error){msg('Falha ao abrir documento: '+error.message)}};action.append(button);tr.append(action);body.append(tr)
+ }
+ table.append(head,body);const wrap=document.createElement('div');wrap.className='fleet-table-wrap';wrap.append(table);root.append(wrap)
 }
 function renderFleetHistory(){
  const root=el('history-content'),form=el('history-filters');if(!root||!form)return;if(!form.elements.from.value&&!form.elements.to.value){form.elements.from.value=localDay(new Date(new Date().getFullYear(),new Date().getMonth(),1));form.elements.to.value=localDay(new Date())}renderFilterSummary();const from=form.elements.from.value,to=form.elements.to.value,kind=form.elements.kind.value;
@@ -243,7 +263,7 @@ function renderContractFinance(filtered){
  let panel=el('xrm-contract-finance');if(!panel){panel=document.createElement('section');panel.id='xrm-contract-finance';panel.className='fleet-panel';el('view-financial')?.append(panel)}if(!panel)return;panel.replaceChildren();
  if(financialState){panel.textContent=financialState==='loading'?'Consultando custos do mês selecionado…':'Não foi possível consultar os custos do mês selecionado. Atualize para tentar novamente.';return}
  const ids=new Set(filtered.map(v=>v.id));const rows=[...paidExpenses.filter(row=>ids.has(row.vehicle_id)).map(row=>({...row,kind:'expense',amount:row.amount,description:(expenseCategories[row.category]||'Despesa')+' · '+row.description})),...fuelEntries.filter(row=>ids.has(row.vehicle_id)).map(row=>({...row,kind:'fuel',amount:row.cost??row.total_cost,description:'Abastecimento'+(row.station?' · '+row.station:'')})),...maintenanceExpenses.filter(row=>ids.has(row.vehicle_id)).map(row=>({...row,kind:'maintenance',amount:row.actual_cost,description:row.title||'Manutenção concluída'}))];
- const title=document.createElement('h2');title.textContent='Custos da frota filtrada';panel.append(title);const caption=document.createElement('p');caption.className='fleet-financial-caption';caption.textContent='Período: '+(el('fuel-ranking-month')?.value||'Mês atual')+' · '+filtered.length+' veículo(s). Clique nos valores para consultar os lançamentos.';panel.append(caption);
+ const title=document.createElement('h2');title.textContent='Custos da frota filtrada';panel.append(title);const caption=document.createElement('p');caption.className='fleet-financial-caption';caption.textContent='Período: '+(xrmReportRange?.from&&xrmReportRange?.to?xrmReportRange.from+' a '+xrmReportRange.to:el('fuel-ranking-month')?.value||'Mês atual')+' · '+filtered.length+' veículo(s). Clique nos valores para consultar os lançamentos.';panel.append(caption);
  const money=n=>Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});const sum=list=>list.reduce((total,row)=>total+Number(row.amount||0),0);
  const cards=document.createElement('div');cards.className='fleet-financial-cards';for(const [key,label]of [['all','Total'],['fuel','Combustível'],['maintenance','Manutenção realizada'],['expense','Despesas pagas']]){const list=rows.filter(row=>key==='all'||row.kind===key),button=document.createElement('button'),name=document.createElement('span'),value=document.createElement('strong');button.type='button';button.dataset.financialKind=key;button.setAttribute('aria-expanded',String(financialDetailsOpen&&financialDetailsKind===key));button.setAttribute('aria-controls','financial-entries');name.textContent=label;value.textContent=money(sum(list));button.append(name,value);button.onclick=()=>{financialDetailsOpen=true;financialDetailsKind=key;renderContractFinance(vehicles.filter(v=>!filteredVehicleIds||filteredVehicleIds.has(v.id)))};cards.append(button)}panel.append(cards);
  const missing=rows.filter(row=>row.amount==null).length;if(missing){const note=document.createElement('p');note.className='fleet-financial-caption';note.textContent=missing+' lançamento(s) sem custo informado. Esses valores não compõem o total.';panel.append(note)}
@@ -327,6 +347,31 @@ function appendDriverAlerts(){
 for(const id of ['driver-search','driver-status','expense-search','expense-category','expense-status','expense-month'])el(id)?.addEventListener(id.endsWith('search')?'input':'change',renderRegistries);
 if(el('driver-clear'))el('driver-clear').onclick=()=>{el('driver-search').value='';el('driver-status').value='active';renderRegistries()};
 
+let xrmReportRange=null;
+function xrmDate(value){return [value.getFullYear(),String(value.getMonth()+1).padStart(2,'0'),String(value.getDate()).padStart(2,'0')].join('-')}
+function xrmResolveRange(){
+ const preset=el('xrm-report-period')?.value||'monthly';
+ const anchor=new Date((el('xrm-report-anchor')?.value||xrmDate(new Date()))+'T12:00:00');
+ const year=anchor.getFullYear(),month=anchor.getMonth(),day=anchor.getDate();
+ let first,last;
+ if(preset==='daily'){first=last=anchor}
+ else if(preset==='fortnight'){first=new Date(year,month,day<=15?1:16);last=new Date(year,month,day<=15?15:new Date(year,month+1,0).getDate())}
+ else if(preset==='monthly'){first=new Date(year,month,1);last=new Date(year,month+1,0)}
+ else if(preset==='quarterly'){const m=Math.floor(month/3)*3;first=new Date(year,m,1);last=new Date(year,m+3,0)}
+ else if(preset==='semiannual'){const m=month<6?0:6;first=new Date(year,m,1);last=new Date(year,m+6,0)}
+ else return {from:el('xrm-report-from').value,to:el('xrm-report-to').value};
+ return {from:xrmDate(first),to:xrmDate(last)};
+}
+function xrmSyncReportDates(){const range=xrmResolveRange(),custom=el('xrm-report-period').value==='custom';for(const [id,value] of [['xrm-report-from',range.from],['xrm-report-to',range.to]]){const node=el(id);if(!custom)node.value=value;node.readOnly=!custom}put('xrm-report-range-label',range.from+' a '+range.to)}
+async function xrmApplyReportRange(){
+ if(!company)return;const {from,to}=xrmResolveRange();if(!from||!to||from>to){msg('Selecione um período válido.');return}
+ const id=company.id,request=++financeRequest;xrmReportRange={from,to};financialState='loading';renderContractFinance(vehicles.filter(v=>!filteredVehicleIds||filteredVehicleIds.has(v.id)));
+ try{const data=await rpc('cost_report',{cid:id,from_date:from,to_date:to,vid:null});if(company?.id!==id||request!==financeRequest)return;fuelEntries=data?.fuel||[];maintenanceExpenses=data?.maintenance||[];paidExpenses=data?.expenses||[];financialState='';applyVehicleFilters()}catch(error){if(request!==financeRequest)return;financialState='error';applyVehicleFilters();msg('Não foi possível consultar o período: '+error.message)}
+}
+if(el('xrm-report-anchor'))el('xrm-report-anchor').value=xrmDate(new Date());
+for(const id of ['xrm-report-period','xrm-report-anchor'])el(id)?.addEventListener('change',xrmSyncReportDates);
+el('xrm-report-apply')?.addEventListener('click',()=>void xrmApplyReportRange());
+xrmSyncReportDates();
 /* Finance exports use the same currently loaded, company-scoped records as the report cards. */
 function xrmFinancialExportRows(){
  const ids=new Set(vehicles.filter(v=>!filteredVehicleIds||filteredVehicleIds.has(v.id)).map(v=>v.id));
@@ -339,7 +384,7 @@ function xrmFinancialExportRows(){
 }
 if(el('financial-export-csv'))el('financial-export-csv').onclick=()=>{
  if(financialState){msg('Relatório indisponível: consulte os dados do período novamente.');return}
- const rows=xrmFinancialExportRows(),month=el('fuel-ranking-month')?.value||'periodo';
+ const rows=xrmFinancialExportRows(),month=xrmReportRange?xrmReportRange.from+'_'+xrmReportRange.to:el('fuel-ranking-month')?.value||'periodo';
  const escapeCsv=value=>'"'+String(value??'').replaceAll('"','""')+'"';
  const data=[['Data','Veículo','Tipo','Descrição','Valor (R$)'],...rows].map(row=>row.map(escapeCsv).join(';')).join('\r\n');
  const blob=new Blob(['\uFEFF'+data],{type:'text/csv;charset=utf-8'});
@@ -348,8 +393,12 @@ if(el('financial-export-csv'))el('financial-export-csv').onclick=()=>{
 };
 if(el('financial-print'))el('financial-print').onclick=()=>{
  if(financialState){msg('Consulte os dados financeiros antes de imprimir.');return}
- financialDetailsOpen=true;financialDetailsKind='all';
- renderContractFinance(vehicles.filter(v=>!filteredVehicleIds||filteredVehicleIds.has(v.id)));
- window.print();
+ const records=xrmFinancialExportRows(),money=n=>Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+ const safe=v=>String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
+ const sum=kind=>records.filter(r=>!kind||r[2]===kind).reduce((acc,r)=>acc+Number(r[4]||0),0);
+ const range=xrmReportRange?xrmReportRange.from+' a '+xrmReportRange.to:el('fuel-ranking-month')?.value||'Mês atual';
+ const rows=records.map(r=>'<tr>'+r.map((v,i)=>'<td'+(i===4?' class="value"':'')+'>'+safe(i===4?money(v):v)+'</td>').join('')+'</tr>').join('');
+ const markup='<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Relatório financeiro XRMOVI</title><style>@page{size:A4 landscape;margin:15mm}*{box-sizing:border-box}body{font:11px Arial,sans-serif;color:#1b3042;margin:0;background:white}h1{font-size:21px;margin:0 0 7px}header{border-bottom:2px solid #177c91;padding-bottom:13px;margin-bottom:16px}.muted{color:#567084;font-size:11px}.totals{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0 19px}.total{border:1px solid #c8d7dd;padding:12px;border-radius:6px}.total strong{display:block;font-size:15px;margin-top:6px;color:#126e7d}table{width:100%;border-collapse:collapse;table-layout:fixed}th{text-align:left;background:#e5eff2;color:#17374b;font-size:10px;text-transform:uppercase}td,th{padding:8px 7px;border-bottom:1px solid #d6e0e5;overflow-wrap:anywhere}tr{break-inside:avoid}thead{display:table-header-group}.value{text-align:right;white-space:nowrap}td:nth-child(1){width:12%}td:nth-child(2){width:13%}td:nth-child(3){width:17%}td:nth-child(5){width:15%}.footer{border-top:1px solid #d6e0e5;margin-top:20px;padding-top:8px;font-size:10px;color:#567084}</style></head><body><header><h1>Relatório financeiro da frota</h1><div class="muted">XRMOVI | Empresa: '+safe(company?.name||'')+' | Período: '+safe(range)+' | Veículos filtrados: '+(filteredVehicleIds?.size??vehicles.length)+' | Emitido em '+safe(new Date().toLocaleString('pt-BR'))+'</div></header><div class="totals">'+[['Total',sum()],['Combustível',sum('Combustível')],['Manutenção realizada',sum('Manutenção realizada')],['Despesas pagas',sum('Despesa paga')]].map(([label,value])=>'<div class="total">'+safe(label)+'<strong>'+safe(money(value))+'</strong></div>').join('')+'</div><table><thead><tr><th>Data</th><th>Veículo</th><th>Tipo</th><th>Descrição</th><th>Valor</th></tr></thead><tbody>'+rows+'</tbody></table><div class="footer">'+records.length+' lançamento(s) · Valores em reais (R$)</div></body></html>';
+ const popup=window.open('','_blank');if(!popup){msg('Permita a abertura de pop-ups para imprimir o relatório.');return}popup.document.open();popup.document.write(markup);popup.document.close();popup.focus();popup.addEventListener('load',()=>popup.print(),{once:true});
 };
 
