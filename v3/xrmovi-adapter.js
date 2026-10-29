@@ -1,7 +1,7 @@
 import{createClient}from 'https://esm.sh/@supabase/supabase-js@2';
 import { setupSubscriptionPanel } from './subscription-panel.js?v=20261029-billing-2';
 import { createCompanyBranding } from './company-branding.js?v=20261029-logo-1';
-import { setupMileage } from './mileage.js?v=20261029-km-audit-33';
+import { setupMileage } from './mileage.js?v=20261029-km-audit-34';
 let branding;
 let mileage=null;
 let subscriptionPanel=null;
