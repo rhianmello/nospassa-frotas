@@ -102,6 +102,7 @@ export function setupMileage({client,getCompany,getVehicles,getFilteredIds,onRel
     actions.append(btn('Configurar',()=>onEditVehicle(v.id),'subtle small'));
     if(v.qr_token)actions.append(btn('QR Code',()=>showQr(v),'subtle small'));
     if(v.interval_km)actions.append(btn('Concluir óleo',()=>showOil(v),'subtle small'));
+    if(v.interval_km)actions.append(btn('Histórico de óleo',()=>void showOilHistory(v),'subtle small'));
    }
    tr.append(actions);tbody.append(tr);
   }
@@ -159,7 +160,8 @@ export function setupMileage({client,getCompany,getVehicles,getFilteredIds,onRel
  function showOil(vehicle){
   const modal=makeDialog('Concluir troca de óleo · '+vehicle.plate);
   const form=add('form','xrm-mileage-modal-form');form.method='dialog';
-  const meter=labelInput('KM da troca','number',vehicle.meter),date=labelInput('Data do serviço','date',new Date().toLocaleDateString('en-CA')),oil=labelInput('Óleo utilizado','text',vehicle.oil_type||''),cost=labelInput('Custo realizado (R$)','number','0'),notes=labelInput('Serviço realizado / observações','text','');
+  const today=new Date(),localISO=[today.getFullYear(),String(today.getMonth()+1).padStart(2,'0'),String(today.getDate()).padStart(2,'0')].join('-');
+  const meter=labelInput('KM da troca','number',vehicle.meter),date=labelInput('Data do serviço','date',localISO),oil=labelInput('Óleo utilizado','text',vehicle.oil_type||''),cost=labelInput('Custo realizado (R$)','number','0'),notes=labelInput('Serviço realizado / observações','text','');
   for(const x of [meter,date,oil,cost,notes])form.append(x.label);
   meter.input.required=true;meter.input.min='0';date.input.required=true;cost.input.min='0';cost.input.step='.01';
   const message=add('p','xrm-mileage-modal-help','A próxima troca será calculada automaticamente após salvar a conclusão.');form.append(message);
@@ -169,6 +171,22 @@ export function setupMileage({client,getCompany,getVehicles,getFilteredIds,onRel
    try{await rpc('oil_complete',{cid:companyId,vid:vehicle.id,p_meter:Number(meter.input.value),p_date:date.input.value,p_oil_type:oil.input.value,p_cost:Number(cost.input.value)||0,p_notes:notes.input.value});modal.close();await onReload();await refresh();status('Troca de óleo concluída. Próximo vencimento atualizado.')}
    catch(error){message.textContent=error.message;submit.disabled=false}
   },'primary');form.append(submit);modal.append(form);
+ }
+ async function showOilHistory(vehicle){
+  const modal=makeDialog('Trocas de óleo · '+vehicle.plate);
+  const box=add('div','xrm-mileage-history');box.append(add('p','xrm-mileage-modal-help','Consultando trocas registradas no Supabase…'));modal.append(box);
+  try{
+   const records=await rpc('oil_history',{cid:companyId,vid:vehicle.id});
+   box.replaceChildren();
+   if(!records?.length){box.append(add('p','xrm-mileage-modal-help','Nenhuma troca concluída neste veículo.'));return}
+   for(const item of records){
+    const line=add('div','xrm-mileage-history-row');
+    line.append(add('strong','',day(item.completed_on)+' · '+km(item.completed_meter)+' km'));
+    line.append(add('span','',(item.oil_type||'Óleo não informado')+' · '+km(item.interval_km)+' km por troca'));
+    line.append(add('span','','Custo: '+money(item.cost)+' · '+(item.notes||'Sem observações')));
+    box.append(line);
+   }
+  }catch(error){box.textContent='Erro ao consultar histórico: '+error.message}
  }
  function showReview(record){
   const modal=makeDialog('Conferir leitura · '+record.plate);
