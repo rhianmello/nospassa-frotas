@@ -1,6 +1,6 @@
 // XRMOVI | Central de assinatura — todas as gravações passam por RPCs autenticadas.
 // Nunca decide cotas pelo navegador: o banco aplica regras nas inserções.
-export function setupSubscriptionPanel({client,getCompany,onCompanyCreated,onDataChanged}){
+export function setupSubscriptionPanel({client,getCompany,onCompanyCreated,onDataChanged,billingEnabled=false}){
  const root=document.getElementById('xrm-subscription-content');
  const nav=document.getElementById('xrm-subscriptions-nav');
  if(!root)return {refresh:async()=>{}};
@@ -57,7 +57,7 @@ export function setupSubscriptionPanel({client,getCompany,onCompanyCreated,onDat
    <section class="xrm-group"><h3>Adicionar empresa</h3><form id="xrm-bill-company-form"><label>Nome da nova empresa<input name="company" required minlength="2" maxlength="160" placeholder="Ex.: Empresa de Transportes"></label><button type="submit">Cadastrar empresa</button></form><div class="xrm-feedback" id="xrm-bill-company-feedback" role="status"></div></section>
    <section class="xrm-group"><h3>Criar contrato</h3><form id="xrm-bill-contract-form"><label>Empresa<select name="company" required id="xrm-bill-contract-company"></select></label><label>Contrato<input name="name" required minlength="2" maxlength="160" placeholder="Ex.: Contrato Obra 02"></label><label>Cliente (opcional)<input name="client" maxlength="160"></label><label>Código (opcional)<input name="code" maxlength="60"></label><button type="submit" class="secondary">Adicionar contrato</button></form><div class="xrm-feedback" id="xrm-bill-contract-feedback" role="status"></div></section>
    <section class="xrm-group"><h3>Adicionar usuário</h3><form id="xrm-bill-member-form"><label>Empresa<select name="company" required id="xrm-bill-member-company"></select></label><label>E-mail cadastrado e confirmado<input type="email" name="email" required autocomplete="off" placeholder="usuario@empresa.com.br"></label><label>Permissão<select name="role"><option value="manager">Gestor</option><option value="driver">Motorista</option></select></label><button type="submit" class="secondary">Vincular usuário</button></form><div class="xrm-feedback" id="xrm-bill-member-feedback" role="status"></div><p class="xrm-info">O usuário precisa ter conta confirmada no XRMOVI. O número de usuários é independente do número de empresas.</p></section>
-   <section class="xrm-group"><h3>Alterar plano</h3><form id="xrm-bill-plan-form"><label>Plano desejado<select name="plan" required><option value="start">Start — R$ 19,90</option><option value="pro">Pro — R$ 39,90</option><option value="business">Business — R$ 64,90</option><option value="advanced">Advanced — R$ 99,90</option></select></label><button type="submit">Solicitar mudança de plano</button></form><div class="xrm-feedback" id="xrm-bill-plan-feedback" role="status"></div><p class="xrm-info">Solicitar um plano não ativa cobrança nem libera cotas extras. A mudança depende de confirmação comercial e de pagamento. Para Enterprise, entre em contato.</p></section>
+   <section class="xrm-group"><h3>Alterar plano</h3><form id="xrm-bill-plan-form"><label>Plano desejado<select name="plan" required><option value="start">Start — R$ 19,90</option><option value="pro">Pro — R$ 39,90</option><option value="business">Business — R$ 64,90</option><option value="advanced">Advanced — R$ 99,90</option></select></label><button type="submit">Solicitar mudança de plano</button><button type="button" class="secondary" id="xrm-bill-checkout">Pagar com Mercado Pago</button></form><div class="xrm-feedback" id="xrm-bill-plan-feedback" role="status"></div><p class="xrm-info">Solicitar um plano não ativa cobrança nem libera cotas extras. O checkout ficará disponível após a habilitação segura do Mercado Pago. Para Enterprise, entre em contato.</p></section>
   </div>
   <p class="xrm-billing-foot">Apenas o titular da assinatura pode gerenciar empresas, usuários e planos. Todas as alterações são validadas pelo servidor.</p>
  </div>`;
@@ -99,6 +99,28 @@ export function setupSubscriptionPanel({client,getCompany,onCompanyCreated,onDat
    const {error}=await client.rpc('xrmovi_account_request_plan',{cid:base.id,chosen_plan:String(data.get('plan'))});
    if(error)throw error;feedback('xrm-bill-plan-feedback','Solicitação registrada. Ainda não houve cobrança e o plano não foi alterado.');
   });
+ });
+ const checkoutButton=root.querySelector('#xrm-bill-checkout');
+ checkoutButton.disabled=!billingEnabled;
+ checkoutButton.title=billingEnabled?'Abrir ambiente seguro de pagamento':'Checkout indisponível até a configuração comercial.';
+ checkoutButton.addEventListener('click',async()=>{
+  if(!billingEnabled)return;
+  const base=getCompany();if(!base)return;
+  checkoutButton.disabled=true;feedback('xrm-bill-plan-feedback','Preparando o pagamento no Mercado Pago...');
+  try{
+   const chosen=root.querySelector('#xrm-bill-plan-form select').value;
+   const {data,error}=await client.functions.invoke('xrmovi-create-subscription',{
+    body:{company_id:base.id,plan:chosen}
+   });
+   if(error)throw new Error(error.message||'Não foi possível iniciar o checkout.');
+   const url=new URL(String(data?.checkout_url||''));
+   if(url.protocol!=='https:'||!(url.hostname==='mercadopago.com.br'||url.hostname.endsWith('.mercadopago.com.br')||url.hostname==='mercadopago.com'||url.hostname.endsWith('.mercadopago.com')))
+    throw new Error('O provedor retornou um endereço de pagamento inválido.');
+   window.location.assign(url.href);
+  }catch(err){
+   feedback('xrm-bill-plan-feedback',err?.message||'Checkout indisponível.',true);
+   checkoutButton.disabled=false;
+  }
  });
  const selectCompanies=(id,companies,active)=>{
   const node=root.querySelector('#'+id);node.replaceChildren();
