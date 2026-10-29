@@ -532,3 +532,60 @@
 @media(max-width:900px){#view-dashboard .fleet-insights-grid{grid-template-columns:1fr}#view-dashboard .fleet-insight-card{width:100%}}
 @media(max-width:480px){#view-dashboard .fleet-insight-header{align-items:flex-start}#view-dashboard .fleet-insight-header .fleet-link-button{font-size:10px}#view-dashboard .fleet-insight-stat{min-height:67px;padding:9px}#view-dashboard .fleet-insight-stats{gap:8px}#view-dashboard .fleet-insight-rank{grid-template-columns:minmax(55px,80px) minmax(0,1fr) auto;gap:7px}#view-dashboard .fleet-insight-driver{grid-template-columns:31px minmax(0,1fr) auto;gap:8px}#view-dashboard .fleet-insight-avatar{width:30px;height:30px}#view-dashboard .fleet-insight-expiry{font-size:10px}}
 
+/* One-screen executive workspace on desktop, while preserving scroll on small screens.
+   Keep all details reachable through existing module links. */
+@media(min-width:1100px) and (min-height:680px){
+.fleet-page .fleet-content{padding-top:8px!important;padding-bottom:8px!important}
+.fleet-page .fleet-hero.xrm-company-header{padding-top:5px!important;padding-bottom:5px!important;margin-bottom:6px!important;row-gap:2px!important}
+.fleet-page .xrm-company-header #company-logo-area{max-height:62px}
+.fleet-page .xrm-company-header #company-logo-area img{max-height:62px!important;max-width:62px!important;object-fit:contain}
+#view-dashboard .fleet-section-label{margin:1px 0 6px!important;padding:0!important;min-height:0!important}
+#view-dashboard .fleet-section-label strong{font-size:12px!important}
+#view-dashboard .fleet-kpis{gap:8px!important;margin:0 0 8px!important}
+#view-dashboard .fleet-kpi{min-height:65px!important;padding:9px 11px!important;gap:4px!important}
+#view-dashboard .fleet-kpi .fleet-kpi-label{font-size:10px!important}
+#view-dashboard .fleet-kpi .fleet-kpi-value{font-size:23px!important;line-height:1.05!important}
+#view-dashboard .fleet-kpi .fleet-kpi-sub{font-size:8px!important}
+#view-dashboard .fleet-overview-grid{display:grid!important;grid-template-columns:minmax(0,.90fr) minmax(0,.83fr) minmax(0,1.37fr)!important;gap:9px!important}
+#view-dashboard .fleet-overview-grid>.fleet-panel{min-height:0!important;height:clamp(204px,26vh,248px)!important;margin:0!important;overflow:hidden!important}
+#view-dashboard .fleet-action-panel{grid-column:1!important;grid-row:1!important}
+#view-dashboard .fleet-status-panel{grid-column:2!important;grid-row:1!important}
+#view-dashboard .fleet-expiry-panel{grid-column:3!important;grid-row:1!important}
+#view-dashboard .fleet-overview-grid>.fleet-panel>header{padding:9px 12px!important;min-height:45px!important}
+#view-dashboard .fleet-overview-grid>.fleet-panel>header h2{font-size:12px!important;line-height:1.25!important}
+#view-dashboard .fleet-overview-grid>.fleet-panel>header .eyebrow{font-size:8px!important}
+#view-dashboard .fleet-overview-grid>.fleet-panel>header small{font-size:8px!important}
+#view-dashboard .fleet-alert-preview-grid{gap:5px!important;padding:7px!important}
+#view-dashboard .fleet-alert-preview-grid>.fleet-ptran-entry:nth-child(n+4){display:none!important}
+#view-dashboard .fleet-alert-preview-grid>.fleet-ptran-entry{min-height:0!important;padding:7px 8px!important;font-size:10px!important;line-height:1.2!important}
+#view-dashboard .fleet-status-panel .fleet-donut-layout.fleet-donut-compact{gap:5px!important;padding:4px 8px!important}
+#view-dashboard .fleet-status-panel .fleet-donut-compact>.fleet-chart-shell{min-height:95px!important}
+#view-dashboard #v3-situation-donut{width:clamp(91px,12vh,118px)!important;margin:2px auto!important}
+#view-dashboard #v3-situation-donut>div{font-size:22px!important}
+#view-dashboard .fleet-status-panel .fleet-chart-legend{gap:3px!important;padding:0!important}
+#view-dashboard .fleet-status-panel .xrm-status-legend-item{min-height:0!important;padding:5px 7px!important;font-size:9px!important;line-height:1.15!important}
+#view-dashboard #v3-expiry-bars{min-height:0!important;padding:11px 12px 5px!important;gap:8px!important}
+#view-dashboard #v3-expiry-bars>div{grid-template-columns:minmax(65px,80px) minmax(0,1fr) 21px!important;gap:6px!important;font-size:10px!important}
+#view-dashboard #v3-expiry-bars>div>div{height:10px!important}
+#view-dashboard .fleet-insights-grid{grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr)!important;gap:9px!important;margin-top:9px!important}
+#view-dashboard .fleet-insight-header{min-height:43px!important;padding:9px 12px!important}
+#view-dashboard .fleet-insight-header h2{font-size:13px!important}
+#view-dashboard .fleet-insight-header .eyebrow{font-size:8px!important}
+#view-dashboard .fleet-insight-period{padding:6px 12px 2px!important;font-size:9px!important}
+#view-dashboard .fleet-insight-stats{padding:6px 12px 8px!important;gap:6px!important}
+#view-dashboard .fleet-insight-stat{min-height:47px!important;padding:6px 9px!important;gap:3px!important}
+#view-dashboard .fleet-insight-stat span{font-size:9px!important}
+#view-dashboard .fleet-insight-stat strong{font-size:clamp(15px,1.5vw,20px)!important}
+#view-dashboard .fleet-insight-subheading{font-size:9px!important;margin:0 12px 3px!important}
+#view-dashboard .fleet-insight-ranking,#view-dashboard .fleet-insight-driver-list{padding:0 12px 7px!important}
+#view-dashboard .fleet-insight-rank{min-height:26px!important}
+#view-dashboard .fleet-insight-driver{padding:6px 0!important;gap:8px!important}
+#view-dashboard .fleet-insight-avatar{width:27px!important;height:27px!important}
+#view-dashboard .fleet-insight-driver-identity strong{font-size:11px!important}
+#view-dashboard .fleet-insight-driver-identity small{font-size:9px!important}
+#view-dashboard .fleet-insight-expiry{font-size:10px!important}
+}
+@media(max-width:1099px), (max-height:679px){
+/* On narrow or short displays, content remains visible and scrollable. */
+#view-dashboard .fleet-overview-grid>.fleet-panel{height:auto}
+}
