@@ -45,7 +45,8 @@ function showLoadFailure(error){
  const retry=document.createElement('button');retry.type='button';retry.textContent='Tentar novamente';retry.style.cssText='padding:12px;background:#30d3b6;border:0;border-radius:8px;font-weight:700;cursor:pointer';
  retry.onclick=()=>{login.hidden=true;if(!sb)window.location.reload();else void init()};
  const back=document.createElement('a');back.href='../';back.textContent='Voltar à página inicial';back.style.cssText='color:#7de9d3;text-align:center;padding:8px';
- box.append(heading,intro,message,retry,back);
+ const support=document.createElement('a');support.href='../cliente/';support.textContent='Minha conta e mensagens com o administrador';support.style.cssText='color:#77eccc;text-align:center;padding:8px;border:1px solid #33726a;border-radius:8px;font-size:12px';
+ box.append(heading,intro,message,retry,support,back);
 }
 async function init(){
  try{
