@@ -1,7 +1,7 @@
 import{createClient}from'https://esm.sh/@supabase/supabase-js@2';
 const $=id=>document.getElementById(id);
-const names={patrimonio:'Patrimônio',locais:'Manutenção predial / locais',almoxarifado:'Almoxarifado',checklists:'Modelos de checklist',chamados:'Help Desk / chamados',pcm:'Planejamento e controle',inspecoes:'Inspeções',movimentacoes:'Movimentações'};
-let sb,companies=[],cid=null,moduleName='patrimonio',records=[],orders=[],editing=null;
+const names={almoxarifado:'Estoque de peças',checklists:'Checklists de veículos',inspecoes:'Inspeções da frota',movimentacoes:'Movimentações de peças'};
+let sb,companies=[],cid=null,moduleName='almoxarifado',records=[],orders=[],editing=null;
 const say=msg=>$('message').textContent=msg;
 async function rpc(name,args={}){const{data,error}=await sb.rpc('xrmovi_'+name,args);if(error)throw error;return data}
 function option(value,label){const o=document.createElement('option');o.value=value;o.textContent=label;return o}
