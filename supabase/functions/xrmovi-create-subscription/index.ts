@@ -18,6 +18,8 @@ Deno.serve(async(req:Request)=>{
  const token=Deno.env.get("XRMOVI_MP_ACCESS_TOKEN");
  const supabaseUrl=Deno.env.get("SUPABASE_URL"),anonKey=Deno.env.get("SUPABASE_ANON_KEY"),serviceKey=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
  if(!token||!supabaseUrl||!anonKey||!serviceKey)return json({error:"Configuração de cobrança incompleta."},503,outputOrigin);
+ let createdIntent:string|null=null;
+ let providerCreated=false;
  const bearer=req.headers.get("authorization")||"";
  if(!bearer.startsWith("Bearer "))return json({error:"Faça login antes de contratar."},401,outputOrigin);
  try{
@@ -30,6 +32,7 @@ Deno.serve(async(req:Request)=>{
     return json({error:"Dados inválidos."},400,outputOrigin);
   const {data:intent,error:intentError}=await authClient.rpc("xrmovi_checkout_prepare",{cid,chosen_plan:chosen});
   if(intentError)throw new Error(intentError.message);
+  createdIntent=String(intent.intent_id);
   const price=Number(intent.amount_brl);
   if(!Number.isFinite(price)||price<=0)throw new Error("Preço inválido.");
   const mp=await fetch("https://api.mercadopago.com/preapproval",{
@@ -46,6 +49,7 @@ Deno.serve(async(req:Request)=>{
   });
   if(!mp.ok)throw new Error("O provedor de cobrança não autorizou a criação do checkout.");
   const response=await mp.json();
+  providerCreated=Boolean(response?.id);
   if(!response?.id||!response?.init_point||!String(response.init_point).startsWith("https://"))
     throw new Error("Checkout sem link válido.");
   const service=createClient(supabaseUrl,serviceKey,{auth:{persistSession:false}});
@@ -53,6 +57,11 @@ Deno.serve(async(req:Request)=>{
   if(bindError)throw new Error("Falha no vínculo seguro da assinatura.");
   return json({checkout_url:String(response.init_point),status:"pending"},200,outputOrigin);
  }catch(error){
+  if(createdIntent&&!providerCreated&&supabaseUrl&&serviceKey){
+   try{const service=createClient(supabaseUrl,serviceKey,{auth:{persistSession:false}});
+    await service.rpc("xrmovi_checkout_fail",{intent_id:createdIntent});
+   }catch{} // Never replace the original payment provider error.
+  }
   return json({error:error instanceof Error?error.message:"Não foi possível abrir o checkout."},400,outputOrigin);
  }
 });
