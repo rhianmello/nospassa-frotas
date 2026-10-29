@@ -1,6 +1,6 @@
 import{createClient}from 'https://esm.sh/@supabase/supabase-js@2';
 import { createCompanyBranding } from './company-branding.js?v=20261029-logo-1';
-import { setupMileage } from './mileage.js?v=20261029-km-oil-30';
+import { setupMileage } from './mileage.js?v=20261029-qr-review-31';
 let branding;
 let mileage=null;
 let drivers=[],vehicleExpenses=[],paidExpenses=[],historyExpenses=[];
