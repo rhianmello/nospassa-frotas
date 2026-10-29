@@ -1,16 +1,26 @@
-# XRMOVI Fleet
+# Frota — reconstrução limpa a partir da CPL
 
-Plataforma de gestão inteligente de frotas.
+Sistema em desenvolvimento: https://frota.nospassa.com.br/
 
-O repositório permanece `nospassa-frotas` por compatibilidade. O domínio atual `frota.nospassa.com.br` continua em uso até a migração segura para um novo domínio.
+## Estado atual
+- A página inicial redireciona para `/v3/`, onde está a réplica visual da Frota CPL.
+- A estrutura HTML/CSS e os SVGs de veículos foram copiados do módulo original da CPL.
+- Os scripts originais da CPL estão preservados como referência em `v3/cpl-original/js/`. **Não são executados** na V3: usam banco, senha master e RPCs próprios da CPL.
+- `v3/xrmovi-adapter.js` é o adaptador provisório ao schema XRMOVI do Supabase. Parte dos recursos da CPL ainda não está disponível.
+- A empresa de teste e registros relacionados foram excluídos do schema `xrmovi`, preservando as outras aplicações do Supabase.
+- As contas de autenticação `auth.users` foram mantidas. Um arquivo no bucket de Storage do XRMOVI necessita exclusão pelo serviço de Storage.
+- A antiga V1, V2, painel CEO e documentos legados foram removidos do branch principal.
 
-A interface pública está em `index.html`; o portal em `app/index.html`.
+## Recuperação
+Backup integral do repositório antes da limpeza:
+`backup-xrmovi-before-clean-rebuild-20261029`
 
-## SaaS comercial — implementação em etapas
-- Página administrativa: `/ceo/` (requer sessão Supabase e usuário previamente cadastrado em `fleet_admins` por operador autorizado).
-- Portal das empresas: `/app/` (ainda desabilitado até configurar `app/config.json`).
-- Migração proposta: `database/002_saas_ceo_billing.sql`. **Não executada**; revisar e testar junto à migração 001 em projeto de frotas isolado.
-- Planos propostos Start (até 5 veículos/1 login), Pro (15/3), Business (30/5), Advanced (60/10), Enterprise sob contrato.
-- Controle de pausa, teste e cancelamento em RPCs do CEO, sem poder declarar pagamentos aprovados manualmente.
-- Próximos itens obrigatórios: convites para funcionários, cobrança Mercado Pago server-side (Pix/boleto/cartão), webhooks verificados e idempotentes, upgrades/downgrades prorrateados, expiração e recuperação de assinaturas, tela de contratação, testes de RLS e carga.
-- O domínio `frota.nospassa.com.br` e os projetos existentes Supabase permanecem intactos. Não disponibilizar comercialmente antes da validação ponta a ponta.
+## Próximas etapas
+1. Auditar scripts da CPL e mapear cada módulo ao modelo multiempresa.
+2. Criar nova autenticação/empresa inicial, mantendo isolamento por usuário.
+3. Reconstruir ativos, documentos, manutenção, abastecimento, programação semanal, histórico e relatórios.
+4. Testar login, autorização, upload, exportações e responsividade no navegador.
+5. Só habilitar rotinas de gravação e comercialização após validação funcional.
+
+## Segurança
+Não foram alterados o projeto CPL-EPC15, outras aplicações do Supabase ou dados de pagamentos de outros projetos. A cópia visual não equivale ainda à paridade funcional.
