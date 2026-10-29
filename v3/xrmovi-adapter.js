@@ -152,6 +152,94 @@ function refreshOverdueKpi(){
  card.classList.toggle('xrm-overdue-active',count>0);
  card.setAttribute('aria-label',count+' itens vencidos; abrir central de alertas');
 }
+/**
+ * Dashboard snapshots use only data already fetched for the active company.
+ * Financial figures come from the selected cost-report period, never demo data.
+ */
+function renderFleetInsights(){
+ const root=el('fleet-insight-cost-ranking'),driversRoot=el('fleet-insight-drivers');
+ if(!root||!driversRoot||!company)return;
+ const selected=filteredVehicleIds||new Set(vehicles.map(v=>v.id));
+ const scopedVehicles=vehicles.filter(v=>selected.has(v.id));
+ const scopeMaintenance=maintenance.filter(m=>selected.has(m.vehicle_id));
+ const open=scopeMaintenance.filter(m=>m.status==='open').length;
+ const overdue=scopeMaintenance.filter(m=>m.status!=='done'&&alertKind(m)==='overdue').length;
+ put('fleet-insight-open',open);
+ put('fleet-insight-overdue',overdue);
+ const month=el('fuel-ranking-month')?.value||localDay(new Date()).slice(0,7);
+ const [year,number]=month.split('-').map(Number);
+ const period=(year&&number)?new Date(year,number-1,1).toLocaleDateString('pt-BR',{month:'long',year:'numeric'}):month;
+ put('fleet-insight-period',period+' · '+scopedVehicles.length+' veículo(s) nos filtros');
+ const money=value=>Number(value||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+ const amount=(record,fields)=>{for(const field of fields){if(record[field]!=null&&record[field]!==''){const n=Number(record[field]);if(Number.isFinite(n))return n}}return 0};
+ root.replaceChildren();
+ if(financialState){
+  put('fleet-insight-fuel-cost','—');
+  put('fleet-insight-maint-cost','—');
+  const empty=document.createElement('p');
+  empty.className='fleet-insight-empty';
+  empty.textContent=financialState==='loading'?'Consultando custos do período…':'Não foi possível consultar os custos. Atualize para tentar novamente.';
+  root.append(empty);
+ }else{
+  const fuels=fuelEntries.filter(row=>selected.has(row.vehicle_id));
+  const maint=maintenanceExpenses.filter(row=>selected.has(row.vehicle_id));
+  const expenses=paidExpenses.filter(row=>selected.has(row.vehicle_id));
+  put('fleet-insight-fuel-cost',money(fuels.reduce((sum,row)=>sum+amount(row,['cost','total_cost']),0)));
+  put('fleet-insight-maint-cost',money(maint.reduce((sum,row)=>sum+amount(row,['actual_cost']),0)));
+  const group=new Map();
+  for(const row of [...fuels.map(value=>({value,fields:['cost','total_cost']})),...maint.map(value=>({value,fields:['actual_cost']})),...expenses.map(value=>({value,fields:['amount']}))]){
+   const vid=row.value.vehicle_id;
+   group.set(vid,(group.get(vid)||0)+amount(row.value,row.fields));
+  }
+  const ranking=scopedVehicles.map(v=>({plate:v.plate||'Ativo',value:group.get(v.id)||0})).filter(v=>v.value>0).sort((a,b)=>b.value-a.value).slice(0,3);
+  if(!ranking.length){
+   const empty=document.createElement('p');empty.className='fleet-insight-empty';empty.textContent='Nenhum custo registrado para os veículos e período selecionados.';root.append(empty);
+  }else{
+   const max=Math.max(1,...ranking.map(v=>v.value));
+   for(const [i,item] of ranking.entries()){
+    const row=document.createElement('div');row.className='fleet-insight-rank';
+    const name=document.createElement('span');name.className='fleet-insight-rank-name';name.textContent=(i+1)+'º '+item.plate;
+    const track=document.createElement('span');track.className='fleet-insight-rank-track';
+    const fill=document.createElement('span');fill.style.width=(item.value/max*100).toFixed(1)+'%';track.append(fill);
+    const value=document.createElement('strong');value.textContent=money(item.value);
+    row.append(name,track,value);root.append(row);
+   }
+  }
+ }
+ driversRoot.replaceChildren();
+ const hasFilters=['fleet-search','xrm-filter-category','xrm-filter-status','xrm-filter-expiry','xrm-contract-filter'].some(id=>Boolean(el(id)?.value));
+ const scopedIds=hasFilters?new Set(scopedVehicles.map(v=>v.driver_id).filter(Boolean)):null;
+ const activeDrivers=drivers.filter(d=>d.active!==false&&d.active!=='false'&&(!scopedIds||scopedIds.has(d.id)));
+ put('fleet-insight-drivers-period',hasFilters?'Motoristas vinculados aos veículos filtrados':'Próximos vencimentos dos motoristas ativos');
+ if(driversState){
+  const empty=document.createElement('p');empty.className='fleet-insight-empty';empty.textContent='Não foi possível consultar os motoristas. Atualize para tentar novamente.';driversRoot.append(empty);return;
+ }
+ if(!activeDrivers.length){
+  const empty=document.createElement('p');empty.className='fleet-insight-empty';empty.textContent=hasFilters?'Nenhum motorista vinculado aos veículos filtrados.':'Nenhum motorista ativo cadastrado na empresa.';driversRoot.append(empty);return;
+ }
+ const today=new Date();today.setHours(0,0,0,0);
+ const dateValue=d=>/^\\d{4}-\\d{2}-\\d{2}$/.test(String(d||''))?new Date(String(d)+'T00:00:00').getTime():Number.POSITIVE_INFINITY;
+ const sorted=activeDrivers.slice().sort((a,b)=>dateValue(a.cnh_expires_on)-dateValue(b.cnh_expires_on)||String(a.name).localeCompare(String(b.name),'pt-BR'));
+ for(const driver of sorted.slice(0,4)){
+  const row=document.createElement('div');row.className='fleet-insight-driver';
+  const avatar=document.createElement('span');avatar.className='fleet-insight-avatar';avatar.textContent=String(driver.name||'?').trim().split(/\\s+/).slice(0,2).map(part=>part[0]||'').join('').toLocaleUpperCase('pt-BR');
+  const identity=document.createElement('span');identity.className='fleet-insight-driver-identity';
+  const name=document.createElement('strong');name.textContent=driver.name||'Motorista';
+  const category=document.createElement('small');category.textContent='CNH '+(driver.cnh_category||'não informada');
+  identity.append(name,category);
+  const expires=document.createElement('span');expires.className='fleet-insight-expiry';
+  const ts=dateValue(driver.cnh_expires_on);
+  if(Number.isFinite(ts)){
+   const days=Math.round((ts-today.getTime())/86400000);
+   expires.textContent=days<0?'Vencida · '+formatRegistryDate(driver.cnh_expires_on):'Vence '+formatRegistryDate(driver.cnh_expires_on);
+   if(days<0)expires.classList.add('overdue');else if(days<=30)expires.classList.add('soon');
+  }else expires.textContent='Sem validade';
+  row.append(avatar,identity,expires);
+  driversRoot.append(row);
+ }
+ if(sorted.length>4){const more=document.createElement('p');more.className='fleet-insight-more';more.textContent='Mostrando 4 de '+sorted.length+' motoristas. Consulte a lista completa no módulo Motoristas.';driversRoot.append(more)}
+}
+
 function applyVehicleFilters(){
  const category=el('xrm-filter-category'),status=el('xrm-filter-status'),expiry=el('xrm-filter-expiry'),search=el('fleet-search');
  if(!category||!status||!expiry||!search)return;
@@ -172,7 +260,7 @@ function applyVehicleFilters(){
  const preview=el('alert-preview');if(preview){preview.replaceChildren();for(const m of scopedMaintenance.filter(m=>['overdue','soon'].includes(alertKind(m))).slice(0,6)){const item=document.createElement('button');item.type='button';item.className='fleet-ptran-entry';item.textContent=(m.plate||oldVehicles.find(v=>v.id===m.vehicle_id)?.plate||'Ativo')+' — '+m.title;item.onclick=()=>openMaintenanceDetails(m.id);preview.append(item)}if(!preview.children.length)preview.textContent='Nenhuma manutenção em atenção para o filtro selecionado.'}
  put('alert-preview-count',overdue+upcoming);
  const root=el('fleet-table-body');if(root){root.replaceChildren();for(const v of filtered){const tr=document.createElement('tr');for(const value of [v.plate,v.category||'Veículo',v.driver_name||'Não vinculado',v.status||'—',nextRevision(v.id),Number(v.odometer_value||0).toLocaleString('pt-BR')]){const td=document.createElement('td');td.textContent=value;tr.append(td)}const action=document.createElement('td');if(canWrite()){const edit=document.createElement('button');edit.className='fleet-button';edit.textContent='Editar';edit.onclick=()=>openWrite('vehicle',v);action.append(edit)}tr.append(action);root.append(tr)}}
- put('table-count',filtered.length);put('table-page-info',filtered.length+' de '+vehicles.length+' ativos');const caption=el('filter-result');if(caption)caption.textContent=filtered.length+' de '+vehicles.length+' veículos exibidos';renderContractFinance(filtered);renderFuelBars();renderFleetHistory();renderVehicleDocuments(filtered);put('nav-alert-count',overdue+upcoming);put('alerts-total',overdue+upcoming);renderRegistries();appendExpenseAlerts();appendDriverAlerts();refreshOverdueKpi();renderFilterSummary();
+ put('table-count',filtered.length);put('table-page-info',filtered.length+' de '+vehicles.length+' ativos');const caption=el('filter-result');if(caption)caption.textContent=filtered.length+' de '+vehicles.length+' veículos exibidos';renderContractFinance(filtered);renderFuelBars();renderFleetHistory();renderVehicleDocuments(filtered);put('nav-alert-count',overdue+upcoming);put('alerts-total',overdue+upcoming);renderRegistries();appendExpenseAlerts();appendDriverAlerts();refreshOverdueKpi();renderFilterSummary();renderFleetInsights();
 }
 for(const id of ['fleet-search','xrm-filter-category','xrm-filter-status','xrm-filter-expiry']){const control=el(id);if(control)control.addEventListener(id==='fleet-search'?'input':'change',applyVehicleFilters)}
 if(el('xrm-clear-filters'))el('xrm-clear-filters').onclick=()=>{for(const id of ['fleet-search','xrm-filter-category','xrm-filter-status','xrm-filter-expiry','xrm-contract-filter','fuel-ranking-category','maintenance-search','driver-search','expense-search','expense-category'])if(el(id))el(id).value='';el('maintenance-status').value='open';el('driver-status').value='active';el('expense-status').value='all';el('expense-month').value=localDay(new Date()).slice(0,7);const month=el('fuel-ranking-month'),changed=month.value!==localDay(new Date()).slice(0,7);month.value=localDay(new Date()).slice(0,7);el('history-filters').reset();applyVehicleFilters();if(changed)void updateFuelMonth()};
