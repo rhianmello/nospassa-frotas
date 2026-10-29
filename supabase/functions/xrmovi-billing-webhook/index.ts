@@ -1,69 +1,114 @@
-// XRMOVI - webhook Mercado Pago. Desativado até ter credenciais, testes e ativação explícita.
-// Deploy com verify_jwt=false: validação HMAC é obrigatória ANTES de consultar/processar recursos.
-import { createClient } from "npm:@supabase/supabase-js@2.58.0";
-const reply=(data:unknown,status=200)=>new Response(JSON.stringify(data),{status,headers:{"content-type":"application/json"}});
-function parseSignature(value:string){
- const fields=Object.fromEntries(value.split(",").map(part=>part.trim().split("=")));
- return {ts:fields.ts||"",hash:fields.v1||""};
+// XRMOVI billing: validate signed Mercado Pago notification, re-fetch MP resources,
+// reconcile authorized recurring invoices and deliver exactly-once ledger settlement.
+// Keep XRMOVI_BILLING_ENABLED=false until a real sandbox-to-live checklist is completed.
+import {createClient} from "npm:@supabase/supabase-js@2.58.0";
+const send=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:{"content-type":"application/json; charset=utf-8","cache-control":"no-store"}});
+const getType=(s:unknown)=>typeof s==="string"?s:"";
+function signatureInfo(header:string){
+ const parts=new Map(header.split(",").map(x=>x.trim().split("=")).filter(x=>x.length===2));
+ return {time:parts.get("ts")||"",hash:parts.get("v1")||""};
 }
-function hexBytes(hex:string):Uint8Array{
- if(!/^[a-f0-9]{64}$/i.test(hex))throw new Error("Assinatura inválida");
- return Uint8Array.from(hex.match(/../g)!.map(x=>parseInt(x,16)));
-}
-async function signed(req:Request,dataId:string,secret:string){
- const xSignature=req.headers.get("x-signature")||"",requestId=req.headers.get("x-request-id")||"";
- const {ts,hash}=parseSignature(xSignature);
- if(!/^\d{10,13}$/.test(ts)||!requestId||!dataId)return false;
- const eventMs=Number(ts)*(ts.length===13?1:1000);
- if(Math.abs(Date.now()-eventMs)>600000)return false;
- const manifest="id:"+dataId+";request-id:"+requestId+";ts:"+ts+";";
+async function signed(request:Request,id:string,secret:string){
+ const {time,hash}=signatureInfo(request.headers.get("x-signature")||"");
+ const rid=request.headers.get("x-request-id")||"";
+ if(!/^\d{10,13}$/.test(time)||!/^[a-f0-9]{64}$/i.test(hash)||!rid||!id||id.length>128)return false;
+ const value=Number(time);
+ const ms=time.length===13?value:value*1000;
+ if(!Number.isFinite(ms)||Math.abs(Date.now()-ms)>600_000)return false;
+ const manifest="id:"+id.toLowerCase()+";request-id:"+rid+";ts:"+time+";";
  const key=await crypto.subtle.importKey("raw",new TextEncoder().encode(secret),{name:"HMAC",hash:"SHA-256"},false,["verify"]);
- return crypto.subtle.verify("HMAC",key,hexBytes(hash),new TextEncoder().encode(manifest));
+ const bytes=Uint8Array.from(hash.match(/../g)!.map(x=>parseInt(x,16)));
+ return crypto.subtle.verify("HMAC",key,bytes,new TextEncoder().encode(manifest));
 }
-Deno.serve(async(req:Request)=>{
- if(req.method!=="POST")return reply({error:"Método inválido"},405);
- if(Deno.env.get("XRMOVI_BILLING_ENABLED")!=="true")return reply({error:"Integração ainda não ativa."},503);
- const token=Deno.env.get("MERCADOPAGO_ACCESS_TOKEN"),secret=Deno.env.get("MERCADOPAGO_WEBHOOK_SECRET");
- const url=Deno.env.get("SUPABASE_URL"),serviceKey=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
- if(!token||!secret||!url||!serviceKey)return reply({error:"Configuração incompleta"},503);
- const dataId=new URL(req.url).searchParams.get("data.id")||"";
- try{
-  if(!await signed(req,dataId,secret))return reply({error:"Assinatura de webhook inválida"},401);
-  const body=await req.json();
-  if(body?.data?.id!=null&&String(body.data.id)!==dataId)return reply({error:"ID não corresponde ao evento"},400);
-  const type=String(body?.type||body?.topic||"");
+Deno.serve(async(request:Request)=>{
+ if(request.method!=="POST")return send({error:"Method not allowed"},405);
+ if(Deno.env.get("XRMOVI_BILLING_ENABLED")!=="true")return send({error:"Billing disabled"},503);
+ const token=Deno.env.get("MERCADOPAGO_ACCESS_TOKEN")||"";
+ const secret=Deno.env.get("MERCADOPAGO_WEBHOOK_SECRET")||"";
+ const supabaseUrl=Deno.env.get("SUPABASE_URL")||"";
+ const serviceKey=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||"";
+ if(!token.startsWith("APP_USR-")||secret.length<20||!supabaseUrl||!serviceKey)return send({error:"Billing unavailable"},503);
+ const url=new URL(request.url);
+ const dataId=url.searchParams.get("data.id")||url.searchParams.get("data_id")||"";
+ if(!dataId)return send({error:"Missing notification ID"},400);
+ try {
+  if(!await signed(request,dataId,secret))return send({error:"Invalid notification signature"},401);
+  const body=await request.json();
+  if(body?.data?.id!=null&&String(body.data.id).toLowerCase()!==dataId.toLowerCase())
+   return send({error:"Resource mismatch"},400);
+  if(body?.live_mode===false)return send({ok:true,ignored:"test_event"});
+  const type=getType(body?.type||body?.topic);
+  const service=createClient(supabaseUrl,serviceKey,{auth:{persistSession:false}});
   const mpGet=async(path:string)=>{
-   const r=await fetch("https://api.mercadopago.com"+path,{headers:{Authorization:"Bearer "+token}});
-   if(!r.ok)throw new Error("Falha ao validar recurso no provedor");
-   return r.json();
-  };
-  const client=createClient(url,serviceKey,{auth:{persistSession:false}});
-  if(type==="subscription_authorized_payment"){
-   const invoice=await mpGet("/authorized_payments/"+encodeURIComponent(dataId));
-   if(String(invoice?.payment?.status)!=="approved")return reply({ok:true,reason:"Cobrança não aprovada"});
-   if(String(invoice?.currency_id)!=="BRL")return reply({ok:true,reason:"Moeda não confirmada"});
-   const preapproval=await mpGet("/preapproval/"+encodeURIComponent(String(invoice.preapproval_id)));
-   if(String(preapproval?.id)!==String(invoice.preapproval_id)||!preapproval?.external_reference)
-    throw new Error("Assinatura não corresponde à cobrança");
-   const {error}=await client.rpc("xrmovi_checkout_settle",{
-    intent_id:String(preapproval.external_reference),preapproval_id:String(preapproval.id),
-    invoice_id:String(invoice.id),payment_id:String(invoice.payment.id),
-    paid_amount:Number(invoice.transaction_amount),payment_date:String(invoice.debit_date||invoice.date_created)
+   const response=await fetch("https://api.mercadopago.com"+path,{
+    headers:{"Authorization":"Bearer "+token,"Accept":"application/json"},
+    signal:AbortSignal.timeout(12_000)
    });
-   if(error)throw new Error(error.message);
-   return reply({ok:true,kind:"payment"});
+   if(!response.ok)throw new Error("Mercado Pago verification HTTP "+response.status);
+   return response.json();
+  };
+  const settleInvoice=async(invoice:any)=>{
+   if(!invoice||!/^\d+$/.test(String(invoice.id||""))||!invoice.preapproval_id)return {ignored:"not_subscription"};
+   const paymentId=String(invoice.payment?.id||"");
+   if(!/^\d+$/.test(paymentId)||invoice.payment?.status!=="approved")return {ignored:"not_approved"};
+   if(invoice.currency_id!=="BRL")return {ignored:"invalid_currency"};
+   const [subscription,payment]=await Promise.all([
+    mpGet("/preapproval/"+encodeURIComponent(String(invoice.preapproval_id))),
+    mpGet("/v1/payments/"+encodeURIComponent(paymentId))
+   ]);
+   if(String(subscription?.id)!==String(invoice.preapproval_id)
+     ||!subscription.external_reference
+     ||!/^[-0-9a-f]{36}$/i.test(String(subscription.external_reference))
+     ||subscription.status!=="authorized")
+     return {ignored:"subscription_not_authorized"};
+   if(String(payment?.id)!==paymentId||payment.status!=="approved"
+     ||payment.currency_id!=="BRL"||payment.live_mode===false)
+     return {ignored:"payment_not_confirmed"};
+   const amount=Number(invoice.transaction_amount);
+   if(!Number.isFinite(amount)||amount<=0
+     ||Math.abs(amount-Number(payment.transaction_amount))>0.009
+     ||Math.abs(amount-Number(subscription.auto_recurring?.transaction_amount))>0.009)
+     return {ignored:"payment_amount_mismatch"};
+   const paymentDate=String(invoice.debit_date||payment.date_approved||invoice.date_created||"");
+   if(!paymentDate||!Number.isFinite(Date.parse(paymentDate)))throw new Error("Payment date invalid");
+   const {data,error}=await service.rpc("xrmovi_checkout_settle",{
+    intent_id:String(subscription.external_reference),
+    preapproval_id:String(subscription.id),
+    invoice_id:String(invoice.id),payment_id:paymentId,
+    paid_amount:amount,payment_date:paymentDate
+   });
+   if(error)throw new Error("Database settlement rejected: "+error.message);
+   return {result:data?.status||"processed"};
+  };
+  if(type==="subscription_authorized_payment"){
+   if(!/^\d+$/.test(dataId))return send({error:"Invalid invoice id"},400);
+   const outcome=await settleInvoice(await mpGet("/authorized_payments/"+encodeURIComponent(dataId)));
+   return send({ok:true,kind:"recurring_payment",...outcome});
+  }
+  if(type==="payment"){
+   if(!/^\d+$/.test(dataId))return send({error:"Invalid payment id"},400);
+   const payment=await mpGet("/v1/payments/"+encodeURIComponent(dataId));
+   if(payment?.status!=="approved")return send({ok:true,ignored:"payment_not_approved"});
+   const search=await mpGet("/authorized_payments/search?payment_id="+encodeURIComponent(dataId)+"&limit=10");
+   const invoice=Array.isArray(search?.results)?search.results.find((x:any)=>String(x?.payment?.id)===dataId):null;
+   if(!invoice)return send({ok:true,ignored:"not_a_recurring_invoice"});
+   const outcome=await settleInvoice(invoice);
+   return send({ok:true,kind:"payment",...outcome});
   }
   if(type==="subscription_preapproval"){
    const sub=await mpGet("/preapproval/"+encodeURIComponent(dataId));
+   if(String(sub?.id)!==dataId)return send({error:"Subscription mismatch"},400);
    if(["paused","canceled"].includes(String(sub.status))){
-    const {error}=await client.rpc("xrmovi_checkout_provider_status",{preapproval_id:String(sub.id),new_status:String(sub.status)});
-    if(error)throw new Error(error.message);
+    const {error}=await service.rpc("xrmovi_checkout_provider_status",{
+     preapproval_id:String(sub.id),new_status:String(sub.status)
+    });
+    if(error)throw new Error("Subscription status sync failed: "+error.message);
    }
-   return reply({ok:true,kind:"subscription"});
+   return send({ok:true,kind:"subscription",status:sub.status});
   }
-  return reply({ok:true,ignored:true});
+  return send({ok:true,ignored:"unsupported_topic"});
  }catch(error){
-  // Responder erro para permitir retry do provedor; não ativar plano em falhas.
-  return reply({error:error instanceof Error?error.message:"Falha ao verificar cobrança"},500);
+  // Trigger Mercado Pago retries; never mark a payment as paid without verified API evidence.
+  return send({error:error instanceof Error?error.message:"Webhook reconciliation failed"},500);
  }
 });
