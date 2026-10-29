@@ -11,6 +11,7 @@ let documentRows=[],historyFuelRows=[];
 let documentRequest=0;
 let loadRequest=0;
 let financialState='';
+let xrmReportRange=null;
 let financeRequest=0;
 const el=id=>document.getElementById(id),all=q=>[...document.querySelectorAll(q)];
 let sb,company,companies=[],vehicles=[],maintenance=[],contracts=[],fuelRows=[],fuelEntries=[],maintenanceExpenses=[];
@@ -347,7 +348,6 @@ function appendDriverAlerts(){
 for(const id of ['driver-search','driver-status','expense-search','expense-category','expense-status','expense-month'])el(id)?.addEventListener(id.endsWith('search')?'input':'change',renderRegistries);
 if(el('driver-clear'))el('driver-clear').onclick=()=>{el('driver-search').value='';el('driver-status').value='active';renderRegistries()};
 
-let xrmReportRange=null;
 function xrmDate(value){return [value.getFullYear(),String(value.getMonth()+1).padStart(2,'0'),String(value.getDate()).padStart(2,'0')].join('-')}
 function xrmResolveRange(){
  const preset=el('xrm-report-period')?.value||'monthly';
@@ -399,6 +399,6 @@ if(el('financial-print'))el('financial-print').onclick=()=>{
  const range=xrmReportRange?xrmReportRange.from+' a '+xrmReportRange.to:el('fuel-ranking-month')?.value||'Mês atual';
  const rows=records.map(r=>'<tr>'+r.map((v,i)=>'<td'+(i===4?' class="value"':'')+'>'+safe(i===4?money(v):v)+'</td>').join('')+'</tr>').join('');
  const markup='<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Relatório financeiro XRMOVI</title><style>@page{size:A4 landscape;margin:15mm}*{box-sizing:border-box}body{font:11px Arial,sans-serif;color:#1b3042;margin:0;background:white}h1{font-size:21px;margin:0 0 7px}header{border-bottom:2px solid #177c91;padding-bottom:13px;margin-bottom:16px}.muted{color:#567084;font-size:11px}.totals{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0 19px}.total{border:1px solid #c8d7dd;padding:12px;border-radius:6px}.total strong{display:block;font-size:15px;margin-top:6px;color:#126e7d}table{width:100%;border-collapse:collapse;table-layout:fixed}th{text-align:left;background:#e5eff2;color:#17374b;font-size:10px;text-transform:uppercase}td,th{padding:8px 7px;border-bottom:1px solid #d6e0e5;overflow-wrap:anywhere}tr{break-inside:avoid}thead{display:table-header-group}.value{text-align:right;white-space:nowrap}td:nth-child(1){width:12%}td:nth-child(2){width:13%}td:nth-child(3){width:17%}td:nth-child(5){width:15%}.footer{border-top:1px solid #d6e0e5;margin-top:20px;padding-top:8px;font-size:10px;color:#567084}</style></head><body><header><h1>Relatório financeiro da frota</h1><div class="muted">XRMOVI | Empresa: '+safe(company?.name||'')+' | Período: '+safe(range)+' | Veículos filtrados: '+(filteredVehicleIds?.size??vehicles.length)+' | Emitido em '+safe(new Date().toLocaleString('pt-BR'))+'</div></header><div class="totals">'+[['Total',sum()],['Combustível',sum('Combustível')],['Manutenção realizada',sum('Manutenção realizada')],['Despesas pagas',sum('Despesa paga')]].map(([label,value])=>'<div class="total">'+safe(label)+'<strong>'+safe(money(value))+'</strong></div>').join('')+'</div><table><thead><tr><th>Data</th><th>Veículo</th><th>Tipo</th><th>Descrição</th><th>Valor</th></tr></thead><tbody>'+rows+'</tbody></table><div class="footer">'+records.length+' lançamento(s) · Valores em reais (R$)</div></body></html>';
- const popup=window.open('','_blank');if(!popup){msg('Permita a abertura de pop-ups para imprimir o relatório.');return}popup.document.open();popup.document.write(markup);popup.document.close();popup.focus();popup.addEventListener('load',()=>popup.print(),{once:true});
+ const popup=window.open('','_blank');if(!popup){msg('Permita a abertura de pop-ups para imprimir o relatório.');return}popup.document.open();popup.document.write(markup);popup.document.close();popup.focus();popup.setTimeout(()=>popup.print(),350);
 };
 
