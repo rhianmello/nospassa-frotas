@@ -224,7 +224,12 @@ form.addEventListener('submit',async event=>{
   }else{
    const {data:logged,error}=await client.auth.signInWithPassword({email,password});if(error)throw error;if(!logged?.session)throw Error('Não foi possível confirmar sua sessão. Tente novamente.');
   }
-  msg.textContent='Acesso confirmado. Abrindo painel...';location.replace(dashboard);
+  // Route the platform owner to the protected administration area.
+  let destination=dashboard;
+  const {data:isAdmin,error:adminError}=await client.rpc('xrmovi_platform_is_admin');
+  if(!adminError&&isAdmin===true)destination=new URL('/admin/',location.origin).href;
+  msg.textContent=isAdmin===true&&!adminError?'Acesso confirmado. Abrindo administração...':'Acesso confirmado. Abrindo painel...';
+  location.replace(destination);
  }catch(error){msg.textContent=error.message||'Não foi possível autenticar.'}finally{submit.disabled=false}
 });
 // A abertura da janela de acesso é controlada pelo script da landing.
