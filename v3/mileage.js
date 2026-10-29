@@ -3,7 +3,7 @@ export function setupMileage({client,getCompany,getVehicles,getFilteredIds,onRel
  const id=x=>document.getElementById(x);
  const money=n=>Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
  const km=n=>Number(n||0).toLocaleString('pt-BR',{maximumFractionDigits:0});
- const day=date=>{if(!date)return 'Nunca';const text=String(date);return new Date(/^\\d{4}-\\d{2}-\\d{2}$/.test(text)?text+'T12:00:00':text).toLocaleDateString('pt-BR')};
+ const day=date=>{if(!date)return 'Nunca';const text=String(date);return new Date(/^\d{4}-\d{2}-\d{2}$/.test(text)?text+'T12:00:00':text).toLocaleDateString('pt-BR')};
  const days=['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
  let state=null,companyId=null,request=0,loadError='',busy=false,flash='',flashKind='';
  const rpc=async(name,args)=>{const {data,error}=await client.rpc('xrmovi_'+name,args);if(error)throw Error(error.message);return data};
