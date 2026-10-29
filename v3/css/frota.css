@@ -334,3 +334,8 @@
 @media(max-width:760px){.fleet-company-logo{flex-basis:72px;width:72px;height:72px;border-radius:13px}.fleet-company-logo-image{border-radius:12px}.fleet-company-logo-placeholder{font-size:11px}.fleet-hero .fleet-hero-copy{flex-basis:calc(100% - 93px)}.fleet-hero-copy>.fleet-company-subtitle{font-size:10px}}
 @media(max-width:760px){.fleet-company-logo-edit{top:-12px;right:-12px}}
 @media print{.fleet-company-logo-edit,.fleet-company-logo-status{display:none!important}.fleet-company-logo{box-shadow:none}}
+
+/* Keep sidebar navigation scrollable without visible scrollbars. */
+.fleet-sidebar,.fleet-sidebar .main-nav{scrollbar-width:none;-ms-overflow-style:none;overflow-x:hidden}
+.fleet-sidebar::-webkit-scrollbar,.fleet-sidebar .main-nav::-webkit-scrollbar{display:none;width:0;height:0}
+.fleet-sidebar .main-nav{min-width:0}
