@@ -50,7 +50,7 @@ async function init(){
  }catch(err){showLoadFailure(err)}
 }
 if(el('refresh-button'))el('refresh-button').onclick=load;if(el('new-asset-button'))el('new-asset-button').onclick=()=>openWrite('vehicle');
-try{const r=await fetch('./config.json');const config=await r.json();sb=createClient(config.supabaseUrl,config.supabaseAnonKey);branding=createCompanyBranding({client:sb,getCompany:()=>company,onSave:(id,data)=>{const record=companies.find(c=>c.id===id);if(record&&data){record.logo_path=data.logo_path;record.logo_url=data.logo_url}}});window.XrmoviCompanyBranding=Object.freeze({forPdf:()=>branding.forPdf()});await init()}catch(e){showLoadFailure(e)}
+try{const r=await fetch('./config.json');const config=await r.json();sb=createClient(config.supabaseUrl,config.supabaseAnonKey);branding=createCompanyBranding({client:sb,getCompany:()=>company,onSave:(id,data)=>{const record=companies.find(c=>c.id===id);if(record&&data){record.logo_path=data.logo_path;record.logo_url=data.logo_url}}});window.XrmoviCompanyBranding=Object.freeze({forPdf:()=>branding.forPdf()});window.setTimeout(()=>{void init()},0)}catch(e){showLoadFailure(e)}
 page(location.hash.slice(1)||'dashboard',false);window.lucide?.createIcons?.();
 
 function alertKind(m){if(m.status==='done')return'done';const vehicle=vehicles.find(v=>v.id===m.vehicle_id),today=new Date();today.setHours(0,0,0,0);const days=m.due_date?Math.ceil((new Date(m.due_date+'T00:00:00')-today)/86400000):null;const remaining=m.due_meter==null?null:Number(m.due_meter)-Number(vehicle?.odometer_value||0);return(days!==null&&days<0)||(remaining!==null&&remaining<=0)?'overdue':(days!==null&&days<=30)||(remaining!==null&&remaining<=1000)?'soon':'open'}
