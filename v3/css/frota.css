@@ -491,3 +491,44 @@
 .fleet-page .fleet-topbar .fleet-breadcrumb .xrm-header-contract{display:inline-flex!important;flex-direction:row!important;align-items:center!important;justify-content:flex-start;gap:9px;vertical-align:middle;min-width:0;margin-left:12px}
 .fleet-page .fleet-topbar .fleet-breadcrumb .xrm-header-contract select{margin:0!important;min-width:150px;max-width:min(250px,32vw)}
 @media(max-width:660px){.fleet-page .fleet-topbar .fleet-breadcrumb .xrm-header-contract{margin-left:0;flex-wrap:wrap;gap:6px}}
+
+/* XRMOVI dashboard fleet insights: live operational/cost overview and CNH monitoring. */
+#view-dashboard .fleet-insights-grid{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);align-items:stretch;gap:clamp(12px,1.2vw,20px);margin-top:clamp(12px,1.2vw,20px)}
+#view-dashboard .fleet-insight-card{min-width:0;min-height:0;padding:0;overflow:hidden;border:1px solid rgba(112,166,200,.2);border-radius:17px;background:linear-gradient(150deg,#10283e,#0b2033);box-shadow:0 12px 28px rgba(0,0,0,.12)}
+#view-dashboard .fleet-insight-card:before{pointer-events:none}
+#view-dashboard .fleet-insight-header{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:67px;padding:16px 19px 13px;border-bottom:1px solid rgba(132,186,213,.13)}
+#view-dashboard .fleet-insight-header>div{min-width:0}
+#view-dashboard .fleet-insight-header .eyebrow{font-size:9px;font-weight:800;letter-spacing:1.2px;color:#55d6bd;margin:0 0 5px}
+#view-dashboard .fleet-insight-header h2{font-size:16px;line-height:1.25;letter-spacing:-.3px;margin:0;color:#f4f9ff}
+#view-dashboard .fleet-insight-header .fleet-link-button{white-space:nowrap;min-height:30px;gap:6px;flex-shrink:0;font-size:10px}
+#view-dashboard .fleet-insight-header .fleet-link-button svg{width:13px;height:13px}
+#view-dashboard .fleet-insight-period{margin:0;padding:11px 19px 4px;font-size:10px;color:#9bb6c9}
+#view-dashboard .fleet-insight-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;padding:10px 19px 15px}
+#view-dashboard .fleet-insight-stat{display:flex;min-width:0;min-height:76px;flex-direction:column;justify-content:center;gap:8px;padding:11px 13px;border:1px solid rgba(111,164,197,.2);border-radius:12px;background:rgba(16,48,68,.62)}
+#view-dashboard .fleet-insight-stat span{font-size:10px;line-height:1.25;color:#a5c3d4;text-transform:uppercase;letter-spacing:.45px}
+#view-dashboard .fleet-insight-stat strong{font-size:clamp(17px,1.7vw,22px);font-weight:750;line-height:1.1;letter-spacing:-.45px;color:#e7f6fe;overflow-wrap:anywhere}
+#view-dashboard .fleet-insight-stat:nth-child(2) strong{color:#f6b3a3}
+#view-dashboard .fleet-insight-subheading{margin:0 19px 6px;color:#93bdcd;font-size:10px;font-weight:750;letter-spacing:.8px;text-transform:uppercase}
+#view-dashboard .fleet-insight-ranking{display:grid;gap:0;padding:0 19px 14px}
+#view-dashboard .fleet-insight-rank{display:grid;grid-template-columns:minmax(68px,88px) minmax(0,1fr) auto;gap:11px;align-items:center;min-height:37px;border-bottom:1px solid rgba(111,164,197,.13)}
+#view-dashboard .fleet-insight-rank:last-child{border-bottom:0}
+#view-dashboard .fleet-insight-rank-name{font-size:11px;color:#c7dce9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#view-dashboard .fleet-insight-rank-track{height:7px;border-radius:999px;background:#18334a;overflow:hidden}
+#view-dashboard .fleet-insight-rank-track>span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#217dbb,#42d7c0)}
+#view-dashboard .fleet-insight-rank strong{font-size:11px;white-space:nowrap;color:#e4f6ff;font-weight:700;font-variant-numeric:tabular-nums}
+#view-dashboard .fleet-insight-driver-list{display:grid;padding:7px 19px 14px}
+#view-dashboard .fleet-insight-driver{display:grid;grid-template-columns:36px minmax(0,1fr) auto;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(111,164,197,.14)}
+#view-dashboard .fleet-insight-driver:last-child{border-bottom:0}
+#view-dashboard .fleet-insight-avatar{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;color:#82dcfb;background:#143b54;font-size:11px;font-weight:800}
+#view-dashboard .fleet-insight-driver-identity{display:grid;gap:4px;min-width:0}
+#view-dashboard .fleet-insight-driver-identity strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;line-height:1.25;color:#ecf7fd}
+#view-dashboard .fleet-insight-driver-identity small{font-size:10px;color:#97bacd}
+#view-dashboard .fleet-insight-expiry{font-size:11px;color:#99e9d1;white-space:nowrap;text-align:right;font-weight:650;font-variant-numeric:tabular-nums}
+#view-dashboard .fleet-insight-expiry.soon{color:#ffd08d}
+#view-dashboard .fleet-insight-expiry.overdue{color:#ff9399}
+#view-dashboard .fleet-insight-empty{padding:16px 0;margin:0;font-size:11px;line-height:1.5;color:#a7c3d3}
+#view-dashboard .fleet-insight-more{margin:8px 0 0;font-size:10px;line-height:1.5;color:#92b8cc}
+@media(max-width:1080px){#view-dashboard .fleet-insights-grid{grid-template-columns:1fr 1fr}#view-dashboard .fleet-insight-header{padding:14px 15px 11px}#view-dashboard .fleet-insight-period{padding-inline:15px}#view-dashboard .fleet-insight-stats{padding-inline:15px}#view-dashboard .fleet-insight-ranking,#view-dashboard .fleet-insight-driver-list{padding-inline:15px}#view-dashboard .fleet-insight-subheading{margin-inline:15px}}
+@media(max-width:900px){#view-dashboard .fleet-insights-grid{grid-template-columns:1fr}#view-dashboard .fleet-insight-card{width:100%}}
+@media(max-width:480px){#view-dashboard .fleet-insight-header{align-items:flex-start}#view-dashboard .fleet-insight-header .fleet-link-button{font-size:10px}#view-dashboard .fleet-insight-stat{min-height:67px;padding:9px}#view-dashboard .fleet-insight-stats{gap:8px}#view-dashboard .fleet-insight-rank{grid-template-columns:minmax(55px,80px) minmax(0,1fr) auto;gap:7px}#view-dashboard .fleet-insight-driver{grid-template-columns:31px minmax(0,1fr) auto;gap:8px}#view-dashboard .fleet-insight-avatar{width:30px;height:30px}#view-dashboard .fleet-insight-expiry{font-size:10px}}
+
