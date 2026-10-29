@@ -80,6 +80,17 @@ function applyVehicleFilters(){
  const q=search.value.trim().toLocaleLowerCase('pt-BR');
  function maintenanceMatches(v,filter){const tasks=maintenance.filter(m=>m.vehicle_id===v.id&&m.status!=='done');if(!filter)return true;if(filter==='overdue')return tasks.some(m=>alertKind(m)==='overdue');const daysLimit=Number(filter),today=new Date();today.setHours(0,0,0,0);return tasks.some(m=>{if(m.due_date){const days=Math.round((new Date(m.due_date+'T00:00:00')-today)/86400000);if(days>=0&&days<=daysLimit)return true}if(m.due_meter!=null){const km=Number(m.due_meter)-Number(v.odometer_value||0);return km>=0&&km<=daysLimit*35}return false})}
  const filtered=vehicles.filter(v=>(!q||[v.plate,v.brand,v.model,v.unit_name,v.category].some(x=>String(x||'').toLocaleLowerCase('pt-BR').includes(q)))&&(!category.value||v.category===category.value)&&(!status.value||(status.value==='alerta'?maintenance.some(m=>m.vehicle_id===v.id&&alertKind(m)==='overdue'):v.status===status.value))&&maintenanceMatches(v,expiry.value));
+ const filteredIds=new Set(filtered.map(v=>v.id));
+ const scopedMaintenance=maintenance.filter(m=>filteredIds.has(m.vehicle_id));
+ const oldVehicles=vehicles,oldMaintenance=maintenance;
+ try{vehicles=filtered;maintenance=scopedMaintenance;renderOverviewCharts()}finally{vehicles=oldVehicles;maintenance=oldMaintenance}
+ const overdue=scopedMaintenance.filter(m=>alertKind(m)==='overdue').length;
+ const upcoming=scopedMaintenance.filter(m=>alertKind(m)==='soon').length;
+ const kpiValues=[filtered.length,filtered.filter(v=>v.status==='Ativo').length,overdue+upcoming,scopedMaintenance.filter(m=>m.status==='open').length];
+ const kpiNodes=el('fleet-kpis')?.querySelectorAll('.fleet-kpi-value')||[];
+ kpiNodes.forEach((node,i)=>{if(i<kpiValues.length)node.textContent=kpiValues[i]});
+ const preview=el('alert-preview');if(preview){preview.replaceChildren();for(const m of scopedMaintenance.filter(m=>['overdue','soon'].includes(alertKind(m))).slice(0,6)){const item=document.createElement('button');item.type='button';item.className='fleet-ptran-entry';item.textContent=(m.plate||oldVehicles.find(v=>v.id===m.vehicle_id)?.plate||'Ativo')+' — '+m.title;item.onclick=()=>page('alerts');preview.append(item)}if(!preview.children.length)preview.textContent='Nenhuma manutenção em atenção para o filtro selecionado.'}
+ put('alert-preview-count',overdue+upcoming);
  const root=el('fleet-table-body');if(root){root.replaceChildren();for(const v of filtered){const tr=document.createElement('tr');for(const value of [v.plate,v.category||'Veículo',v.unit_name||'—',v.status||'—','—','—','—',Number(v.odometer_value||0).toLocaleString('pt-BR')]){const td=document.createElement('td');td.textContent=value;tr.append(td)}const action=document.createElement('td');if(canWrite()){const edit=document.createElement('button');edit.className='fleet-button';edit.textContent='Editar';edit.onclick=()=>openWrite('vehicle',v);action.append(edit)}tr.append(action);root.append(tr)}}
  put('table-count',filtered.length);put('table-page-info',filtered.length+' de '+vehicles.length+' ativos');const caption=el('filter-result');if(caption)caption.textContent=filtered.length+' de '+vehicles.length+' veículos exibidos';
 }
