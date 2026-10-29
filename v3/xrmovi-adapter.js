@@ -8,6 +8,7 @@ let financialDetailsOpen=false,financialDetailsKind='all';
 let lastWriteFocus=null;
 let filteredVehicleIds=null;
 let documentRows=[],historyFuelRows=[];
+let xrmDocumentCatalog=[],xrmDocumentCatalogRequest=0;
 let documentRequest=0;
 let loadRequest=0;
 let financialState='';
@@ -49,9 +50,8 @@ async function init(){
   setupCompanySwitcher();login.hidden=true;await load();
  }catch(err){showLoadFailure(err)}
 }
-if(el('refresh-button'))el('refresh-button').onclick=load;if(el('new-asset-button'))el('new-asset-button').onclick=()=>openWrite('vehicle');
-try{const r=await fetch('./config.json');const config=await r.json();sb=createClient(config.supabaseUrl,config.supabaseAnonKey);branding=createCompanyBranding({client:sb,getCompany:()=>company,onSave:(id,data)=>{const record=companies.find(c=>c.id===id);if(record&&data){record.logo_path=data.logo_path;record.logo_url=data.logo_url}}});window.XrmoviCompanyBranding=Object.freeze({forPdf:()=>branding.forPdf()});window.setTimeout(()=>{void init()},0)}catch(e){showLoadFailure(e)}
-page(location.hash.slice(1)||'dashboard',false);window.lucide?.createIcons?.();
+if(el('refresh-button'))el('refresh-button').onclick=load;
+if(el('new-asset-button'))el('new-asset-button').onclick=()=>openWrite('vehicle');
 
 function alertKind(m){if(m.status==='done')return'done';const vehicle=vehicles.find(v=>v.id===m.vehicle_id),today=new Date();today.setHours(0,0,0,0);const days=m.due_date?Math.ceil((new Date(m.due_date+'T00:00:00')-today)/86400000):null;const remaining=m.due_meter==null?null:Number(m.due_meter)-Number(vehicle?.odometer_value||0);return(days!==null&&days<0)||(remaining!==null&&remaining<=0)?'overdue':(days!==null&&days<=30)||(remaining!==null&&remaining<=1000)?'soon':'open'}
 function setupCompanySwitcher(){let box=el('v3-company-switch');if(!box){box=document.createElement('div');box.id='v3-company-switch';box.style.cssText='padding:12px;color:#a9c7df;font:11px system-ui';const nav=document.querySelector('.fleet-sidebar .main-nav');nav?.before(box)}box.replaceChildren();const label=document.createElement('label');label.textContent='EMPRESA ATIVA';label.htmlFor='v3-company';label.style.display='block';const select=document.createElement('select');select.id='v3-company';select.style.cssText='max-width:100%;width:100%;padding:9px;margin-top:6px;background:#112a42;color:#e8f7ff;border:1px solid #365470;border-radius:8px';for(const c of companies){const option=document.createElement('option');option.value=c.id;option.textContent=c.name;select.append(option)}select.value=company.id;select.onchange=async()=>{closeWrite(true);company=companies.find(c=>c.id===select.value);vehicles=[];maintenance=[];contracts=[];fuelRows=[];drivers=[];vehicleExpenses=[];paidExpenses=[];historyExpenses=[];await load()};box.append(label,select)}
@@ -177,7 +177,6 @@ async function loadFleetDocuments(id){
  const root=el('vehicle-documents');if(root)root.dataset.failed=String(results.some(r=>r.status==='rejected'));
  renderVehicleDocuments(vehicles.filter(v=>!filteredVehicleIds||filteredVehicleIds.has(v.id)));void xrmLoadDocumentCatalog(id);
 }
-let xrmDocumentCatalog=[],xrmDocumentCatalogRequest=0;
 async function xrmLoadDocumentCatalog(cid){
  const req=++xrmDocumentCatalogRequest;
  try{const rows=await rpc('company_document_catalog',{cid});if(company?.id!==cid||req!==xrmDocumentCatalogRequest)return;xrmDocumentCatalog=rows||[];renderVehicleDocuments(vehicles.filter(v=>!filteredVehicleIds||filteredVehicleIds.has(v.id)))}catch(error){if(req===xrmDocumentCatalogRequest)msg('Não foi possível atualizar os anexos: '+error.message)}
@@ -415,3 +414,25 @@ if(el('financial-print'))el('financial-print').onclick=async()=>{
  const popup=window.open('','_blank');if(!popup){msg('Permita a abertura de pop-ups para imprimir o relatório.');return}popup.document.open();popup.document.write(markup);popup.document.close();popup.focus();popup.setTimeout(()=>popup.print(),350);
 };
 
+/* Initialize only after all module lexical state exists. */
+async function startXrmovi(){
+ try{
+  page(location.hash.slice(1)||'dashboard',false);
+  window.lucide?.createIcons?.();
+  const response=await fetch('./config.json',{cache:'no-store'});
+  if(!response.ok)throw Error('Não foi possível carregar a configuração do painel.');
+  const config=await response.json();
+  if(!config?.supabaseUrl||!config?.supabaseAnonKey)throw Error('Configuração do Supabase incompleta.');
+  sb=createClient(config.supabaseUrl,config.supabaseAnonKey);
+  branding=createCompanyBranding({
+   client:sb,getCompany:()=>company,
+   onSave:(id,data)=>{
+    const record=companies.find(c=>c.id===id);
+    if(record&&data){record.logo_path=data.logo_path;record.logo_url=data.logo_url}
+   }
+  });
+  window.XrmoviCompanyBranding=Object.freeze({forPdf:()=>branding.forPdf()});
+  await init();
+ }catch(error){showLoadFailure(error)}
+}
+void startXrmovi();
