@@ -589,3 +589,165 @@
 /* On narrow or short displays, content remains visible and scrollable. */
 #view-dashboard .fleet-overview-grid>.fleet-panel{height:auto}
 }
+
+
+/* XRMOVI responsive company logo and always-visible fleet status legend (2026-10-29) */
+/* Keep the company logo square at all breakpoints. Previously the compact
+   desktop layout capped only the height at 62px, while retaining an 88px width. */
+.fleet-page .xrm-company-header #company-logo-area{
+  width:clamp(62px,5.5vw,82px)!important;
+  height:clamp(62px,5.5vw,82px)!important;
+  max-height:none!important;
+  min-width:0;
+  min-height:0;
+  margin:0;
+  padding:0;
+  aspect-ratio:1 / 1;
+  align-self:center;
+  box-sizing:border-box;
+  flex:none;
+}
+.fleet-page .xrm-company-header #company-logo-area .fleet-company-logo-image{
+  display:block;
+  width:100%!important;
+  height:100%!important;
+  max-width:100%!important;
+  max-height:100%!important;
+  aspect-ratio:1 / 1;
+  object-fit:contain!important;
+  padding:clamp(4px,.45vw,7px);
+  border-radius:inherit;
+  box-sizing:border-box;
+}
+.fleet-page .xrm-company-header #company-logo-area .fleet-company-logo-placeholder{
+  font-size:clamp(9px,.8vw,12px);
+  line-height:1.3;
+  overflow-wrap:anywhere;
+}
+.fleet-page .xrm-company-header .fleet-hero-copy{
+  min-width:0;
+  overflow-wrap:anywhere;
+}
+.fleet-page .xrm-company-header #company-name{
+  max-width:100%;
+  overflow-wrap:anywhere;
+  hyphens:auto;
+}
+
+/* The previous 204px–248px fixed height plus overflow:hidden in the
+   one-screen desktop dashboard cut off the second/third status legends.
+   Let this card grow to accommodate real data while keeping other cards
+   and chart logic untouched. */
+#view-dashboard .fleet-overview-grid > .fleet-status-panel{
+  height:auto!important;
+  min-height:0!important;
+  overflow:visible!important;
+  align-self:stretch;
+}
+#view-dashboard .fleet-status-panel .fleet-donut-layout.fleet-donut-compact{
+  width:100%;
+  height:auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  overflow:visible!important;
+  box-sizing:border-box;
+}
+#view-dashboard .fleet-status-panel .fleet-donut-compact > .fleet-chart-shell{
+  min-width:0;
+  flex:none;
+  overflow:visible!important;
+}
+#view-dashboard .fleet-status-panel #v3-situation-donut{
+  max-width:calc(100% - 12px);
+  flex:none;
+}
+#view-dashboard .fleet-status-panel #situation-legend.fleet-chart-legend{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  grid-auto-rows:auto;
+  width:100%;
+  min-width:0;
+  max-height:none!important;
+  height:auto!important;
+  overflow:visible!important;
+  align-self:auto;
+  visibility:visible;
+}
+#view-dashboard .fleet-status-panel #situation-legend .xrm-status-legend-item{
+  display:grid;
+  grid-template-columns:10px minmax(0,1fr) auto;
+  align-items:center;
+  gap:9px;
+  width:100%;
+  min-width:0;
+  min-height:32px!important;
+  padding:8px 10px!important;
+  font-size:clamp(10px,.75vw,12px)!important;
+  line-height:1.35!important;
+  box-sizing:border-box;
+  white-space:normal;
+}
+#view-dashboard .fleet-status-panel #situation-legend .xrm-status-legend-item > span:nth-child(2){
+  min-width:0;
+  overflow-wrap:anywhere;
+  white-space:normal;
+}
+#view-dashboard .fleet-status-panel #situation-legend .xrm-status-legend-item > strong{
+  min-width:2ch;
+  justify-self:end;
+  flex-shrink:0;
+  font-size:12px;
+  font-variant-numeric:tabular-nums;
+}
+@media (min-width:1100px) and (min-height:680px){
+  .fleet-page .xrm-company-header #company-logo-area{
+    width:clamp(58px,5.1vw,66px)!important;
+    height:clamp(58px,5.1vw,66px)!important;
+  }
+  /* Only this panel needs additional vertical space in the compact layout. */
+  #view-dashboard .fleet-overview-grid > .fleet-status-panel{
+    height:auto!important;
+    overflow:visible!important;
+  }
+  #view-dashboard .fleet-status-panel .fleet-donut-layout.fleet-donut-compact{
+    gap:8px!important;
+    padding:9px 12px 14px!important;
+  }
+  #view-dashboard .fleet-status-panel #situation-legend.fleet-chart-legend{
+    gap:6px!important;
+  }
+}
+@media (max-width:760px){
+  .fleet-page .xrm-company-header #company-logo-area{
+    width:60px!important;
+    height:60px!important;
+  }
+  .fleet-page .xrm-company-header .fleet-hero-copy{
+    flex-basis:auto!important;
+  }
+  #view-dashboard .fleet-status-panel .fleet-donut-layout.fleet-donut-compact{
+    gap:12px!important;
+    padding:16px!important;
+  }
+  #view-dashboard .fleet-status-panel #situation-legend.fleet-chart-legend{
+    gap:8px!important;
+  }
+  #view-dashboard .fleet-status-panel #situation-legend .xrm-status-legend-item{
+    min-height:38px!important;
+    padding:10px 12px!important;
+    font-size:12px!important;
+  }
+}
+@media (max-width:420px){
+  .fleet-page .xrm-company-header #company-logo-area{
+    width:54px!important;
+    height:54px!important;
+  }
+  .fleet-page .xrm-company-header #company-name{
+    font-size:clamp(14px,4.3vw,18px)!important;
+    line-height:1.2;
+  }
+  #view-dashboard .fleet-status-panel #v3-situation-donut{
+    max-width:150px;
+  }
+}
