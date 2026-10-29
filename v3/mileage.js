@@ -343,11 +343,18 @@ export function setupMileage({client,getCompany,getVehicles,getFilteredIds,onRel
    popup.document.write('<!doctype html><html><head><title>QR - '+title+'</title></head><body style="text-align:center;font-family:sans-serif"><h1>'+title+'</h1><img alt="QR Code" width="260" height="260" src="'+data+'"><p>Escaneie para atualizar a quilometragem no XRMOVI.</p></body></html>');
    popup.document.close();popup.onload=()=>popup.print();
   });
+  // Add the mandatory white quiet zone to downloaded and printed QR images.
+  // A QR without a white margin may display correctly but fail to scan.
   const imageData=()=>{
-   const img=qrHost.querySelector('img');
-   if(img?.src?.startsWith('data:image/'))return img.src;
-   const canvas=qrHost.querySelector('canvas');
-   try{return canvas?.toDataURL('image/png')||''}catch{return ''}
+   const source=qrHost.querySelector('canvas')||qrHost.querySelector('img');
+   if(!source)return '';
+   try{
+    const image=document.createElement('canvas');image.width=320;image.height=320;
+    const context=image.getContext('2d');if(!context)return '';
+    context.fillStyle='#ffffff';context.fillRect(0,0,320,320);
+    context.drawImage(source,32,32,256,256);
+    return image.toDataURL('image/png');
+   }catch{return ''}
   };
   download.disabled=true;print.disabled=true;
   actions.append(copy,download,print);
