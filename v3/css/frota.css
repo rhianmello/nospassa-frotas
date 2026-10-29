@@ -319,8 +319,8 @@
 .fleet-company-logo{position:relative;display:grid;place-items:center;flex:0 0 88px;width:88px;height:88px;margin-right:4px;border:1px solid rgba(245,183,46,.28);border-radius:16px;background:linear-gradient(145deg,#17354a,#102538);box-shadow:0 6px 20px #0002}
 .fleet-company-logo-image{display:block;width:100%;height:100%;padding:7px;object-fit:contain;border-radius:15px;background:#f8fafc}
 .fleet-company-logo-placeholder{padding:10px;color:#b9cddd;font:600 12px/1.4 system-ui;text-align:center}
-.fleet-company-logo-edit{position:absolute;top:-9px;right:-9px;display:grid;place-items:center;width:44px;height:44px;padding:0;border:1px solid #55738a;border-radius:50%;background:#18394e;color:#e9f6ff;box-shadow:0 3px 10px #0005;cursor:pointer;transition:background .15s,border-color .15s}
-.fleet-company-logo-edit svg{width:17px;height:17px;pointer-events:none}
+.fleet-company-logo-edit{position:absolute;top:-12px;right:-12px;display:grid;place-items:center;width:26px;height:26px;padding:0;border:1px solid #55738a;border-radius:50%;background:#18394e;color:#e9f6ff;box-shadow:0 3px 10px #0005;cursor:pointer;transition:background .15s,border-color .15s}
+.fleet-company-logo-edit svg{width:13px;height:13px;pointer-events:none}
 .fleet-company-logo-edit:hover{background:#24516a;border-color:#9bd7e8}
 .fleet-company-logo-edit:focus-visible{outline:3px solid #64ddca;outline-offset:3px}
 .fleet-company-logo-edit:disabled{opacity:.6;cursor:wait}
@@ -332,5 +332,5 @@
 .fleet-hero-copy>.fleet-company-logo-status{margin:7px 0 0;color:#a9d6e3;font-size:11px;line-height:1.5;overflow-wrap:anywhere}
 .fleet-company-logo-status:empty{display:none}
 @media(max-width:760px){.fleet-company-logo{flex-basis:72px;width:72px;height:72px;border-radius:13px}.fleet-company-logo-image{border-radius:12px}.fleet-company-logo-placeholder{font-size:11px}.fleet-hero .fleet-hero-copy{flex-basis:calc(100% - 93px)}.fleet-hero-copy>.fleet-company-subtitle{font-size:10px}}
-@media(max-width:760px){.fleet-company-logo-edit{top:-16px;right:-12px}}
+@media(max-width:760px){.fleet-company-logo-edit{top:-12px;right:-12px}}
 @media print{.fleet-company-logo-edit,.fleet-company-logo-status{display:none!important}.fleet-company-logo{box-shadow:none}}
