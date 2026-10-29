@@ -31,6 +31,7 @@ footer{padding:20px;text-align:center;color:#849eae;font-size:11px}
    <div class="kpi blocked"><span>Bloqueados</span><b id="k-blocked">—</b><small>Acesso à frota suspenso</small></div>
    <div class="kpi money"><span>Recebimentos confirmados</span><b id="k-paid">—</b><small>Histórico do banco</small></div>
   </div>
+  <div class="notice" role="status" aria-live="polite"><strong>Diagnóstico Mercado Pago:</strong> <span id="xrm-billing-health">Validando credenciais de produção…</span></div>
   <div id="feedback" class="status" role="status" aria-live="polite"></div>
   <nav class="tabs" aria-label="Áreas da administração">
    <button data-tab="overview" aria-selected="true">Visão executiva</button><button data-tab="customers" aria-selected="false">Clientes</button><button data-tab="messages" aria-selected="false">Mensagens <span id="nav-unread"></span></button><button data-tab="payments" aria-selected="false">Pagamentos</button><button data-tab="requests" aria-selected="false">Solicitações</button>
@@ -41,7 +42,7 @@ footer{padding:20px;text-align:center;color:#849eae;font-size:11px}
     <section class="panel"><div class="panel-head"><h2>Carteira de clientes</h2><small>Contas e acessos</small></div><div style="padding:18px;display:grid;gap:13px" id="portfolio-breakdown"></div></section>
    </div>
    <section class="panel" style="margin-top:17px"><div class="panel-head"><h2>Últimos cadastros</h2><button class="btn ghost" data-goto="customers">Ver clientes</button></div><div class="table-wrap"><table><thead><tr><th>Cliente / empresa</th><th>Plano</th><th>Situação</th><th>Entrada</th></tr></thead><tbody id="recent-customers"></tbody></table></div></section>
-   <div class="notice">Os valores financeiros exibidos são os recebimentos efetivamente confirmados no histórico do banco. O painel não considera mensalidades previstas como dinheiro recebido. <strong id="xrm-billing-health">Verificando situação do checkout Mercado Pago…</strong></div>
+   <div class="notice">Os valores financeiros exibidos são os recebimentos efetivamente confirmados no histórico do banco. O painel não considera mensalidades previstas como dinheiro recebido. A situação das credenciais aparece no diagnóstico acima.</div>
   </div>
   <section id="view-customers" class="panel tab-view" hidden><div class="panel-head"><h2>Clientes cadastrados</h2><input class="search" id="customer-search" placeholder="Buscar cliente ou empresa…" type="search"></div><div class="table-wrap"><table><thead><tr><th>Cliente / empresas</th><th>Plano</th><th>Assinatura</th><th>Veículos</th><th>Acesso</th><th>Entrada</th><th>Ações</th></tr></thead><tbody id="customers-body"></tbody></table></div></section>
   <section id="view-messages" class="panel tab-view" hidden><div class="panel-head"><h2>Caixa de mensagens</h2><small>Conversa privada com o titular de cada conta</small></div><div class="inbox"><div class="contacts" id="contacts"></div><div class="conversation"><div class="conversation-top" id="thread-title">Selecione um cliente</div><div class="messages" id="thread-messages"><p class="empty">Escolha uma conta para conversar.</p></div><form class="compose" id="message-form"><textarea id="message-body" placeholder="Digite sua mensagem ao cliente…" maxlength="3000" required></textarea><button class="btn primary" type="submit">Enviar</button></form></div></div></section>
