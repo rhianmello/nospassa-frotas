@@ -4,12 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#07111f">
-  <title>XRMOVI V3 — Réplica visual Frota CPL</title>
+  <title>XRMOVI V3 — Gestão de Frotas</title>
   <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/frota.css?v=20261029-logo-2">
+  <link rel="stylesheet" href="css/frota.css?v=20261029-fleet-3">
 <style>.fleet-ranking-filters{display:flex;flex-wrap:wrap;gap:12px;align-items:center}.fleet-ranking-filters select{max-width:240px;min-width:165px}.fleet-fuel-ranking-panel{margin-block:18px}.fleet-fuel-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0}.fleet-fuel-summary>div{padding:15px;border:1px solid rgba(56,189,248,.23);border-radius:12px;background:rgba(17,42,67,.65)}.fleet-fuel-summary small{display:block;color:#95bdd4;margin-bottom:7px}.fleet-fuel-summary strong{font-size:clamp(15px,2vw,24px);color:#e3f7ff}.fleet-fuel-bars{display:grid;gap:9px}.fleet-fuel-bar,.fleet-ptran-entry{font:inherit;cursor:pointer;text-align:left;border:1px solid rgba(56,189,248,.17);border-radius:10px;background:rgba(14,34,54,.68);color:#d6eeff;padding:11px 13px}.fleet-fuel-bar{display:grid;grid-template-columns:minmax(155px,1.35fr) minmax(85px,2fr) minmax(105px,.7fr);gap:12px;align-items:center}.fleet-fuel-bar:hover,.fleet-ptran-entry:hover{border-color:#38bdf8;background:rgba(27,66,91,.72)}.fleet-fuel-name{font-size:13px;overflow-wrap:anywhere}.fleet-fuel-name b{color:#38bdf8;margin-right:6px}.fleet-fuel-bar>strong{text-align:right;white-space:nowrap}.fleet-fuel-track{display:block;background:rgba(56,189,248,.09);height:12px;border-radius:6px;overflow:hidden}.fleet-fuel-track span{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,#1764ae,#23c6ec);transition:width .35s ease}.fleet-ptran-list{display:grid;gap:10px}.fleet-ptran-entry{display:grid;gap:6px;width:100%}.fleet-ptran-entry>span{font-size:13px}.fleet-ptran-highlight{outline:2px solid #fb7185;outline-offset:2px}@media(max-width:680px){.fleet-fuel-summary{grid-template-columns:1fr}.fleet-fuel-bar{grid-template-columns:1fr auto;gap:7px}.fleet-fuel-track{grid-column:1/-1;grid-row:2}.fleet-fuel-bar>strong{grid-column:2;grid-row:1}}</style>
 <style>.v3-banner{background:#143149;border-bottom:1px solid #3d627d;color:#dbf3ff;font:12px system-ui;padding:9px 22px;text-align:center}.v3-banner a{color:#64ddca;font-weight:700}.fleet-sidebar .fleet-sidebar-visual{background-image:linear-gradient(180deg,rgba(5,16,29,.06),rgba(5,15,25,.2) 54%,rgba(5,15,25,.92) 93%),url("assets/frota/sidebar-fleet-scene.svg")}</style><style>.fleet-breadcrumb{display:flex;align-items:center;flex-wrap:wrap;gap:10px}.xrm-header-contract{display:flex;align-items:center;gap:8px;margin-left:16px;color:#91afc6;font:600 11px system-ui}.xrm-header-contract select{max-width:min(290px,38vw);min-width:150px;background:#10283c;color:#e3f5ff;border:1px solid #345471;border-radius:7px;padding:8px 11px;font:12px system-ui}@media(max-width:660px){.xrm-header-contract{margin-left:0;width:100%}.xrm-header-contract select{max-width:100%;flex:1}}</style></head>
-<body class="fleet-page"><div class="v3-banner">XRMOVI V3 — espelho visual da Frota CPL em homologação. Sistema em reconstrução sobre a base Frota CPL.</div>
+<body class="fleet-page">
   <a class="fleet-skip" href="#fleet-main">Ir para o conteúdo</a>
   <div class="app-shell fleet-shell">
     <aside class="sidebar fleet-sidebar" aria-label="Navegação principal">
@@ -20,16 +20,17 @@
       <nav class="main-nav fleet-main-nav">
         <p class="nav-group-label">NAVEGAÇÃO</p>
         <button class="fleet-subnav active" data-view="dashboard"><i data-lucide="house"></i><span>Visão Geral</span></button>
-        <button class="fleet-subnav" data-focus="assets"><i data-lucide="truck"></i><span>Ativos</span></button>
-        <a class="fleet-subnav" href="./operacoes.html#checklists" style="text-decoration:none"><i data-lucide="list-checks"></i><span>Checklists</span></a>
-<a class="fleet-subnav" href="./operacoes.html#almoxarifado" style="text-decoration:none"><i data-lucide="warehouse"></i><span>Almoxarifado</span></a>
+        <button class="fleet-subnav" data-focus="assets"><i data-lucide="truck"></i><span>Ativos / Veículos</span></button>
+        <a class="fleet-subnav" href="./operacoes.html#checklists" style="text-decoration:none"><i data-lucide="list-checks"></i><span>Checklists de veículos</span></a>
+<a class="fleet-subnav" href="./operacoes.html#almoxarifado" style="text-decoration:none"><i data-lucide="warehouse"></i><span>Almoxarifado de peças</span></a>
 <a class="fleet-subnav" href="./operacoes.html#inspecoes" style="text-decoration:none"><i data-lucide="shield-check"></i><span>Inspeções</span></a>
 <a class="fleet-subnav" href="./os.html" style="text-decoration:none"><i data-lucide="clipboard-list"></i><span>Ordens de serviço</span></a>
         <button class="fleet-subnav" data-focus="maintenance"><i data-lucide="wrench"></i><span>Manutenção</span></button>
         <button class="fleet-subnav" data-focus="documents"><i data-lucide="file-check-2"></i><span>Documentação</span></button>
         <button class="fleet-subnav" data-view="alerts"><i data-lucide="bell"></i><span>Alertas</span><span id="nav-alert-count" class="fleet-nav-count">—</span></button>
         <button class="fleet-subnav" data-view="history"><i data-lucide="history"></i><span>Histórico</span></button>
-        <button class="fleet-subnav" data-fuel-report=""><i data-lucide="fuel"></i><span>Relatório de abastecimento</span></button>
+        <button class="fleet-subnav" data-fuel-report=""><i data-lucide="fuel"></i><span>Abastecimentos</span></button>
+        <button class="fleet-subnav" data-financial-report><i data-lucide="chart-no-axes-combined"></i><span>Relatórios financeiros</span></button>
         </nav>
       <div class="fleet-sidebar-visual" aria-hidden="true">
         <div class="fleet-sidebar-visual-copy">
@@ -75,14 +76,7 @@
         </section>
 
         <div id="page-notice" class="fleet-notice hidden" role="status"></div>
-        <div class="fleet-tabbar hidden" role="tablist" aria-hidden="true">
-          <button class="active" role="tab" aria-selected="true" aria-controls="view-dashboard" id="tab-dashboard" data-view="dashboard">Visão geral</button>
-          <button role="tab" aria-selected="false" aria-controls="view-alerts" id="tab-alerts" data-view="alerts">Alertas <span id="tab-alert-count">—</span></button>
-          <button role="tab" aria-selected="false" aria-controls="view-quality" id="tab-quality" data-view="quality">Qualidade <span id="tab-quality-count">—</span></button>
-          <button role="tab" aria-selected="false" aria-controls="view-history" id="tab-history" data-view="history">Histórico</button>
-        </div>
 
-        <section id="view-dashboard" class="fleet-view" role="tabpanel" aria-labelledby="tab-dashboard">
           <section class="fleet-filterbar fleet-commandbar" aria-label="Filtros de veículos">
             <label class="fleet-search fleet-command-search"><i data-lucide="search"></i><input id="fleet-search" type="search" placeholder="Buscar placa, marca, modelo ou unidade..." aria-label="Buscar veículos"></label>
             <label class="fleet-command-filter"><span>Categoria</span><select id="xrm-filter-category"><option value="">Todas</option></select></label>
@@ -90,6 +84,9 @@
             <label class="fleet-command-filter"><span>Vencimento da revisão</span><select id="xrm-filter-expiry"><option value="">Todos</option><option value="overdue">Vencidas</option><option value="7">Até 7 dias</option><option value="30">Até 30 dias</option><option value="90">Até 90 dias</option></select></label>
             <button class="fleet-button" id="xrm-clear-filters" type="button">Limpar</button>
           </section>
+
+        <section id="view-dashboard" class="fleet-view" role="tabpanel" aria-label="Visão Geral">
+
 
           <div class="fleet-section-label fleet-section-heading">
             <div><span>VISÃO EXECUTIVA</span><strong>O que precisa de atenção agora</strong></div>
@@ -99,7 +96,7 @@
 
           <div class="fleet-overview-grid">
             <section class="fleet-panel fleet-expiry-panel" id="expiry-panel">
-              <header><div><p class="eyebrow">PRÓXIMOS 90 DIAS</p><h2>Vencimentos próximos</h2><small>Documentação, PTRAN, inspeções e revisões</small></div><span class="fleet-chip">Clique nas faixas para filtrar</span></header>
+              <header><div><p class="eyebrow">PRÓXIMOS 90 DIAS</p><h2>Vencimentos próximos</h2><small>Revisões com data de vencimento</small></div></header>
               <div class="fleet-chart-shell fleet-bar-shell fleet-expiry-shell"><canvas id="expiry-chart" aria-label="Vencimentos em até 90 dias" role="img"></canvas><div id="expiry-empty" class="fleet-chart-empty">Nenhum prazo cadastrado nos próximos 90 dias</div></div>
             </section>
 
@@ -114,49 +111,37 @@
             </section>
           </div>
 
-          <section class="fleet-panel fleet-fuel-ranking-panel"><header><div><p class="eyebrow">CONTROLE FINANCEIRO</p><h2>RANKING — GASTOS DE TODOS OS VEÍCULOS NO MÊS</h2><small>Despesas reais com combustível, por ativo</small></div><div class="fleet-ranking-filters"><label class="fleet-inline-filter">Categoria <select id="fuel-ranking-category" aria-label="Categoria de veículos no ranking"><option value="">Todas as categorias</option></select></label><label class="fleet-inline-filter">Mês <input id="fuel-ranking-month" type="month" aria-label="Mês do ranking de abastecimento"></label></div></header><div id="fleet-fuel-ranking" aria-live="polite"><p class="fleet-history-note">Carregando dados do banco…</p></div></section>
+          <section class="fleet-panel fleet-fuel-ranking-panel"><header><div><p class="eyebrow">CONTROLE FINANCEIRO</p><h2>RANKING — COMBUSTÍVEL DOS VEÍCULOS FILTRADOS NO MÊS</h2><small>Despesas reais com combustível, por ativo</small></div><div class="fleet-ranking-filters"><label class="fleet-inline-filter">Categoria <select id="fuel-ranking-category" aria-label="Categoria de veículos no ranking"><option value="">Todas as categorias</option></select></label><label class="fleet-inline-filter">Mês <input id="fuel-ranking-month" type="month" aria-label="Mês do ranking de abastecimento"></label></div></header><div id="fleet-fuel-ranking" aria-live="polite"><p class="fleet-history-note">Carregando dados do banco…</p></div></section>
           <section class="fleet-panel fleet-table-panel" id="fleet-assets-panel">
             <header>
               <div><p class="eyebrow">ATIVOS</p><h2>Principais ativos <span id="table-count" class="fleet-chip">—</span></h2><small>Consulta rápida da situação operacional e próximos prazos</small></div>
-              <div class="fleet-table-actions"><button class="fleet-button" id="export-button"><i data-lucide="download"></i> Exportar visão</button></div>
+              
             </header>
             <div id="fleet-table-empty" class="fleet-empty hidden"></div>
             <div class="fleet-table-wrap" id="fleet-table-wrap">
               <table class="fleet-table fleet-table-executive">
-                <thead><tr><th scope="col">Veículo / identificação</th><th scope="col">Tipo</th><th scope="col">Responsável</th><th scope="col">Status</th><th scope="col">Próxima revisão</th><th scope="col">PTRAN</th><th scope="col">Inspeção</th><th scope="col">KM / Horímetro</th><th scope="col">Ações</th></tr></thead>
+                <thead><tr><th scope="col">Veículo / identificação</th><th scope="col">Tipo</th><th scope="col">Responsável</th><th scope="col">Status</th><th scope="col">Próxima revisão</th><th scope="col">KM / Horímetro</th><th scope="col">Ações</th></tr></thead>
                 <tbody id="fleet-table-body"></tbody>
               </table>
             </div>
-            <footer class="fleet-table-footer"><span id="table-page-info">—</span><div><button class="fleet-icon-button" id="table-prev" aria-label="Página anterior"><i data-lucide="chevron-left"></i></button><button class="fleet-icon-button" id="table-next" aria-label="Próxima página"><i data-lucide="chevron-right"></i></button></div></footer>
+            <footer class="fleet-table-footer"><span id="table-page-info">—</span></footer>
           </section>
 
-          <div class="fleet-insights-control">
-            <button class="fleet-button fleet-insights-button" id="analytics-toggle" type="button" aria-expanded="false" aria-controls="fleet-secondary-analytics"><i data-lucide="chart-no-axes-combined"></i> Ver análises detalhadas <i data-lucide="chevron-down"></i></button>
-          </div>
-
-          <div id="fleet-secondary-analytics" class="fleet-secondary-grid hidden">
-            <section class="fleet-panel" id="document-panel"><header><div><p class="eyebrow">AUTORIZAÇÃO &amp; CONTROLE</p><h2>PTRAN &amp; Documentação</h2></div><i class="fleet-panel-icon" data-lucide="file-check-2"></i></header><div class="fleet-chart-shell fleet-bar-shell"><canvas id="ptran-chart" aria-label="Distribuição de status PTRAN" role="img"></canvas><div id="ptran-empty" class="fleet-chart-empty">Nenhum PTRAN registrado</div></div><div id="document-overview" class="fleet-mini-strip"></div></section>
-            <section class="fleet-panel"><header><div><p class="eyebrow">COMPOSIÇÃO DA BASE</p><h2>Frota por categoria</h2></div><i class="fleet-panel-icon" data-lucide="layers-3"></i></header><div class="fleet-chart-shell fleet-bar-shell"><canvas id="category-chart" aria-label="Frota por categoria" role="img"></canvas><div id="category-empty" class="fleet-chart-empty">Nenhuma categoria disponível</div></div></section>
-            <section id="maintenance-panel" class="fleet-panel hidden"><header><div><p class="eyebrow">HISTÓRICO DE EXECUÇÃO</p><h2>Manutenções por mês</h2></div><i class="fleet-panel-icon" data-lucide="wrench"></i></header><div class="fleet-chart-shell fleet-bar-shell"><canvas id="maintenance-chart" aria-label="Manutenções realizadas por mês" role="img"></canvas></div></section>
-            <section id="availability-panel" class="fleet-panel hidden"><header><div><p class="eyebrow">FROTA NO CONTRATO</p><h2>Disponibilidade operacional</h2></div><i class="fleet-panel-icon" data-lucide="activity"></i></header><div id="availability-content" class="fleet-availability"></div></section>
-          </div>
+          <section id="maintenance-panel" class="fleet-panel"><header><h2>Manutenção da frota</h2></header></section>
+          <section id="document-panel" class="fleet-panel"><header><h2>Documentação dos veículos</h2></header><div id="vehicle-documents"></div></section>
         </section>
 
-        <section id="view-alerts" class="fleet-view hidden" role="tabpanel" aria-labelledby="tab-alerts"><div class="fleet-view-heading"><div><p class="eyebrow">AÇÃO &amp; PREVENÇÃO</p><h2>Central de Alertas</h2><p>Todos os ativos da base. Abra um alerta para consultar a ficha e seu histórico.</p></div><div class="fleet-inline-title"><span id="alerts-total" class="fleet-chip">—</span><button type="button" class="fleet-button" id="export-alerts-button" title="Exportar pendências para Excel"><i data-lucide="file-spreadsheet"></i> Exportar pendências</button></div></div><div id="alerts-content" class="fleet-alert-groups"></div></section>
-        <section id="view-quality" class="fleet-view hidden" role="tabpanel" aria-labelledby="tab-quality"><div class="fleet-view-heading"><div><p class="eyebrow">CONFIABILIDADE DOS DADOS</p><h2>Qualidade da Base</h2><p>Inconsistências sinalizadas para conferência humana, sem correções automáticas.</p></div><div class="fleet-inline-title"><span id="quality-total" class="fleet-chip">—</span><button type="button" class="fleet-button" id="export-quality-button" title="Exportar inconsistências para Excel"><i data-lucide="file-spreadsheet"></i> Exportar revisão</button></div></div><div id="quality-summary" class="fleet-quality-summary"></div><section class="fleet-panel"><header><h2>Itens para revisão</h2><label class="fleet-inline-filter">Tipo<select id="quality-type"><option value="">Todas as inconsistências</option></select></label></header><div id="quality-content"></div></section></section>
-        <section id="view-history" class="fleet-view hidden" role="tabpanel" aria-labelledby="tab-history"><div class="fleet-view-heading"><div><p class="eyebrow">RASTREABILIDADE &amp; AUDITORIA</p><h2>Histórico da Frota</h2><p>Entradas, saídas e alterações preservadas com data, responsável e origem.</p></div><i data-lucide="history"></i></div><form id="history-filters" class="fleet-history-filters fleet-panel"><label>De<input type="date" name="from"></label><label>Até<input type="date" name="to"></label><label>Ativo<select name="asset_id" id="history-asset"><option value="">Todos os ativos</option></select></label><label>Tipo de evento<select name="kind"><option value="">Todos os eventos</option><option value="assets">Cadastro do ativo</option><option value="ptrans">PTRAN</option><option value="inspections">Inspeção</option><option value="maintenance">Manutenção</option><option value="documents">Documento</option><option value="movements">Movimentação</option></select></label><label>Responsável<input name="responsavel" placeholder="Nome do responsável"></label><label>Usuário<input name="actor" placeholder="Autor da alteração"></label><label>Origem<select name="origem"><option value="">Todas as origens</option><option value="manual">Manual</option><option value="excel_import">Importação Excel</option><option value="system">Sistema</option></select></label><button class="fleet-button primary" type="submit"><i data-lucide="filter"></i> Consultar</button><button class="fleet-link-button" type="reset">Limpar</button></form><section class="fleet-panel"><header><h2>Eventos registrados</h2><span id="history-count" class="fleet-chip">—</span></header><div id="history-content" class="fleet-timeline"></div><footer class="fleet-center-footer"><button class="fleet-button hidden" id="history-more">Carregar mais eventos</button></footer></section></section>
+        <section id="view-alerts" class="fleet-view hidden" role="tabpanel" aria-label="Alertas"><div class="fleet-view-heading"><div><p class="eyebrow">AÇÃO &amp; PREVENÇÃO</p><h2>Central de Alertas</h2><p>Manutenções dos veículos correspondentes aos filtros selecionados.</p></div><div class="fleet-inline-title"><span id="alerts-total" class="fleet-chip">—</span></div></div><div id="alerts-content" class="fleet-alert-groups"></div></section>
+        <section id="view-history" class="fleet-view hidden" role="tabpanel" aria-label="Histórico"><div class="fleet-view-heading"><div><p class="eyebrow">RASTREABILIDADE &amp; AUDITORIA</p><h2>Histórico da Frota</h2><p>Registros de manutenção e abastecimento dos veículos filtrados.</p></div><i data-lucide="history"></i></div><form id="history-filters" class="fleet-history-filters fleet-panel"><label>De<input type="date" name="from"></label><label>Até<input type="date" name="to"></label><label>Tipo<select name="kind"><option value="">Todos</option><option value="maintenance">Manutenção</option><option value="fuel">Abastecimento</option></select></label><button class="fleet-button" type="submit">Consultar</button><button class="fleet-link-button" type="reset">Limpar</button></form><section class="fleet-panel"><header><h2>Eventos registrados</h2><span id="history-count" class="fleet-chip">—</span></header><div id="history-content" class="fleet-timeline"></div></section></section>
         <footer class="fleet-page-footer"><span>XRMOVI • GESTÃO DE FROTA</span><span>Operação • manutenção • conformidade</span></footer>
       </div>
     </main>
   </div>
 
-  <div id="fleet-drawer-overlay" class="fleet-overlay hidden"><aside id="fleet-drawer" class="fleet-drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title" tabindex="-1"><div id="drawer-content"></div></aside></div>
-  <div id="fleet-modal-overlay" class="fleet-overlay fleet-modal-overlay hidden"><section id="fleet-modal" class="fleet-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" tabindex="-1"><div id="modal-content"></div></section></div>
-  <div id="fleet-confirm-overlay" class="fleet-overlay fleet-confirm-overlay hidden"><section class="fleet-modal fleet-confirm" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" tabindex="-1"><div id="confirm-content"></div></section></div>
   <div id="fleet-toasts" class="fleet-toasts" aria-live="polite" aria-atomic="false"></div>
-  <input type="file" id="fleet-import-file" accept=".xlsx,.xlsm,.xlsb" hidden>
+  
 
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js"></script>
-<script type="module" src="./xrmovi-adapter.js?v=20261029-logo-1"></script>
+<script type="module" src="./xrmovi-adapter.js?v=20261029-fleet-3"></script>
 </body>
 </html>

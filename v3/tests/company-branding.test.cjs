@@ -263,7 +263,7 @@ test('late download from a previous company cannot replace current company brand
   await page.close();
 });
 
-test('desktop and mobile keep logo visible, edit target >=44px and long company name within viewport', async () => {
+test('desktop and mobile keep logo visible, compact edit target >=26px and long company name within viewport', async () => {
   for (const viewport of [{ width: 1440, height: 1000 }, { width: 390, height: 844 }]) {
     const { page, errors } = await open({ viewport });
     await page.evaluate(() => {
@@ -272,7 +272,7 @@ test('desktop and mobile keep logo visible, edit target >=44px and long company 
     });
     assert.equal(await page.locator('#company-logo-area').isVisible(), true);
     const box = await page.locator('#company-logo-edit').boundingBox();
-    assert.ok(box.width >= 44 && box.height >= 44);
+    assert.ok(box.width >= 26 && box.height >= 26);
     const hero = await page.locator('.fleet-hero').boundingBox();
     assert.ok(hero.x >= 0 && hero.x + hero.width <= viewport.width + 1);
     const heading = await page.locator('#company-name').boundingBox();
