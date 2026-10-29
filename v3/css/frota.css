@@ -382,5 +382,11 @@
 .fleet-financial-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:10px 18px 18px}
 .fleet-financial-cards button{display:grid;gap:10px;text-align:left;padding:18px;background:#102b3f;border:1px solid #35596e;border-radius:10px;cursor:pointer;color:#adc9dd}
 .fleet-financial-cards strong{font-size:25px;color:#42d5bd}.fleet-financial-cards button[aria-expanded="true"]{border-color:#42d5bd;background:#15374a}
+.fleet-workspace-tabs{display:flex;flex-wrap:wrap;gap:9px;margin:0 0 17px}.fleet-workspace-tabs button{padding:11px 16px;border-radius:8px;background:#102a3e;color:#b9d3e5;border:1px solid #36566c;cursor:pointer;font:600 12px system-ui}.fleet-workspace-tabs button[aria-pressed="true"]{background:#183e51;color:#78e6ce;border-color:#3dbda6}
+#driver-list .fleet-table,#expense-list .fleet-table{min-width:880px}#driver-list .fleet-workspace-note,#expense-list .fleet-workspace-note{padding:16px}
+#driver-new{white-space:nowrap}.fleet-page .fleet-commandbar.hidden,.fleet-page .xrm-header-contract.hidden{display:none!important}
+.fleet-financial-cards{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:760px){#view-drivers .fleet-workspace-heading{flex-wrap:wrap}.fleet-financial-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:530px){.fleet-financial-cards{grid-template-columns:1fr}.fleet-workspace-tabs button{flex:1}}
 @media(max-width:530px){.fleet-maintenance-details,.fleet-financial-cards{grid-template-columns:1fr}#v3-edit-overlay[data-layout="drawer"] .v3-edit-dialog{padding:18px}.fleet-financial-cards{gap:8px}.fleet-detail-actions{display:grid;grid-template-columns:1fr;width:100%}}
 @media(max-width:760px){.fleet-maintenance-summary{grid-template-columns:repeat(2,minmax(0,1fr));padding:12px;gap:8px}.fleet-maintenance-filters{padding:0 12px 12px}.fleet-maintenance-filters label{min-width:0;flex:1 1 100%}.fleet-workspace-heading h2{font-size:22px}.fleet-topbar .fleet-mobile-navigation{display:flex;gap:7px;align-items:center;font-size:10px;color:#a0bbcf}.fleet-mobile-navigation select{max-width:160px;background:#10283c;color:#e7f3ff;border:1px solid #33566f;border-radius:6px}.fleet-topbar{height:auto;min-height:60px;flex-wrap:wrap;gap:10px;padding-block:10px}.fleet-breadcrumb{width:100%}}

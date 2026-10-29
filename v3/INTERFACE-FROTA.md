@@ -1,5 +1,7 @@
 # Navegação e ações da frota
 
+O módulo de manutenção foi ampliado para `Manutenção / Despesas` e há uma tela `Motoristas`. Consulte `MOTORISTAS-DESPESAS.md` para cadastro, vínculo ao veículo, categorias de despesa e regras de pagamento/Financeiro. O histórico de registros passou a incluir despesas pagas, sem alterar o histórico auditável das manutenções.
+
 Cada item do menu abre uma tela exclusiva no mesmo aplicativo, identificada por `#assets`, `#maintenance` etc. Voltar e recarregar preservam a navegação. No celular há um seletor de tela. Os módulos e registros existentes continuam disponíveis; os quatro atalhos retirados do menu não foram reintroduzidos.
 
 ## Ações no contexto
