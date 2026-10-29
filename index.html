@@ -85,6 +85,19 @@ header .nav-actions .btn{margin:0!important;align-self:center;vertical-align:mid
    <div class="xrm-sim-result" id="xrm-sim-result" role="status" aria-live="polite"><strong id="xrm-sim-summary">3 empresas · 3 contratos · 15 veículos</strong><div class="xrm-sim-list" id="xrm-sim-list"></div></div>
    <p class="xrm-sim-note">O simulador distribui igualmente para fins de exemplo. A organização real poderá ter quantidades diferentes de veículos e contratos por empresa, respeitando as cotas da assinatura. Não constitui contratação ou reserva.</p>
   </section>
+  
+  <div class="xrm-commercial-trial" aria-labelledby="xrm-trial-title">
+    <div class="xrm-trial-content">
+      <span class="xrm-trial-eyebrow">COMECE PELO START</span>
+      <h3 id="xrm-trial-title">Conheça o XRMOVI por 14 dias.</h3>
+      <p>Crie sua conta e cadastre a primeira empresa no plano Start para experimentar o controle de até 5 veículos e 1 contrato. Durante o período de avaliação, você poderá explorar o sistema sem ativar cobrança automática.</p>
+      <small>Ao final do teste, novos cadastros ficam sujeitos à ativação do plano. Os dados existentes são preservados.</small>
+    </div>
+    <div class="xrm-trial-actions">
+      <a class="btn" href="/?login=1">Criar conta para testar</a>
+      <a class="btn outline" href="#xrm-faq">Entender as regras</a>
+    </div>
+  </div>
   <p class="notice">Não há contratação ou cobrança ativa nesta página. Os valores, limites e funcionalidades apresentados são uma proposta comercial, sujeitos a confirmação no lançamento.</p>
  </div>
 </section>
@@ -136,6 +149,8 @@ header .nav-actions .btn{margin:0!important;align-self:center;vertical-align:mid
    <details><summary>Qual é a diferença entre login, empresa e contrato?</summary><p>O login identifica quem acessa o sistema. A empresa representa uma organização cadastrada. O contrato organiza os veículos dessa empresa por cliente, obra ou operação. Os limites de empresas e de usuários são independentes: no Pro, por exemplo, são até 3 empresas e até 3 usuários no total, podendo um usuário autorizado acessar mais de uma empresa.</p></details>
    <details><summary>No Pro, posso ter uma única empresa com 15 veículos?</summary><p>Sim. A proposta do Pro permite até 15 veículos no total. Uma empresa poderá usar os 15, inclusive divididos entre 3 contratos, por exemplo, com 5 veículos em cada um.</p></details>
    <details><summary>E se eu cadastrar 3 empresas no Pro?</summary><p>Você terá 15 veículos para distribuir. Uma divisão igual seria 5 veículos em cada empresa. Também poderá distribuir de outra forma, como 8, 4 e 3, desde que o total não ultrapasse 15.</p></details>
+   <details><summary>Posso testar o sistema antes de contratar?</summary><p>Sim. Novos cadastros podem começar com 14 dias de avaliação no Start, incluindo 1 empresa, 1 usuário, 1 contrato e até 5 veículos. A criação da conta não ativa cobrança recorrente; a contratação paga está em preparação.</p></details>
+   <details><summary>Um contrato pode ficar vazio enquanto estou cadastrando?</summary><p>Sim. Você pode criar primeiro um contrato e depois vincular seus veículos. Um contrato sem veículos continua ocupando uma vaga de contrato no plano, mas não ocupa vaga de veículo.</p></details>
    <details><summary>O Pro realmente aceita até 15 contratos?</summary><p>Essa é a regra comercial proposta: até 15 contratos, com no mínimo 1 veículo por contrato ativo. Assim, é possível ter 15 contratos com 1 veículo cada ou menos contratos reunindo os mesmos 15 veículos.</p></details>
    <details><summary>Como funcionam Business e Advanced?</summary><p>O Business oferece até 5 empresas, 30 veículos e 30 contratos; se dividido igualmente entre 5 empresas, são 6 veículos cada. O Advanced oferece até 10 empresas, 60 veículos e 60 contratos; se dividido igualmente entre 10 empresas, também são 6 veículos cada.</p></details>
    <details><summary>Posso vincular o mesmo veículo a dois contratos?</summary><p>Para evitar contagens duplicadas, a proposta prevê um contrato ativo por veículo em cada momento. As transferências entre contratos deverão preservar o histórico de movimentação e de despesas.</p></details>
@@ -514,4 +529,16 @@ html{scroll-padding-top:90px}
  [companies,contracts].forEach(el=>el.addEventListener('input',render));
  render();
 })();
-</script></body></html>
+</script><style>
+/* Convite ao teste de 14 dias no plano Start — sem ativação automática de cobrança */
+#planos .xrm-commercial-trial{display:flex;gap:24px;align-items:center;justify-content:space-between;margin-top:22px;padding:28px;border:1px solid #389b86;border-radius:19px;background:radial-gradient(circle at 90% 20%,rgba(84,224,173,.14),transparent 35%),linear-gradient(115deg,#12394a,#0c2636)}
+#planos .xrm-trial-content{max-width:740px}
+#planos .xrm-trial-eyebrow{display:inline-block;color:#55e3b6;font-size:11px;font-weight:850;letter-spacing:1.3px;margin-bottom:8px}
+#planos .xrm-commercial-trial h3{font-size:25px;margin:0 0 10px;line-height:1.25}
+#planos .xrm-commercial-trial p{font-size:13px;line-height:1.7;margin:0 0 12px;min-height:0;color:#c8e0e7}
+#planos .xrm-commercial-trial small{display:block;font-size:11px;color:#abc8d1;line-height:1.6}
+#planos .xrm-trial-actions{flex:0 0 auto;display:flex;flex-direction:column;gap:10px}
+#planos .xrm-trial-actions .btn{min-width:185px;font-size:12px}
+@media(max-width:760px){#planos .xrm-commercial-trial{flex-direction:column;align-items:stretch;padding:22px}#planos .xrm-trial-actions{flex-direction:row;flex-wrap:wrap}#planos .xrm-trial-actions .btn{flex:1}}
+@media(max-width:480px){#planos .xrm-commercial-trial h3{font-size:21px}#planos .xrm-trial-actions{flex-direction:column}}
+</style></body></html>
