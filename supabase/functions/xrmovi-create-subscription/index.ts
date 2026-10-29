@@ -15,7 +15,7 @@ Deno.serve(async(req:Request)=>{
  }});
  if(req.method!=="POST")return json({error:"Método não permitido"},405,outputOrigin);
  if(Deno.env.get("XRMOVI_BILLING_ENABLED")!=="true")return json({error:"Checkout ainda não habilitado."},503,outputOrigin);
- const token=Deno.env.get("MERCADOPAGO_ACCESS_TOKEN");
+ const token=Deno.env.get("XRMOVI_MP_ACCESS_TOKEN");
  const supabaseUrl=Deno.env.get("SUPABASE_URL"),anonKey=Deno.env.get("SUPABASE_ANON_KEY"),serviceKey=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
  if(!token||!supabaseUrl||!anonKey||!serviceKey)return json({error:"Configuração de cobrança incompleta."},503,outputOrigin);
  const bearer=req.headers.get("authorization")||"";
