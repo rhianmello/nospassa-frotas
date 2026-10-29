@@ -72,6 +72,23 @@ const v3Overlay=document.createElement('div');v3Overlay.id='v3-edit-overlay';v3O
 document.body.append(v3Overlay);
 const v3Style=document.createElement('style');v3Style.textContent='#v3-edit-overlay{position:fixed;inset:0;z-index:1000;background:#07111fe8;display:grid;place-items:center;padding:20px}#v3-edit-overlay[hidden]{display:none!important}.v3-edit-dialog{width:min(610px,96vw);max-height:91vh;overflow:auto;background:#10273c;border:1px solid #40617c;border-radius:16px;padding:23px;color:#edf7ff;font:13px system-ui;box-shadow:0 20px 70px #0008}.v3-edit-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}.v3-edit-heading h2{font-size:21px}.v3-edit-heading button{background:#1c4058;color:#fff;border:1px solid #426980;border-radius:8px;font-size:24px;padding:0 10px}.v3-edit-dialog form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.v3-edit-dialog label{display:grid;gap:5px;font-size:11px;color:#afc8da}.v3-edit-dialog input,.v3-edit-dialog select{width:100%;min-width:0;padding:10px;border-radius:8px;background:#091b2e;color:#fff;border:1px solid #43647a}.v3-edit-dialog .wide{grid-column:1/-1}.v3-edit-dialog form button{border:0;border-radius:9px;background:#34cdb5;color:#052128;font-weight:800;padding:12px;grid-column:1/-1}.v3-write-actions{display:flex;flex-wrap:wrap;gap:9px;margin:14px 0}.v3-write-actions button{background:#143951;color:#daf1fc;border:1px solid #36617b;border-radius:8px;padding:10px 13px;font:600 12px system-ui}.v3-write-actions button:disabled{opacity:.45;cursor:not-allowed}@media(max-width:530px){.v3-edit-dialog form{grid-template-columns:1fr}.v3-edit-dialog label{grid-column:1}}';
 document.head.append(v3Style);
+const v3DriverStyle=document.createElement('style');
+v3DriverStyle.textContent=`
+.v3-edit-dialog .v3-driver-search{position:relative;align-content:start}
+.v3-edit-dialog .v3-driver-search input[role="combobox"]{background:#091b2e}
+.v3-edit-dialog .v3-driver-results{border:1px solid #426b82;border-radius:10px;background:#0c293d;max-height:226px;overflow-y:auto;box-shadow:0 12px 28px #0005;margin-top:3px}
+.v3-edit-dialog .v3-driver-results[hidden]{display:none!important}
+.v3-edit-dialog .v3-driver-option{display:flex;flex-direction:column;align-items:flex-start;gap:3px;width:100%;padding:10px 12px!important;grid-column:auto!important;background:transparent!important;color:#eaf6fd!important;border:0!important;border-radius:0!important;text-align:left;cursor:pointer;font-weight:400!important}
+.v3-edit-dialog .v3-driver-option+.v3-driver-option{border-top:1px solid #23485d!important}
+.v3-edit-dialog .v3-driver-option:hover,.v3-edit-dialog .v3-driver-option:focus-visible{background:#154d5e!important;outline:2px solid #56dbc0;outline-offset:-2px}
+.v3-edit-dialog .v3-driver-option[aria-selected="true"]{background:#15463e!important}
+.v3-edit-dialog .v3-driver-option strong{font-size:12px;font-weight:700}
+.v3-edit-dialog .v3-driver-option small{font-size:10px;color:#a6c4d0}
+.v3-edit-dialog .v3-driver-empty{padding:12px;color:#a6c4d0;font-size:11px}
+.v3-edit-dialog .v3-driver-helper{margin:0;font-size:11px;line-height:1.5;color:#a8c5d4}
+`;
+document.head.append(v3DriverStyle);
+
 const field=(name,label,type='text',value='',required=false)=>{const l=document.createElement('label');l.textContent=label;const i=document.createElement('input');i.name=name;i.type=type;i.value=value??'';i.required=required;if(type==='number'){i.min='0';i.step='any'}l.append(i);return l};
 const pick=(name,label,options,value='')=>{const l=document.createElement('label');l.textContent=label;const s=document.createElement('select');s.name=name;s.required=true;for(const [id,text]of options){const o=document.createElement('option');o.value=id;o.textContent=text;s.append(o)}s.value=value||options[0]?.[0]||'';l.append(s);return l};
 function canWrite(){return !!company&&['owner','manager'].includes(company.role)}
@@ -304,9 +321,133 @@ async function showXrmRecordAttachments(cid,kind,id,container){
 function buildDriverForm(form,record){form.append(field('name','Nome do motorista','text',record?.name||'',true),field('phone','Telefone (opcional)','tel',record?.phone||''),field('cnh','Número da CNH (opcional)','text',record?.cnh_number||''),pick('cnh_category','Categoria da CNH',[['','Não informada'],...['A','B','AB','C','AC','D','AD','E','AE'].map(value=>[value,value])],record?.cnh_category||''),field('cnh_expires','Validade da CNH (opcional)','date',record?.cnh_expires_on||''),pick('active','Situação',[['true','Ativo'],['false','Inativo']],record?.active===false?'false':'true'),field('notes','Observações (opcional)','text',record?.notes||''));form.elements.cnh_category.required=false;form.elements.name.maxLength=160;form.elements.phone.maxLength=40;form.elements.cnh.maxLength=30;form.elements.notes.maxLength=1000;const note=document.createElement('p');note.className='wide';note.textContent='Motoristas inativos deixam de aparecer para novos vínculos. Veículos já vinculados são preservados.';form.append(note)}
 
 function buildVehicleDriverSelect(form,record){
- const search=field('driver_search','Buscar motorista','search',''),label=pick('driver','Motorista responsável',[['','Sem motorista vinculado']],''),select=label.querySelector('select');search.classList.add('wide');label.classList.add('wide');select.required=false;let firstPopulate=true;
- function populate(){const current=firstPopulate?(record?.driver_id||''):select.value;firstPopulate=false;const query=search.querySelector('input').value.trim().toLocaleLowerCase('pt-BR');const source=drivers.filter(driver=>(driver.active||driver.id===record?.driver_id)&&(!query||driver.name.toLocaleLowerCase('pt-BR').includes(query)||driver.id===current));if(current&&!source.some(driver=>driver.id===current)&&record?.driver_id===current)source.push({id:current,name:record.driver_name||'Motorista vinculado',active:false});select.replaceChildren();const empty=document.createElement('option');empty.value='';empty.textContent='Sem motorista vinculado';select.append(empty);for(const driver of source){const option=document.createElement('option');option.value=driver.id;option.textContent=driver.name+(driver.cnh_category?' · '+driver.cnh_category:'')+(driver.cnh_number?' · CNH final '+driver.cnh_number.slice(-4):'')+(driver.active?'':' (inativo)');select.append(option)}select.value=source.some(driver=>driver.id===current)?current:''}
- populate();search.querySelector('input').oninput=populate;form.append(search,label);const note=document.createElement('p');note.className='wide';note.textContent=driversState?'Não foi possível consultar os motoristas. O vínculo existente será preservado; atualize para consultar o cadastro.':drivers.some(driver=>driver.active)?'Selecione um motorista cadastrado na empresa ativa.':'Cadastre motoristas na tela Motoristas para vinculá-los aos veículos.';form.append(note);
+ const search=field('driver_search','Buscar motorista','search','');
+ const label=pick('driver','Motorista responsável',[['','Sem motorista vinculado']],'');
+ const select=label.querySelector('select');
+ const input=search.querySelector('input');
+ const results=document.createElement('div');
+ const helper=document.createElement('p');
+ search.classList.add('wide','v3-driver-search');
+ label.classList.add('wide');
+ helper.classList.add('wide','v3-driver-helper');
+ results.className='v3-driver-results';
+ results.id='v3-driver-results';
+ results.hidden=true;
+ input.placeholder='Digite o nome, número da CNH ou categoria';
+ input.autocomplete='off';
+ input.setAttribute('role','combobox');
+ input.setAttribute('aria-autocomplete','list');
+ input.setAttribute('aria-controls',results.id);
+ input.setAttribute('aria-expanded','false');
+ select.required=false;
+ let selectedId=record?.driver_id||'';
+ let resultsOpen=false;
+ const normalize=value=>String(value??'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLocaleLowerCase('pt-BR');
+ const active=driver=>driver.active!==false&&driver.active!=='false'&&driver.active!==0;
+ const candidates=()=>drivers.filter(driver=>active(driver)||driver.id===record?.driver_id);
+ const driverLabel=driver=>driver.name+(driver.cnh_category?' · CNH '+driver.cnh_category:'')+(driver.cnh_number?' · final '+String(driver.cnh_number).slice(-4):'')+(!active(driver)?' (inativo)':'');
+ const matches=(driver,query)=>[driver.name,driver.cnh_number,driver.cnh_category].some(value=>normalize(value).includes(query));
+ function updateHelper(){
+  const selected=candidates().find(driver=>driver.id===selectedId);
+  helper.textContent=driversState
+   ? 'Não foi possível carregar os motoristas da empresa. Atualize a página para tentar novamente.'
+   : selected?'Selecionado: '+selected.name+'. Você pode buscar outro motorista ou deixar sem vínculo.'
+   : candidates().some(active)?'Digite para localizar um motorista e clique no resultado para vinculá-lo.'
+   :'Nenhum motorista ativo cadastrado. Cadastre um na área Motoristas antes de vinculá-lo.';
+ }
+ function updateSelect(){
+  const query=normalize(input.value.trim());
+  const available=candidates().filter(driver=>!query||matches(driver,query)||driver.id===selectedId);
+  if(selectedId&&!available.some(driver=>driver.id===selectedId)){
+   available.push({id:selectedId,name:record?.driver_name||'Motorista vinculado',active:false});
+  }
+  select.replaceChildren();
+  const empty=document.createElement('option');
+  empty.value='';empty.textContent='Sem motorista vinculado';select.append(empty);
+  for(const driver of available){const option=document.createElement('option');option.value=driver.id;option.textContent=driverLabel(driver);select.append(option)}
+  select.value=selectedId;
+  if(select.selectedIndex<0){selectedId='';select.value=''}
+  updateHelper();
+ }
+ function toggleResults(open){
+  resultsOpen=!!open;
+  results.hidden=!resultsOpen;
+  input.setAttribute('aria-expanded',String(resultsOpen));
+ }
+ function choose(driver){
+  selectedId=driver.id;
+  input.value=driver.name;
+  updateSelect();
+  toggleResults(false);
+  input.focus({preventScroll:true});
+ }
+ function showMatches(){
+  updateSelect();
+  const query=normalize(input.value.trim());
+  const matchesList=candidates().filter(driver=>!query||matches(driver,query));
+  results.replaceChildren();
+  if(driversState||!matchesList.length){
+   const empty=document.createElement('div');
+   empty.className='v3-driver-empty';
+   empty.textContent=driversState?'Falha ao consultar os motoristas.':'Nenhum motorista encontrado para essa busca.';
+   results.append(empty);
+  }else{
+   for(const driver of matchesList.slice(0,25)){
+    const button=document.createElement('button');
+    button.type='button';
+    button.className='v3-driver-option';
+    button.setAttribute('role','option');
+    button.setAttribute('aria-selected',String(driver.id===selectedId));
+    const name=document.createElement('strong');name.textContent=driver.name;
+    const meta=document.createElement('small');meta.textContent=(driver.cnh_category?'CNH '+driver.cnh_category:'Categoria não informada')+(!active(driver)?' · Inativo':'')+(driver.cnh_number?' · final '+String(driver.cnh_number).slice(-4):'');
+    button.append(name,meta);
+    button.addEventListener('click',()=>choose(driver));
+    results.append(button);
+   }
+   if(matchesList.length>25){
+    const more=document.createElement('div');more.className='v3-driver-empty';
+    more.textContent='Exibindo 25 de '+matchesList.length+' motoristas. Refine a busca.';
+    results.append(more);
+   }
+  }
+  toggleResults(true);
+ }
+ input.addEventListener('focus',showMatches);
+ input.addEventListener('input',showMatches);
+ input.addEventListener('keydown',event=>{
+  if(event.key==='Escape'){toggleResults(false);return}
+  if(event.key==='ArrowDown'){
+   if(!resultsOpen)showMatches();
+   const first=results.querySelector('.v3-driver-option');
+   if(first){event.preventDefault();first.focus()}
+  }
+ });
+ results.addEventListener('keydown',event=>{
+  const buttons=[...results.querySelectorAll('.v3-driver-option')];
+  const index=buttons.indexOf(document.activeElement);
+  if(event.key==='Escape'){event.preventDefault();toggleResults(false);input.focus({preventScroll:true})}
+  else if(event.key==='ArrowDown'||event.key==='ArrowUp'){
+   event.preventDefault();
+   const next=event.key==='ArrowDown'?Math.min(index+1,buttons.length-1):Math.max(index-1,0);
+   buttons[next]?.focus();
+  }
+ });
+ select.addEventListener('change',()=>{
+  selectedId=select.value;
+  const driver=candidates().find(item=>item.id===selectedId);
+  input.value=driver?.name||'';
+  updateSelect();
+  toggleResults(false);
+ });
+ document.addEventListener('pointerdown',event=>{
+  if(!search.isConnected)return;
+  if(!search.contains(event.target))toggleResults(false);
+ },{signal:(()=>{const controller=new AbortController();const observer=new MutationObserver(()=>{
+  if(!search.isConnected){controller.abort();observer.disconnect()}
+ });observer.observe(form,{childList:true});return controller.signal})()});
+ search.append(results);
+ form.append(search,label,helper);
+ updateSelect();
 }
 
 function buildExpenseForm(form,record){const options=vehicles.map(vehicle=>[vehicle.id,vehicle.plate+' · '+(vehicle.model||vehicle.category||'Veículo')]);form.append(pick('vehicle','Veículo',options,record?.vehicle_id),pick('expense_category','Tipo de despesa',Object.entries(expenseCategories),record?.category||'outros'),field('description','Despesa ou serviço','text',record?.description||'',true),field('expense_date','Data da despesa','date',record?.expense_date||localDay(new Date()),true),field('due_date','Vencimento (opcional)','date',record?.due_date||''),field('amount','Valor (R$)','number',record?.amount??'',true),pick('payment_status','Pagamento',[['open','Em aberto'],['paid','Pago']],record?.paid_on?'paid':'open'),field('paid_on','Data do pagamento','date',record?.paid_on||localDay(new Date())),field('notes','Observações (opcional)','text',record?.notes||''));form.elements.description.maxLength=180;form.elements.description.placeholder='Ex.: lavagem, borracharia, serviço extra, IPVA…';const guidance=document.createElement('p');guidance.className='wide';guidance.textContent='Para custos de uma manutenção já cadastrada, use Registrar custos no próprio serviço. Aqui você lança despesas e serviços avulsos do veículo.';form.append(guidance);form.elements.notes.maxLength=1000;form.elements.amount.min='0.01';form.elements.amount.step='0.01';form.elements.paid_on.max=localDay(new Date());const sync=()=>{const paid=form.elements.payment_status.value==='paid';form.elements.paid_on.closest('label').hidden=!paid;form.elements.paid_on.required=paid};form.elements.payment_status.onchange=sync;sync();if(!options.length){const note=document.createElement('p');note.className='wide';note.textContent='Cadastre um veículo na tela Ativos / Veículos antes de lançar uma despesa.';form.append(note)}}
