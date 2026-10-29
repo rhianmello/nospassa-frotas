@@ -486,3 +486,8 @@
 .fleet-page .xrm-company-header .xrm-hero-filters .fleet-filterbar.fleet-commandbar{grid-template-columns:minmax(130px,1.5fr) repeat(3,minmax(83px,1fr)) auto!important;gap:6px!important}
 .fleet-page .xrm-company-header .xrm-hero-filters input,.fleet-page .xrm-company-header .xrm-hero-filters select{font-size:11px!important}
 }
+
+/* Align contract label beside its selector in the top navigation. */
+.fleet-page .fleet-topbar .fleet-breadcrumb .xrm-header-contract{display:inline-flex!important;flex-direction:row!important;align-items:center!important;justify-content:flex-start;gap:9px;vertical-align:middle;min-width:0;margin-left:12px}
+.fleet-page .fleet-topbar .fleet-breadcrumb .xrm-header-contract select{margin:0!important;min-width:150px;max-width:min(250px,32vw)}
+@media(max-width:660px){.fleet-page .fleet-topbar .fleet-breadcrumb .xrm-header-contract{margin-left:0;flex-wrap:wrap;gap:6px}}
