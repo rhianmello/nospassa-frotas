@@ -41,7 +41,7 @@ footer{padding:20px;text-align:center;color:#849eae;font-size:11px}
     <section class="panel"><div class="panel-head"><h2>Carteira de clientes</h2><small>Contas e acessos</small></div><div style="padding:18px;display:grid;gap:13px" id="portfolio-breakdown"></div></section>
    </div>
    <section class="panel" style="margin-top:17px"><div class="panel-head"><h2>Últimos cadastros</h2><button class="btn ghost" data-goto="customers">Ver clientes</button></div><div class="table-wrap"><table><thead><tr><th>Cliente / empresa</th><th>Plano</th><th>Situação</th><th>Entrada</th></tr></thead><tbody id="recent-customers"></tbody></table></div></section>
-   <div class="notice">Os valores financeiros exibidos são os recebimentos efetivamente confirmados no histórico do banco. O painel não considera mensalidades previstas como dinheiro recebido. A ativação de cobrança está em preparação e depende de teste real.</div>
+   <div class="notice">Os valores financeiros exibidos são os recebimentos efetivamente confirmados no histórico do banco. O painel não considera mensalidades previstas como dinheiro recebido. <strong id="xrm-billing-health">Verificando situação do checkout Mercado Pago…</strong></div>
   </div>
   <section id="view-customers" class="panel tab-view" hidden><div class="panel-head"><h2>Clientes cadastrados</h2><input class="search" id="customer-search" placeholder="Buscar cliente ou empresa…" type="search"></div><div class="table-wrap"><table><thead><tr><th>Cliente / empresas</th><th>Plano</th><th>Assinatura</th><th>Veículos</th><th>Acesso</th><th>Entrada</th><th>Ações</th></tr></thead><tbody id="customers-body"></tbody></table></div></section>
   <section id="view-messages" class="panel tab-view" hidden><div class="panel-head"><h2>Caixa de mensagens</h2><small>Conversa privada com o titular de cada conta</small></div><div class="inbox"><div class="contacts" id="contacts"></div><div class="conversation"><div class="conversation-top" id="thread-title">Selecione um cliente</div><div class="messages" id="thread-messages"><p class="empty">Escolha uma conta para conversar.</p></div><form class="compose" id="message-form"><textarea id="message-body" placeholder="Digite sua mensagem ao cliente…" maxlength="3000" required></textarea><button class="btn primary" type="submit">Enviar</button></form></div></div></section>
@@ -148,13 +148,23 @@ el('message-form').onsubmit=async event=>{
 };
 el('refresh').onclick=()=>void refresh();
 el('signout').onclick=async()=>{if(db)await db.auth.signOut();location.replace('../?login=1')};
+async function checkBillingStatus(){
+ const label=el('xrm-billing-health');
+ try{
+  const url=new URL('/functions/v1/xrmovi-billing-readiness',db.supabaseUrl);
+  const response=await fetch(url.href,{method:'GET',cache:'no-store'});
+  if(!response.ok)throw new Error('Provedor indisponível');
+  const data=await response.json();
+  label.textContent=data.enabled===true?'Mercado Pago: checkout habilitado para pagamentos reais.':'Mercado Pago: checkout ainda não habilitado. Faltam configurações ou autorização para operação real.';
+ }catch{label.textContent='Mercado Pago: não foi possível verificar a integração.'}
+}
 async function start(){
  try{const cfg=await fetch('../v3/config.json',{cache:'no-store'});if(!cfg.ok)throw Error('Configuração indisponível');
   const c=await cfg.json();db=createClient(c.supabaseUrl,c.supabaseAnonKey);
   const {data,error}=await db.auth.getUser();if(error||!data?.user){location.replace('../?login=1');return}
   el('user-label').textContent='Conectado como '+data.user.email;
   const check=await rpc('platform_is_admin');if(check!==true)throw Error('Usuário não autorizado como administrador da plataforma.');
-  await refresh();
+  await refresh();void checkBillingStatus();
  }catch(e){show('unauthorized');el('denied-text').textContent=e.message}
 }
 void start();
