@@ -1,5 +1,5 @@
 import{createClient}from 'https://esm.sh/@supabase/supabase-js@2';
-import { setupSubscriptionPanel } from './subscription-panel.js?v=20261030-reconcile-5';
+import { setupSubscriptionPanel } from './subscription-panel.js?v=20261030-paywall-6';
 import { createCompanyBranding } from './company-branding.js?v=20261029-logo-1';
 import { setupMileage } from './mileage.js?v=20261029-km-audit-34';
 let branding;
@@ -67,7 +67,7 @@ function updatePaymentGateUI(){
  }
  for(const id of ['xrm-bill-company-form','xrm-bill-contract-form','xrm-bill-member-form']){
   const group=el(id)?.closest('.xrm-group');
-  if(group)group.hidden=paymentRequired;
+  if(group){group.hidden=paymentRequired;group.style.display=paymentRequired?'none':'';}
  }
  document.querySelectorAll('.fleet-main-nav [data-view]').forEach(node=>{
   const blocked=paymentRequired&&node.dataset.view!=='subscription';
