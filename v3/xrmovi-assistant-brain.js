@@ -66,18 +66,19 @@ function describe(items,data){
 async function financial(question,tools,data,follow=false){
  const q=norm(question),previous=/mes passado|mes anterior/.test(q),compare=/compar|ultimos dois meses|dois ultimos meses/.test(q);
  const last=state.intent;
- const kind=/manutencao|revisao/.test(q)||follow&&last==='finance:maintenanceCosts'?'maintenanceCosts':/despesas? pag/.test(q)||follow&&last==='finance:paidExpenses'?'paidExpenses':'fuel';
- const caption=kind==='fuel'?'combustível':kind==='maintenanceCosts'?'manutenção realizada':'despesas pagas';
+ const kind=/custo total|frota cust|custou a frota|quanto minha frota|gasto total/.test(q)||follow&&last==='finance:all'?'all':/manutencao|revisao/.test(q)||follow&&last==='finance:maintenanceCosts'?'maintenanceCosts':/despesas? pag/.test(q)||follow&&last==='finance:paidExpenses'?'paidExpenses':'fuel';
+ const caption=kind==='all'?'custo total da frota':kind==='fuel'?'combustível':kind==='maintenanceCosts'?'manutenção realizada':'despesas pagas';
+ const rowsOf=report=>kind==='all'?[...(report.fuel||[]),...(report.maintenanceCosts||[]),...(report.paidExpenses||[])]:report[kind]||[];
  const ask=(offset)=>{const range=month(offset);return tools.financePeriod({from:range.from,to:range.to,requestedCompanyId:data.companyId});};
  try{
   if(compare){
    const [lastMonth,prior]=await Promise.all([ask(-1),ask(-2)]);
-   const a=valued(lastMonth[kind]||[]),b=valued(prior[kind]||[]);
+   const a=valued(rowsOf(lastMonth)),b=valued(rowsOf(prior));
    const delta=sum(a)-sum(b),pct=sum(b)?(delta/sum(b)*100).toFixed(1).replace('.',',')+'%':'percentual indisponível (base zero)';
    return respond(question,'Comparação de '+caption+': '+month(-2).name+' teve '+money(sum(b))+' e '+month(-1).name+' teve '+money(sum(a))+'. Diferença '+(delta>=0?'+':'')+money(delta)+'; '+pct+'. Os valores consideram apenas lançamentos com custos informados nos filtros atuais.','finance:'+kind,{topic:'financial',period:month(-1).name});
   }
   const offset=previous?-1:0, period=month(offset);
-  const rows=valued((await ask(offset))[kind]||[]);
+  const rows=valued(rowsOf(await ask(offset)));
   const missing=rows.length===0?' Não há lançamentos com valor informado nesse período.':'';
   if(/diesel/.test(q)){
    if(kind!=='fuel')return null;
@@ -151,6 +152,8 @@ async function handle(question,{course}={}){
   const topic=course?.getById('operational');
   return respond(question,topic?.intro||'Operacional é o veículo com status Ativo; Inativo ou Em manutenção não são operacionais.','course',{topic:'operational',lessonId:'operational'});
  }
+ if(vehicle&&/(qual (e|a) (situacao|status)|esse carro.*(operacion|inativo|manutencao)|esse veiculo.*(operacion|status))/.test(q))
+  return respond(question,'A situação cadastrada do veículo '+vehicle.plate+' é '+(vehicle.status||'não informada')+'. Uma revisão vencida é um alerta separado.','fleet',{topic:'assets',vehicleId:vehicle.id});
  if(/quantos? (veiculos|carros|ativos|caminhoes)|qual a quantidade de veiculos|tamanho da frota/.test(q))
   return respond(question,'Há '+count(data.vehicles.length)+' veículos na '+scope(data)+'. '+count(data.vehicles.filter(v=>v.status==='Ativo').length)+' estão ativos (operacionais).','fleet',{topic:'assets'});
  if(/quais? (veiculos |carros )?(estao )?(inativos|em manutencao|ativos)|liste (os )?(inativos|ativos)/.test(q)){
@@ -191,8 +194,18 @@ async function handle(question,{course}={}){
   const records=data.maintenance.filter(m=>mode==='open'?m.status!=='done':m.alert===mode);
   return respond(question,records.length?'Há '+records.length+' serviços. '+records.slice(0,8).map(m=>plate(data,m.vehicleId)+' · '+m.title+(m.dueDate?' · vence '+m.dueDate:'')).join('; ')+'.':'Nenhum serviço dessa situação foi encontrado nos filtros atuais.','maintenance',{topic:'maintenance'});
  }
- if(/qual contrato.*(maior|mais).*(despesa|custo|gast)/.test(q))
-  return respond(question,'Para comparar contratos com precisão, selecione os contratos individualmente no cabeçalho e use Relatórios financeiros. Não há um comparativo multicontrato consolidado disponível nesta consulta.','scope',{topic:'financial'});
+ if(/qual contrato.*(maior|mais).*(despesa|custo|gast)/.test(q)){
+  if(data.contractId)return respond(question,'O painel está filtrado por um único contrato. Selecione Todos os contratos para fazer a comparação dentro da empresa ativa.','scope',{topic:'financial'});
+  const groups=new Map();
+  for(const row of valued([...data.fuel,...data.maintenanceCosts,...data.paidExpenses])){
+   const contractId=data.vehicles.find(v=>v.id===row.vehicleId)?.contractId;
+   if(contractId)groups.set(contractId,(groups.get(contractId)||0)+Number(row.amount));
+  }
+  const ordered=[...groups].sort((a,b)=>b[1]-a[1]);
+  if(!ordered.length)return respond(question,'Não há vínculo de contrato e lançamentos realizados suficientes para essa classificação nos dados carregados.','finance:contract',{topic:'financial'});
+  const best=ordered[0],name=data.contracts?.find(c=>c.id===best[0])?.name||'Contrato sem nome';
+  return respond(question,'O maior gasto entre os contratos com registros carregados é de '+name+': '+money(best[1])+'. Soma combustível, manutenção realizada e outras despesas pagas; exclui despesas em aberto.','finance:contract',{topic:'financial'});
+ }
  if(/qual veiculo.*(mais caro|maior gasto|mais despesa)/.test(q)&&/manutencao|despesa/.test(q)){
   const ranks=grouped([...data.maintenanceCosts,...data.paidExpenses]);
   return respond(question,ranks.length?plate(data,ranks[0].vehicleId)+' teve o maior gasto realizado de manutenção e outras despesas pagas no período consultado: '+money(ranks[0].amount)+'.':'Não há gastos realizados suficientes para classificar os veículos.','finance:maintenanceCosts',{topic:'financial'});
