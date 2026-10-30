@@ -873,6 +873,7 @@ const xrmAssistantBridge=Object.freeze({
    filters:(el('active-filter-summary')?.textContent||'').trim().slice(0,300),
    financialReady:!financialState,financialPeriod:range,
    financialNote:financialState?'Dados financeiros não carregados.':'Valores registrados no período consultado (sem estimar lançamentos ausentes).',
+   contracts:contracts.map(c=>({id:c.id,name:c.name||'Contrato sem nome'})),
    vehicles:vehiclesInView,
    maintenance:scoped(maintenance).map(m=>({
      id:m.id,vehicleId:m.vehicle_id,title:m.title||'',status:m.status,
@@ -902,9 +903,12 @@ const xrmAssistantBridge=Object.freeze({
   const windowDays=(Date.parse(to+'T00:00:00Z')-Date.parse(from+'T00:00:00Z'))/86400000;
   if(!Number.isFinite(windowDays)||windowDays>366)throw Error('O intervalo máximo é de 367 dias.');
   const cid=company.id;
+  const startingContract=el('xrm-contract-filter')?.value||'';
+  const startingFilters=(el('active-filter-summary')?.textContent||'').trim();
   const ids=new Set(vehicles.filter(v=>!filteredVehicleIds||filteredVehicleIds.has(v.id)).map(v=>v.id));
   const data=await rpc('cost_report',{cid,from_date:from,to_date:to,vid:null});
   if(!company||paymentRequired||company.id!==cid)throw Error('Empresa mudou durante a consulta.');
+  if((el('xrm-contract-filter')?.value||'')!==startingContract||(el('active-filter-summary')?.textContent||'').trim()!==startingFilters)throw Error('Os filtros mudaram durante a consulta. Repita a pergunta.');
   const subset=(a)=>Array.isArray(a)?a.filter(r=>ids.has(r.vehicle_id)):[];
   return {from,to,companyId:cid,contractId:el('xrm-contract-filter')?.value||null,
     fuel:subset(data?.fuel).map(r=>({vehicleId:r.vehicle_id,amount:r.cost??r.total_cost??null,
