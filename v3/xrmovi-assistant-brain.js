@@ -127,6 +127,12 @@ async function handle(question,{course}={}){
   if(state.topic==='operational')return respond(question,'Para mudar a situação operacional, abra Ativos / Veículos, clique em Editar, escolha Ativo, Em manutenção ou Inativo e salve. É necessário perfil autorizado.','course',{topic:'operational',lessonId:'vehicle-edit'});
   return respond(question,'A que assunto você se refere? Diga o módulo ou a placa do veículo.','clarify');
  }
+ if(/(qual erro|por que nao salvou|nao consigo salvar|erro no formulario|falha ao salvar)/.test(q)){
+  if(data.validationNotice)return respond(question,'A tela está informando: '+data.validationNotice+'. Confira os campos obrigatórios e não tente gravar novamente sem revisar o aviso.','validation',{topic:data.view});
+  return respond(question,'Não há mensagem de validação visível no momento. Abra o formulário e informe exatamente o erro exibido, sem compartilhar senhas ou documentos sensíveis.','validation',{topic:data.view});
+ }
+ if(/^(qual tela|onde estou|qual pagina|o que estou vendo)/.test(q))
+  return respond(question,'Você está no módulo '+data.view+' da empresa '+data.companyName+'. '+(data.contractName||'Todos os contratos')+'. '+(data.filters||'Sem filtros adicionais descritos')+'.','screen',{topic:data.view});
  const nav=/^(abra|abrir|abre|me leva|ir para|mostre onde|me mostra onde|quero abrir|quero cadastrar|quero registrar|inicie o cadastro)/.test(q);
  if(nav){
   const kind=/(cadastr|registr|formulario|programar)/.test(q)?formFor(q):null;
