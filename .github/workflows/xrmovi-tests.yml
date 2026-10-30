@@ -7,6 +7,9 @@ on:
       - 'v3/xrmovi-adapter.js'
       - 'v3/xrmovi-local-assistant.js'
       - 'v3/xrmovi-assistant-brain.js'
+      - 'v3/xrmovi-local-model.js'
+      - 'v3/xrmovi-local-model-worker.js'
+      - 'v3/tests/assistant-local-model.test.cjs'
       - 'v3/tests/assistant-brain.test.cjs'
       - 'v3/xrmovi-local-assistant.css'
       - 'v3/tests/assistant-layout.test.cjs'
@@ -21,6 +24,9 @@ on:
       - 'v3/xrmovi-adapter.js'
       - 'v3/xrmovi-local-assistant.js'
       - 'v3/xrmovi-assistant-brain.js'
+      - 'v3/xrmovi-local-model.js'
+      - 'v3/xrmovi-local-model-worker.js'
+      - 'v3/tests/assistant-local-model.test.cjs'
       - 'v3/tests/assistant-brain.test.cjs'
       - 'v3/xrmovi-local-assistant.css'
       - 'v3/tests/assistant-layout.test.cjs'
@@ -49,6 +55,12 @@ jobs:
         run: node --check v3/xrmovi-assistant-brain.js
       - name: Test contextual conversation and authorized fleet tools
         run: node --test v3/tests/assistant-brain.test.cjs
+      - name: Validate browser-side local model controller
+        run: node --check v3/xrmovi-local-model.js
+      - name: Validate worker as ES module
+        run: node --input-type=module --check < v3/xrmovi-local-model-worker.js
+      - name: Test local model opt-in, privacy and hardware fallback
+        run: node --test v3/tests/assistant-local-model.test.cjs
       - name: Test local assistant lessons and routing
         run: node --test v3/tests/assistant-course.test.cjs
       - name: Test compact assistant layout and responsive controls
