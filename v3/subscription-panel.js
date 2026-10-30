@@ -169,6 +169,23 @@ export function setupSubscriptionPanel({client,getCompany,onCompanyCreated,onDat
    if(error)throw error;
    checkoutState(data?.enabled===true,
     data?.enabled===true?(data.mode==='pilot'?'Homologação autorizada: pagamento real e recorrente. Confirme o valor antes de pagar; seu plano só será liberado após aprovação no Mercado Pago.':'Pagamento recorrente disponível. Seu plano só será liberado após confirmação efetiva do Mercado Pago.'):'Pagamento em configuração: o checkout será habilitado após a ativação segura do provedor.');
+   if(data?.enabled===true){
+    const base=getCompany();
+    if(base){
+     try{
+      const {data:attempt,error:lookupError}=await client.rpc('xrmovi_checkout_reconcile_lookup',{cid:base.id});
+      if(!lookupError&&attempt?.intent_id&&['created','pending'].includes(attempt.intent_status)){
+       const original=String(attempt.requested_plan||'');
+       const choices=root.querySelector('#xrm-bill-plan-form select');
+       if([...choices.options].some(option=>option.value===original)){
+        choices.value=original;showSelectedPlan();
+       }
+       checkoutButton.textContent='Retomar pagamento pendente';
+       billingNotice.textContent='Identificamos uma tentativa anterior de '+(original||'assinatura')+'. O sistema reutilizará a mesma referência no Mercado Pago; não será criada outra assinatura independente.';
+      }
+     }catch{} // The payment service still enforces recovery and duplicate prevention.
+    }
+   }
   }catch(err){
    checkoutState(false,'Serviço de cobrança indisponível neste momento. Tente atualizar a página.');
   }
