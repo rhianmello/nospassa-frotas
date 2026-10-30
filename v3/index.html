@@ -77,7 +77,7 @@
           <div class="xrm-hero-filters"><section class="fleet-filterbar fleet-commandbar" aria-label="Filtros de veículos">
             <label class="fleet-search fleet-command-search"><i data-lucide="search"></i><input id="fleet-search" type="search" placeholder="Buscar placa, marca, modelo ou unidade..." aria-label="Buscar veículos"></label>
             <label class="fleet-command-filter"><span>Categoria</span><select id="xrm-filter-category"><option value="">Todas</option></select></label>
-            <label class="fleet-command-filter"><span>Situação</span><select id="xrm-filter-status"><option value="">Todas</option><option value="Ativo">Ativos</option><option value="Manutenção">Em manutenção</option><option value="alerta">Com revisão vencida</option></select></label>
+            <label class="fleet-command-filter"><span>Situação</span><select id="xrm-filter-status"><option value="">Todas</option><option value="Ativo">Ativos</option><option value="Manutenção">Em manutenção</option><option value="Inativo">Inativos</option><option value="alerta">Com revisão vencida</option></select></label>
             <label class="fleet-command-filter"><span>Vencimento da revisão</span><select id="xrm-filter-expiry"><option value="">Todos</option><option value="overdue">Vencidas</option><option value="7">Até 7 dias</option><option value="30">Até 30 dias</option><option value="90">Até 90 dias</option></select></label>
             <button class="fleet-button" id="xrm-clear-filters" type="button">Limpar todos</button><button class="fleet-button" id="view-clear-filters" type="button" hidden>Limpar filtros desta tela</button>
           </section></div>
@@ -109,7 +109,7 @@
             </section>
 
             <section class="fleet-panel fleet-status-panel">
-              <header><div><p class="eyebrow">PRONTIDÃO OPERACIONAL</p><h2>Status da frota</h2><small>Semáforo consolidado dos ativos</small></div></header>
+              <header><div><p class="eyebrow">PRONTIDÃO OPERACIONAL</p><h2>Status da frota</h2><small>Ativo = operacional; Em manutenção ou Inativo = não operacional. Revisões vencidas são alertas separados.</small></div></header>
               <div class="fleet-donut-layout fleet-donut-compact"><div class="fleet-chart-shell"><canvas id="situation-chart" aria-label="Situação da frota" role="img"></canvas><div id="situation-empty" class="fleet-chart-empty">Aguardando dados do banco</div><div id="situation-center" class="fleet-donut-center"><strong>—</strong><span>ativos</span></div></div><div id="situation-legend" class="fleet-chart-legend"></div></div>
             </section>
 
@@ -185,7 +185,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js"></script>
 <script defer src="./vendor/qrcode.min.js?v=20261029-qr-31"></script>
-<script defer src="./xrmovi-local-assistant.js?v=20261030-voice-1"></script>
-<script type="module" src="./xrmovi-adapter.js?v=20261030-local-guide-19"></script>
+<script defer src="./xrmovi-local-assistant.js?v=20261030-voice-2"></script>
+<script type="module" src="./xrmovi-adapter.js?v=20261030-status-guide-20"></script>
 </body>
 </html>
