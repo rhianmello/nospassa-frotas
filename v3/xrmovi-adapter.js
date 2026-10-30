@@ -38,7 +38,7 @@ function xrmAssistRefresh(){
   value:node.querySelector('.fleet-kpi-value')?.textContent?.trim()||'—'
  })).filter(item=>item.label);
  window.dispatchEvent(new CustomEvent('xrmovi:assistant-context',{detail:{
-  companyId:company.id,companyName:company.name,view:currentView(),kpis,
+  companyId:company.id,companyName:company.name,role:company.role,view:currentView(),kpis,
   filters:(el('active-filter-summary')?.textContent||'').trim().slice(0,340),
   fuelCost:(el('fleet-insight-fuel-cost')?.textContent||'—').trim(),
   maintCost:(el('fleet-insight-maint-cost')?.textContent||'—').trim(),
