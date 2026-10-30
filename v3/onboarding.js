@@ -2,41 +2,30 @@
 // Valores e limites são fornecidos por xrmovi_list_plans no banco.
 export async function showXrmoviOnboarding({login,client,onCreated,onLogout,existing=null}){
  login.hidden=false;
+ login.classList.add('xrm-onboarding-overlay');
+ login.style.cssText='';
  const form=login.querySelector('#v3login');
  form.classList.add('xrm-signup');
- form.style.cssText='display:grid;gap:0;width:min(940px,95vw);max-height:94vh;overflow:auto;background:#10283b;border:1px solid #386475;border-radius:18px;color:#effaff;padding:0;box-shadow:0 25px 80px #0009';
- const style=document.createElement('style');
- style.id='xrm-onboarding-styles';
- if(!document.getElementById(style.id)){
-  style.textContent=`
-  .xrm-signup *{box-sizing:border-box}.xrm-signup .wizard-head{padding:23px 26px;border-bottom:1px solid #31576c;display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap}
-  .xrm-signup .wizard-head strong{font-size:19px}.xrm-signup .wizard-head small{display:block;color:#81b3c5;margin-top:3px}
-  .xrm-signup .wizard-body{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(260px,.8fr);gap:19px;padding:24px}
-  .xrm-signup .wizard-fields{display:grid;gap:15px}.xrm-signup .step{border:1px solid #33596e;border-radius:12px;padding:14px 16px;background:#0b2436;display:grid;gap:12px}
-  .xrm-signup .step h3{margin:0;font-size:14px;color:#59e0c0}.xrm-signup label{display:grid;gap:6px;font-size:12px;color:#bad9e2}
-  .xrm-signup input,.xrm-signup select{width:100%;border:1px solid #406a7a;background:#081a29;color:white;padding:12px;border-radius:9px;outline-offset:2px;min-width:0}
-  .xrm-signup .plan-preview{background:linear-gradient(150deg,#153e4a,#12283a);border:1px solid #36847c;border-radius:14px;padding:21px;align-self:start;display:grid;gap:13px}
-  .xrm-signup .plan-preview strong{font-size:28px;color:#77f0cc}.xrm-signup .limits{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-  .xrm-signup .limits div{padding:13px;border:1px solid #3b6970;border-radius:11px;background:#102c39}.xrm-signup .limits b{display:block;font-size:25px;color:white}.xrm-signup .limits small{font-size:11px;color:#afd3da}
-  .xrm-signup .wizard-actions{display:grid;gap:9px}.xrm-signup .wizard-submit{border:0;border-radius:9px;background:#51ddb7;color:#042f35;font-weight:900;padding:15px;cursor:pointer}
-  .xrm-signup .wizard-submit:disabled{opacity:.5;cursor:not-allowed}.xrm-signup .wizard-note{color:#a4c4d2;font-size:11px;line-height:1.55}
-  .xrm-signup .wizard-msg{font-size:12px;min-height:20px;color:#ffbaaa}.xrm-signup .wizard-exit{background:transparent;color:#c7dee7;border:1px solid #48697a;border-radius:8px;padding:9px 12px;cursor:pointer}
-  @media(max-width:760px){.xrm-signup .wizard-body{grid-template-columns:1fr;padding:14px}.xrm-signup .wizard-head{padding:17px}.xrm-signup .plan-preview{order:-1}.xrm-signup .limits b{font-size:22px}}
-  `;
-  document.head.append(style);
- }
- form.innerHTML=`
-  <div class="wizard-head"><div><strong>Bem-vindo ao XRMOVI</strong><small>Cadastro inicial · empresa, contrato, assinatura</small></div><button type="button" class="wizard-exit">Sair da conta</button></div>
-  <div class="wizard-body">
-  <div class="wizard-fields">
-  <section class="step"><h3>01 · Sua empresa</h3><label>Nome da empresa<input name="company" required minlength="2" maxlength="160" autocomplete="organization" placeholder="Ex.: Transportadora Santos"></label></section>
-  <section class="step"><h3>02 · Primeiro contrato</h3><label>Nome do contrato<input name="contract" required minlength="2" maxlength="160" placeholder="Ex.: Frota Matriz"></label><label>Cliente / contratante (opcional)<input name="customer" maxlength="160" placeholder="Ex.: Empresa XYZ"></label><label>Código do contrato (opcional)<input name="code" maxlength="60" placeholder="Ex.: CT-2026-001"></label></section>
-  <section class="step"><h3>03 · Escolha sua assinatura</h3><label>Plano mensal<select name="plan" required disabled><option value="">Carregando planos...</option></select></label></section>
-  <div class="wizard-actions"><button type="submit" class="wizard-submit" disabled>Criar cadastro e continuar para pagamento</button><small class="wizard-note">O cadastro não realiza cobrança. O Mercado Pago mostra o valor antes da confirmação. Veículos e operações ficam bloqueados até o pagamento ser aprovado.</small><div class="wizard-msg" role="status" aria-live="polite"></div></div>
-  </div>
-  <aside class="plan-preview" aria-live="polite"><span style="color:#9de5d5;font-size:11px;font-weight:800;letter-spacing:1.3px">O QUE ESTÁ INCLUÍDO</span><div><div data-plan-title style="font-weight:800">Selecione um plano</div><strong data-plan-price>—</strong><small style="color:#acd0da"> / mês</small></div><div class="limits" data-limits></div><small style="color:#a9ccd1">Limites totais compartilhados entre as empresas da assinatura, não multiplicados por contrato.</small></aside>
-  </div>`;
+ form.style.cssText='';
+ form.innerHTML="\n  <header class=\"wizard-header\">\n   <div class=\"wizard-brand\">\n    <span class=\"wizard-brand-symbol\" aria-hidden=\"true\">X</span>\n    <div><b>XRMOVI</b><small>Plataforma inteligente de frotas</small></div>\n   </div>\n   <button type=\"button\" class=\"wizard-exit\" aria-label=\"Encerrar sessão e sair do cadastro\"><span aria-hidden=\"true\">↗</span> Sair da conta</button>\n  </header>\n  <div class=\"wizard-intro\">\n   <div class=\"wizard-eyebrow\">Sua operação começa aqui</div>\n   <h1>Configure sua frota.<br><em>O controle começa agora.</em></h1>\n   <p>Defina sua empresa, organize o primeiro contrato e escolha a capacidade ideal. Tudo preparado para começar assim que o pagamento for confirmado.</p>\n  </div>\n  <div class=\"wizard-journey\" aria-label=\"Etapas do cadastro\">\n   <div class=\"wizard-journey-step\" data-journey=\"1\" data-active=\"true\"><span class=\"journey-number\">01</span><span>Empresa</span></div>\n   <div class=\"wizard-journey-step\" data-journey=\"2\" data-active=\"false\"><span class=\"journey-number\">02</span><span>Contrato</span></div>\n   <div class=\"wizard-journey-step\" data-journey=\"3\" data-active=\"false\"><span class=\"journey-number\">03</span><span>Assinatura</span></div>\n  </div>\n  <div class=\"wizard-body\">\n   <div class=\"wizard-fields\">\n    <section class=\"step\" data-wizard-step=\"1\" aria-labelledby=\"step-company-title\">\n     <header class=\"step-heading\"><span class=\"step-number\">01</span><div><h3 id=\"step-company-title\">Dados da empresa</h3><p>Quem será o titular desta assinatura?</p></div></header>\n     <label>Nome da empresa<input name=\"company\" required minlength=\"2\" maxlength=\"160\" autocomplete=\"organization\" placeholder=\"Ex.: Transportadora Santos\"></label>\n    </section>\n    <section class=\"step\" data-wizard-step=\"2\" aria-labelledby=\"step-contract-title\">\n     <header class=\"step-heading\"><span class=\"step-number\">02</span><div><h3 id=\"step-contract-title\">Seu primeiro contrato</h3><p>Organize a estrutura inicial da frota</p></div></header>\n     <label>Nome do contrato<input name=\"contract\" required minlength=\"2\" maxlength=\"160\" placeholder=\"Ex.: Frota Matriz\"></label>\n     <div class=\"step-input-grid\">\n      <label>Cliente / contratante <span class=\"optional\">Opcional</span><input name=\"customer\" maxlength=\"160\" placeholder=\"Ex.: Empresa XYZ\"></label>\n      <label>Código do contrato <span class=\"optional\">Opcional</span><input name=\"code\" maxlength=\"60\" placeholder=\"Ex.: CT-2026-001\"></label>\n     </div>\n    </section>\n    <section class=\"step\" data-wizard-step=\"3\" aria-labelledby=\"step-plan-title\">\n     <header class=\"step-heading\"><span class=\"step-number\">03</span><div><h3 id=\"step-plan-title\">Escolha sua assinatura</h3><p>Você pode mudar de plano conforme a frota crescer</p></div></header>\n     <label>Plano mensal<select name=\"plan\" required disabled><option value=\"\">Carregando os planos...</option></select></label>\n    </section>\n    <div class=\"wizard-actions\">\n     <button type=\"submit\" class=\"wizard-submit\" disabled><span data-action-label>Continuar para o pagamento</span><span class=\"wizard-submit-arrow\" aria-hidden=\"true\">›</span></button>\n     <p class=\"wizard-note\"><span class=\"wizard-note-dot\" aria-hidden=\"true\">●</span><span>Cadastro sem cobrança imediata. O Mercado Pago apresenta as condições antes de confirmar. O painel operacional é liberado após pagamento aprovado.</span></p>\n     <p class=\"wizard-msg\" role=\"status\" aria-live=\"polite\"></p>\n    </div>\n   </div>\n   <aside class=\"plan-preview\" aria-label=\"Resumo da assinatura escolhida\" aria-live=\"polite\">\n    <div class=\"preview-top\">\n     <span class=\"preview-label\">Sua assinatura</span>\n     <div class=\"preview-plan\" data-plan-title>Selecione um plano</div>\n     <div class=\"preview-price-line\"><strong data-plan-price>—</strong><small>/ mês</small></div>\n    </div>\n    <div class=\"preview-rule\" aria-hidden=\"true\"></div>\n    <div class=\"preview-cap\">\n     <p class=\"preview-cap-title\">Capacidade incluída</p>\n     <div class=\"limits\" data-limits></div>\n    </div>\n    <div class=\"preview-summary\">\n     <span>Resumo do cadastro</span>\n     <div class=\"preview-summary-row\"><small>Empresa</small><strong data-summary-company>Não informado</strong></div>\n     <div class=\"preview-summary-row\"><small>Contrato</small><strong data-summary-contract>Não informado</strong></div>\n    </div>\n    <div class=\"preview-footer\"><span class=\"preview-footer-mark\" aria-hidden=\"true\">✓</span><span>Limites compartilhados entre as empresas, não multiplicados por contrato. Sem acesso operacional antes da confirmação do pagamento.</span></div>\n   </aside>\n  </div>";
  const elements=form.elements, select=elements.namedItem('plan'), submit=form.querySelector('.wizard-submit'), status=form.querySelector('.wizard-msg');
+
+ const setSummary=()=>{
+  const companyName=String(elements.namedItem('company').value||'').trim();
+  const contractName=String(elements.namedItem('contract').value||'').trim();
+  form.querySelector('[data-summary-company]').textContent=companyName||'Não informado';
+  form.querySelector('[data-summary-contract]').textContent=contractName||'Não informado';
+ };
+ for(const field of ['company','contract'])elements.namedItem(field).addEventListener('input',setSummary);
+ const setStep=(number)=>{
+  for(const tab of form.querySelectorAll('[data-journey]'))tab.dataset.active=String(tab.dataset.journey===String(number));
+ };
+ for(const step of form.querySelectorAll('[data-wizard-step]')){
+  step.addEventListener('focusin',()=>setStep(step.dataset.wizardStep));
+ }
+ elements.namedItem('plan').addEventListener('change',()=>setStep(3));
+ setSummary();
+
  form.querySelector('.wizard-exit').onclick=onLogout;
  let plans=[];
  let pendingSnapshot=null;
@@ -45,6 +34,7 @@ export async function showXrmoviOnboarding({login,client,onCreated,onLogout,exis
    const {data,error}=await client.rpc('xrmovi_onboarding_snapshot',{cid:existing.id});
    if(error)throw error;
    pendingSnapshot=data;
+   setSummary();
    form.elements.namedItem('company').value=String(data.company_name||existing.name||'');
    form.elements.namedItem('contract').value=String(data.contract_name||'');
    form.elements.namedItem('customer').value=String(data.contract_client||'');
@@ -58,7 +48,7 @@ export async function showXrmoviOnboarding({login,client,onCreated,onLogout,exis
   form.querySelector('[data-plan-price]').textContent=p?.monthly_brl!=null?Number(p.monthly_brl).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}):'—';
   const host=form.querySelector('[data-limits]');host.replaceChildren();
   for(const [name,value] of [['Empresas',p?.company_limit],['Contratos',p?.contract_limit],['Veículos',p?.vehicle_limit],['Logins',p?.seat_limit]]){
-   const card=document.createElement('div'),val=document.createElement('b'),label=document.createElement('small');
+   const card=document.createElement('div'),val=document.createElement('b'),label=document.createElement('small');card.className='limit-tile';
    val.textContent=value==null?'—':String(value);label.textContent=name;card.append(val,label);host.append(card);
   }
  };
@@ -76,7 +66,7 @@ export async function showXrmoviOnboarding({login,client,onCreated,onLogout,exis
  form.onsubmit=async event=>{
   event.preventDefault();
   if(submit.disabled)return;
-  submit.disabled=true;status.textContent='Criando cadastro e contrato...';
+  submit.disabled=true;status.textContent='Salvando cadastro com segurança...';
   const plan=String(select.value);
   try{
    const {data,error}=await client.rpc(existing?.id?'xrmovi_onboarding_update':'xrmovi_onboarding_complete',{
