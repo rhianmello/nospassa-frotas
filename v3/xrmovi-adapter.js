@@ -1,6 +1,6 @@
 import{createClient}from 'https://esm.sh/@supabase/supabase-js@2';
 import { setupSubscriptionPanel } from './subscription-panel.js?v=20261030-paywall-6';
-import { showXrmoviOnboarding } from './onboarding.js?v=20261030-signup-2';
+import { showXrmoviOnboarding } from './onboarding.js?v=20261030-premium-3';
 import { createCompanyBranding } from './company-branding.js?v=20261029-logo-1';
 import { setupMileage } from './mileage.js?v=20261029-km-audit-34';
 let branding;
