@@ -45,15 +45,21 @@ Deno.serve(async(req:Request)=>{
  };
  const bindMP=async(intentId:string,mpId:string)=>{
    const {error}=await service.rpc("xrmovi_checkout_attach",{intent_id:intentId,preapproval_id:mpId});
-   if(error)throw new Error("Assinatura encontrada, mas não foi possível vinculá-la ao banco. Não conclua outra compra; verifique o pagamento e procure o suporte.");
+   if(error){
+    // Keep the database cause in server logs without credentials or payment payloads.
+    console.error("XRMOVI checkout attach rejected",{code:String(error.code||"").slice(0,32),message:String(error.message||"").slice(0,180)});
+    throw new Error("Assinatura encontrada, mas não foi possível vinculá-la ao banco. Não conclua outra compra; verifique o pagamento e procure o suporte.");
+   }
  };
  const useExisting=async(item:any,intent:any,amount:number,origin:string)=>{
    verifyMP(item,intent,amount);
    if(["canceled","paused"].includes(String(item.status||"")))
     return json({error:"Uma assinatura anterior já foi encontrada no Mercado Pago e está "+String(item.status)+". A alteração precisa de conferência no suporte; não criamos outra cobrança."},409,origin);
+   // An already authorized subscription may be the one whose original attach failed.
+   // Recover its verified ID so payment reconciliation can find it without a new charge.
+   await bindMP(String(intent.intent_id),String(item.id));
    if(item.status==="authorized")
     return json({error:"O Mercado Pago já autorizou uma assinatura vinculada a esta conta. Use Verificar pagamento, sem contratar novamente."},409,origin);
-   await bindMP(String(intent.intent_id),String(item.id));
    return json({checkout_url:checkoutUrl(item),status:"pending",resumed:true},200,origin);
  };
  const bearer=req.headers.get("authorization")||"";
