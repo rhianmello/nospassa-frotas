@@ -32,6 +32,7 @@
         <button class="fleet-subnav" data-view="financial"><i data-lucide="chart-no-axes-combined"></i><span>Relatórios financeiros</span></button>
         <button class="fleet-subnav" data-view="subscription" id="xrm-subscriptions-nav"><i data-lucide="credit-card"></i><span>Minha assinatura</span></button>
         <a class="fleet-subnav" href="../cliente/" style="text-decoration:none"><i data-lucide="messages-square"></i><span>Mensagens / Suporte</span></a>
+        <button type="button" class="fleet-subnav" id="xrm-fleet-logout" style="color:#ffd2c6"><i data-lucide="log-out"></i><span>Sair da conta</span></button>
         </nav>
       <div class="fleet-sidebar-visual" aria-hidden="true">
         <div class="fleet-sidebar-visual-copy">
@@ -51,6 +52,7 @@
         <label class="fleet-mobile-navigation">Tela<select id="fleet-mobile-view" aria-label="Abrir tela"><option value="dashboard">Visão Geral</option><option value="assets">Ativos / Veículos</option><option value="maintenance">Manutenção / Despesas</option><option value="drivers">Motoristas</option><option value="documents">Documentação</option><option value="alerts">Alertas</option><option value="history">Histórico</option><option value="fuel">Abastecimentos</option><option value="financial">Relatórios financeiros</option><option value="subscription">Minha assinatura</option></select></label><div class="fleet-top-actions">
           <span class="fleet-connection fleet-top-connection" id="connection-status" data-status="loading"><span class="fleet-dot"></span> Consultando banco</span>
           
+          <button class="fleet-icon-button" id="xrm-fleet-logout-mobile" title="Sair da conta" aria-label="Sair da conta"><i data-lucide="log-out"></i></button>
           <button class="fleet-icon-button" id="refresh-button" title="Atualizar dados do banco" aria-label="Atualizar dados do banco"><i data-lucide="refresh-cw"></i></button>
           
         </div>
@@ -181,6 +183,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js"></script>
 <script defer src="./vendor/qrcode.min.js?v=20261029-qr-31"></script>
-<script type="module" src="./xrmovi-adapter.js?v=20261030-paywall-10"></script>
+<script type="module" src="./xrmovi-adapter.js?v=20261030-signup-11"></script>
 </body>
 </html>
