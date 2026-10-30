@@ -44,7 +44,12 @@ function xrmAssistRefresh(){
   maintCost:(el('fleet-insight-maint-cost')?.textContent||'—').trim(),
   costPeriod:(el('fleet-insight-period')?.textContent||'').trim().slice(0,140),
   financialReady:!financialState,
-  healthy:!String(el('connection-status')?.textContent||'').includes('parcial')
+  healthy:!String(el('connection-status')?.textContent||'').includes('parcial'),
+  statusCounts:(()=>{const scope=vehicles.filter(v=>!filteredVehicleIds||filteredVehicleIds.has(v.id));return{
+   operational:scope.filter(v=>v.status==='Ativo').length,
+   maintenance:scope.filter(v=>v.status==='Manutenção').length,
+   inactive:scope.filter(v=>v.status==='Inativo').length
+  }})()
  }}));
 }
 
@@ -230,7 +235,25 @@ if(kind==='driver'){buildDriverForm(form,record)}
 else if(kind==='expense'){buildExpenseForm(form,record)}
 else if(kind==='maintenance-edit'){const vehicle=document.createElement('p');vehicle.className='wide';vehicle.textContent=record.plate||vehicles.find(v=>v.id===record.vehicle_id)?.plate||'Veículo';form.append(vehicle,field('title','Serviço','text',record.title,true),field('due_date','Vencimento por data','date',record.due_date||''),field('due_meter','Vencimento por KM/horímetro','number',record.due_meter??''),field('notes','Observações','text',record.notes||''),field('reason','Motivo da alteração','text','',true));form.elements.title.maxLength=150;form.elements.reason.minLength=3;form.elements.reason.maxLength=500;form.elements.notes.maxLength=1000}
 else if(kind==='maintenance-cost'||kind==='maintenance-complete'){const description=document.createElement('p');description.className='wide';description.textContent=(record.plate||vehicles.find(v=>v.id===record.vehicle_id)?.plate||'Veículo')+' · '+record.title;form.append(description,field('estimate','Custo previsto (R$)','number',record.estimated_cost??''),field('actual','Custo realizado (R$)','number',record.actual_cost??'',kind==='maintenance-complete'),field('completed_meter','KM/horímetro na execução','number',record.completed_meter??'',kind==='maintenance-complete'));if(kind==='maintenance-complete'){const note=document.createElement('p');note.className='wide';note.textContent='Confirme os valores e a leitura na execução. O serviço será marcado como concluído.';form.append(note)}}
-else if(kind==='vehicle'){form.append(field('plate','Placa / identificação','text',record?.plate||'',true),pick('category','Categoria',['Leve','Utilitário','Caminhão','Van','Trator','Máquina','Ônibus','Moto','Implemento','Equipamento','Outro'].map(value=>[value,value]),record?.category),field('brand','Marca','text',record?.brand||'',true),field('model','Modelo','text',record?.model||'',true),field('manufacture_year','Ano fabricação','number',record?.manufacture_year||''),field('model_year','Ano modelo','number',record?.model_year||''),field('odometer','KM/H','number',record?.odometer_value||0),field('unit','Unidade / local','text',record?.unit_name||''),field('notes','Observações','text',record?.notes||''));buildVehicleDriverSelect(form,record);
+else if(kind==='vehicle'){form.append(field('plate','Placa / identificação','text',record?.plate||'',true),pick('category','Categoria',['Leve','Utilitário','Caminhão','Van','Trator','Máquina','Ônibus','Moto','Implemento','Equipamento','Outro'].map(value=>[value,value]),record?.category),pick('status','Situação operacional',[['Ativo','Ativo — operacional'],['Manutenção','Em manutenção — não operacional'],['Inativo','Inativo — não operacional']],record?.status||'Ativo'),field('brand','Marca','text',record?.brand||'',true),field('model','Modelo','text',record?.model||'',true),field('manufacture_year','Ano fabricação','number',record?.manufacture_year||''),field('model_year','Ano modelo','number',record?.model_year||''),field('odometer','KM/H','number',record?.odometer_value||0),field('unit','Unidade / local','text',record?.unit_name||''),field('notes','Observações','text',record?.notes||''));buildVehicleDriverSelect(form,record);
+ const statusInfo=document.createElement('p');
+ statusInfo.className='wide xrm-oil-vehicle-note';
+ statusInfo.textContent='Operacional significa status Ativo. Revisão vencida gera alerta, mas não altera automaticamente o status. Apenas proprietários e gestores podem modificar esta situação.';
+ form.append(statusInfo);
+ if(record?.id){
+  const reason=field('status_reason','Motivo da mudança de situação (opcional)','text','');
+  reason.classList.add('wide');reason.querySelector('input').maxLength=240;form.append(reason);
+  const log=document.createElement('details');log.className='wide xrm-oil-vehicle-note';
+  const title=document.createElement('summary');title.textContent='Histórico de mudanças de situação';
+  const content=document.createElement('div');content.textContent='Carregando histórico…';
+  log.append(title,content);form.append(log);
+  void rpc('vehicle_status_history',{cid:company.id,vid:record.id}).then(entries=>{
+   if(v3Overlay.hidden||v3Editing?.record?.id!==record.id||v3Editing?.companyId!==company.id)return;
+   content.replaceChildren();
+   if(!entries?.length){content.textContent='Nenhuma mudança de situação registrada até agora.';return}
+   for(const e of entries){const line=document.createElement('p');line.textContent=new Date(e.changed_at).toLocaleString('pt-BR')+' · '+e.old_status+' → '+e.new_status+' · '+(e.reason||'Alteração registrada');content.append(line)}
+  }).catch(()=>{content.textContent='Histórico temporariamente indisponível.'});
+ }
  const rule=mileage?.planFor(record?.id)||null;
  const enabled=pick('oil_enabled','Controle de óleo por quilometragem',[['no','Não configurar agora'],['yes','Sim — controlar trocas de óleo']],rule?.interval_km?'yes':'no');
  enabled.classList.add('wide');form.append(enabled);
@@ -278,6 +301,10 @@ if(kind==='vehicle'){
   if(num('oil_warning')===null||num('oil_warning')<0||num('weekly_max')<100)throw Error('Confira a margem de aviso e o limite semanal.');
  }
  draft.savedRecordId=await rpc('vehicle_save_with_driver',{cid:companyId,p_id:record?.id||draft.savedRecordId||null,p_plate:plate,p_brand:str('brand'),p_model:str('model'),p_category:str('category'),p_manufacture_year:num('manufacture_year'),p_model_year:num('model_year'),p_odometer:num('odometer')||0,p_unit:str('unit'),p_notes:str('notes'),p_driver:str('driver')||null});
+ if(str('status')!==(record?.status||'Ativo')){
+  await rpc('vehicle_status_update',{cid:companyId,vid:draft.savedRecordId,p_status:str('status'),
+   p_expected_status:record?.status||'Ativo',p_reason:str('status_reason')||'Alteração pelo cadastro'});
+ }
  await rpc('mileage_rule_save',{
   cid:companyId,vid:draft.savedRecordId,p_interval:str('oil_enabled')==='yes'?num('oil_interval'):null,
   p_next_due:str('oil_enabled')==='yes'?num('oil_next_due'):null,p_last_change:str('oil_enabled')==='yes'?num('oil_last_change'):null,
@@ -314,8 +341,8 @@ function renderOverviewCharts(){
  const upcoming=[];
  for(const task of maintenance){if(task.status==='done')continue;const due=task.due_date?new Date(task.due_date+'T00:00:00'):null;if(!due||Number.isNaN(+due))continue;const days=Math.round((due-today)/86400000);if(days>90)continue;const index=days<0?0:days<=7?1:days<=30?2:3;periods[index].count++;upcoming.push({task,days})}
  if(expiryCanvas){expiryCanvas.style.display='none';let graph=el('v3-expiry-bars');if(!graph){graph=document.createElement('div');graph.id='v3-expiry-bars';graph.style.cssText='display:grid;gap:14px;padding:20px 16px 12px;width:100%;align-content:center;min-height:200px';expiryCanvas.parentElement.append(graph)}graph.replaceChildren();const max=Math.max(1,...periods.map(p=>p.count));for(const item of periods){const row=document.createElement('div');row.style.cssText='display:grid;grid-template-columns:95px 1fr 26px;align-items:center;gap:10px;font:12px system-ui;color:#bdd3e4';const label=document.createElement('span');label.textContent=item.label;const track=document.createElement('div');track.style.cssText='height:15px;background:#173147;border-radius:5px;overflow:hidden';const fill=document.createElement('div');fill.style.cssText='height:100%;border-radius:5px;background:'+item.color+';width:'+(item.count/max*100)+'%';track.append(fill);const value=document.createElement('strong');value.textContent=item.count;row.append(label,track,value);graph.append(row)}if(expiryEmpty)expiryEmpty.style.display='none';const summary=el('filter-result');if(summary)summary.textContent=upcoming.length+' manutenção(ões) com data até 90 dias'}
- const stats=[{label:'Operacionais',count:0,color:'#27ccad'},{label:'Em manutenção',count:0,color:'#f0ba5f'},{label:'Com revisão vencida',count:0,color:'#ea7382'}];
- for(const v of vehicles){const overdue=maintenance.some(m=>m.vehicle_id===v.id&&alertKind(m)==='overdue');if(overdue)stats[2].count++;else if(String(v.status).toLowerCase().includes('manuten'))stats[1].count++;else stats[0].count++}
+ const stats=[{label:'Operacionais (Ativo)',count:0,color:'#27ccad'},{label:'Em manutenção',count:0,color:'#f0ba5f'},{label:'Inativos',count:0,color:'#ea7382'}];
+ for(const v of vehicles){if(v.status==='Ativo')stats[0].count++;else if(v.status==='Manutenção')stats[1].count++;else stats[2].count++}
  if(statusCanvas){statusCanvas.style.display='none';let donut=el('v3-situation-donut');if(!donut){donut=document.createElement('div');donut.id='v3-situation-donut';donut.style.cssText='width:min(170px,100%);aspect-ratio:1;border-radius:50%;margin:14px auto;display:grid;place-items:center';statusCanvas.parentElement.append(donut)}const total=vehicles.length;let accumulated=0;const segments=stats.map(x=>{const start=accumulated;accumulated+=total?x.count/total*100:0;return x.color+' '+start+'% '+accumulated+'%'});donut.style.background=total?'conic-gradient('+segments.join(',')+')':'#244057';donut.replaceChildren();const hole=document.createElement('div');hole.style.cssText='width:72%;aspect-ratio:1;border-radius:50%;background:#0a2033;display:grid;place-items:center;text-align:center;font:700 30px system-ui;color:#e9f7ff';hole.textContent=total;donut.append(hole);if(statusEmpty)statusEmpty.style.display='none';if(center)center.style.display='none';if(legend){legend.replaceChildren();for(const x of stats){const item=document.createElement('div');item.className='xrm-status-legend-item';const dot=document.createElement('span');dot.className='xrm-status-legend-dot';dot.style.backgroundColor=x.color;const label=document.createElement('span');label.textContent=x.label;const count=document.createElement('strong');count.textContent=x.count;item.append(dot,label,count);legend.append(item)}}}
 }
 
