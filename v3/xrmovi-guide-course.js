@@ -185,7 +185,7 @@ function rank(question,topic){
   if(q.includes(alias)&&alias.length>=8)score=Math.max(score,85);
   const a=words(alias);
   if(a.length>1&&a.every(w=>qw.includes(w)))score=Math.max(score,56+a.length);
-  if(a.length===1&&qw.includes(a[0])&&a[0].length>4)score=Math.max(score,30);
+  if(a.length===1&&qw.includes(a[0])&&a[0].length>4&&!new Set(['carro','carros','veiculo','veiculos','empresa','motorista','sistema','status','registro','historico','tela','pagina','dados']).has(a[0]))score=Math.max(score,30);
  }
  const titleWords=words(topic.title);
  const common=titleWords.filter(w=>qw.includes(w)).length;
