@@ -147,3 +147,12 @@
 @media(prefers-reduced-motion:reduce){
  .xrm-signup *, .xrm-signup *::before,.xrm-signup *::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}
 }
+/* Checkout recovery: clear commercial state, no duplicate subscription. */
+#v3login.xrm-signup .wizard-pending-payment{
+ display:grid;gap:5px;margin:0;padding:12px 14px;
+ border:1px solid rgba(112,219,190,.35);border-radius:11px;
+ background:linear-gradient(110deg,rgba(48,121,116,.2),rgba(19,55,69,.3));
+ color:#b9dbdf;font-size:11px;line-height:1.55;
+}
+#v3login.xrm-signup .wizard-pending-payment strong{font-size:12px;color:#8ff0cc}
+#v3login.xrm-signup select option:disabled{color:#63869a;background:#12283a}
