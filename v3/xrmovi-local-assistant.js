@@ -1,4 +1,4 @@
-/* XRMOVI Local: voice-first dashboard guide, no external AI API or remote data submission. */
+/* Dashboard guide with no Gemini/OpenAI API. Microphone recognition may use a browser vendor service. */
 (() => {
   'use strict';
   let context = null;
@@ -22,7 +22,7 @@
     '<div class="xrm-assistant-shortcuts"><button type="button" data-intent="resumo">Resumo da tela</button><button type="button" data-intent="alertas">Alertas</button><button type="button" data-intent="combustível">Combustível</button><button type="button" data-intent="manutenção">Manutenção</button></div>',
     '<div class="xrm-assistant-history" role="log" aria-label="Histórico da conversa" aria-live="polite"></div>',
     '<form class="xrm-assistant-form"><label class="xrm-assistant-input-wrap"><span class="sr-only">Sua pergunta sobre o painel</span><input type="text" maxlength="220" autocomplete="off" placeholder="Pergunte sobre esta tela…" aria-label="Pergunte sobre esta tela" required></label><button type="submit" aria-label="Enviar pergunta" title="Enviar pergunta">➤</button><button class="xrm-assistant-mic" type="button" aria-label="Fazer pergunta por voz" title="Perguntar por voz">🎙</button></form>',
-    '<div class="xrm-assistant-foot"><button type="button" class="xrm-assistant-sound" aria-pressed="true">🔊 Voz ligada</button><span>Respostas calculadas a partir do painel. Não é IA generativa.</span></div>',
+    '<div class="xrm-assistant-foot"><button type="button" class="xrm-assistant-sound" aria-pressed="true">🔊 Voz ligada</button><span>Sem API de IA. Microfone sujeito ao serviço de voz do navegador.</span></div>',
     '</div>'
   ].join('');
   document.body.append(host);
