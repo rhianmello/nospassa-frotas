@@ -8,6 +8,9 @@
   let recognizer = null;
   const synthesis = 'speechSynthesis' in window ? window.speechSynthesis : null;
   const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const course = window.XrmoviGuideCourse || null;
+  let selectedLesson = null;
+  let lastCourseId = '';
   const labels = {dashboard:'Visão Geral',assets:'Ativos / Veículos',maintenance:'Manutenção / Despesas',drivers:'Motoristas',documents:'Documentação',alerts:'Alertas',history:'Histórico',fuel:'Abastecimentos',financial:'Relatórios financeiros',subscription:'Minha assinatura'};
   const host = document.createElement('section');
   host.id = 'xrm-local-assistant';
@@ -20,6 +23,9 @@
     '<div class="xrm-assistant-header"><span><strong>XRMOVI VOZ</strong><small>Assistente local do painel · sem API</small></span><button class="xrm-assistant-close" type="button" aria-label="Fechar assistente">✕</button></div>',
     '<div class="xrm-assistant-stage"><div class="xrm-assistant-orb" aria-hidden="true"><span class="xrm-assistant-core"></span></div><p class="xrm-assistant-state" aria-live="polite">Pronto para explicar sua frota.</p><p class="xrm-assistant-caption" aria-live="polite">Abra uma conversa para ouvir seu resumo.</p></div>',
     '<div class="xrm-assistant-shortcuts"><button type="button" data-intent="resumo">Resumo da tela</button><button type="button" data-intent="o que é operacional?">Operacional?</button><button type="button" data-intent="alertas">Alertas</button><button type="button" data-intent="combustível">Combustível</button><button type="button" data-intent="manutenção">Manutenção</button></div>',
+    '<div class="xrm-assistant-learning"><button class="xrm-assistant-course-toggle" type="button" aria-expanded="false">📚 Curso do XRMOVI · '+(course?.topics?.length||0)+' aulas</button><span>Aprenda cada módulo, passo a passo</span></div>',
+    '<div class="xrm-assistant-course-list" hidden><label>Buscar uma aula<input class="xrm-assistant-course-search" type="search" placeholder="Ex.: cadastrar veículo, QR Code…" aria-label="Buscar aula do XRMOVI"></label><div class="xrm-assistant-course-results" role="list"></div></div>',
+    '<div class="xrm-assistant-lesson" hidden><div class="xrm-assistant-lesson-top"><small class="xrm-assistant-lesson-counter"></small><strong class="xrm-assistant-lesson-title"></strong></div><p class="xrm-assistant-lesson-intro"></p><ol class="xrm-assistant-lesson-steps"></ol><p class="xrm-assistant-lesson-note"></p><div class="xrm-assistant-lesson-actions"><button type="button" class="xrm-assistant-lesson-open">Abrir esta tela</button><button type="button" class="xrm-assistant-lesson-hear">🔊 Ouvir aula</button><button type="button" class="xrm-assistant-lesson-prev">Anterior</button><button type="button" class="xrm-assistant-lesson-next">Próxima</button></div></div>',
     '<div class="xrm-assistant-history" role="log" aria-label="Histórico da conversa" aria-live="polite"></div>',
     '<form class="xrm-assistant-form"><label class="xrm-assistant-input-wrap"><span class="sr-only">Sua pergunta sobre o painel</span><input type="text" maxlength="220" autocomplete="off" placeholder="Pergunte sobre esta tela…" aria-label="Pergunte sobre esta tela" required></label><button type="submit" aria-label="Enviar pergunta" title="Enviar pergunta">➤</button><button class="xrm-assistant-mic" type="button" aria-label="Fazer pergunta por voz" title="Perguntar por voz">🎙</button></form>',
     '<div class="xrm-assistant-foot"><button type="button" class="xrm-assistant-sound" aria-pressed="true">🔊 Voz ligada</button><span>Sem API de IA. Microfone sujeito ao serviço de voz do navegador.</span></div>',
@@ -35,6 +41,12 @@
   const input = query('input');
   const mic = query('.xrm-assistant-mic');
   const sound = query('.xrm-assistant-sound');
+  const catalog = query('.xrm-assistant-course-list');
+  const catalogResults = query('.xrm-assistant-course-results');
+  const catalogSearch = query('.xrm-assistant-course-search');
+  const courseToggle = query('.xrm-assistant-course-toggle');
+  const lessonPanel = query('.xrm-assistant-lesson');
+
   let voiceOn = true;
   function normalize(value) {
     return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR').trim();
@@ -44,7 +56,8 @@
     return (context && context.kpis || []).find(item => normalize(item.label) === label)?.value || null;
   }
   function say(text) {
-    caption.textContent = text;
+    const compact = String(text).replace(/\s+/g,' ').trim();
+    caption.textContent = compact.length > 250 ? compact.slice(0,247)+'…' : compact;
     if (!voiceOn || !synthesis || !active || !context) return;
     synthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
@@ -72,10 +85,102 @@
     return 'O painel mostra ' + context[field] + ' em ' + label + '. ' + (context.costPeriod || 'Consulte o período selecionado no painel.');
   }
   let lastTopic = '';
+  function permissionNote(topic) {
+    if (!topic || !context) return '';
+    if (topic.owner && context.role !== 'owner') return 'Esta operação é exclusiva do titular da assinatura. Você pode consultar a aula, mas peça ao titular que execute as alterações.';
+    if (topic.writer && !['owner','manager'].includes(context.role)) return 'Seu perfil permite consulta, mas a gravação exige autorização de proprietário ou gestor.';
+    return '';
+  }
+  function showLesson(topic) {
+    if (!course || !topic) return;
+    selectedLesson = topic;
+    lastCourseId = topic.id;
+    lessonPanel.hidden = false;
+    const index = course.topics.findIndex(t=>t.id===topic.id);
+    query('.xrm-assistant-lesson-counter').textContent = topic.group+' · Aula '+(index+1)+' de '+course.topics.length;
+    query('.xrm-assistant-lesson-title').textContent = topic.title;
+    query('.xrm-assistant-lesson-intro').textContent = topic.intro;
+    const steps=query('.xrm-assistant-lesson-steps');
+    steps.replaceChildren();
+    for (const step of topic.steps) { const li=document.createElement('li');li.textContent=step;steps.append(li); }
+    query('.xrm-assistant-lesson-note').textContent = [topic.note,permissionNote(topic)].filter(Boolean).join(' ');
+    query('.xrm-assistant-lesson-open').hidden = !topic.view && !topic.route;
+    query('.xrm-assistant-lesson-open').textContent = topic.route?'Abrir Mensagens / Suporte':topic.mileage?'Ir para KM e Troca de Óleo':'Abrir '+(labels[topic.view]||'módulo');
+    query('.xrm-assistant-lesson-prev').disabled = index<=0;
+    query('.xrm-assistant-lesson-next').disabled = index>=course.topics.length-1;
+  }
+  function fullLessonText(topic) {
+    if(!topic)return '';
+    return course.answer(topic,'steps',context?.role) + (permissionNote(topic)?'\n'+permissionNote(topic):'');
+  }
+  function showCatalog(){
+    if (!course) return;
+    catalogResults.replaceChildren();
+    const value=course.normalize(catalogSearch.value);
+    const topics=course.topics.filter(topic=>{
+      const hay=course.normalize([topic.title,topic.group,...topic.aliases].join(' '));
+      return !value || value.split(' ').every(part=>hay.includes(part));
+    });
+    if (!topics.length) {const empty=document.createElement('p');empty.textContent='Nenhuma aula encontrada. Experimente outro termo.';catalogResults.append(empty);return;}
+    let lastGroup='';
+    for(const topic of topics){
+      if(topic.group!==lastGroup){const heading=document.createElement('strong');heading.className='xrm-assistant-course-group';heading.textContent=topic.group;catalogResults.append(heading);lastGroup=topic.group;}
+      const button=document.createElement('button');button.type='button';button.className='xrm-assistant-course-item';button.textContent=topic.title;
+      button.addEventListener('click',()=>{
+        showLesson(topic);catalog.hidden=true;courseToggle.setAttribute('aria-expanded','false');
+        const text='Aula: '+topic.title+'. '+topic.intro+' '+topic.steps.map((x,i)=>(i+1)+'. '+x).join(' ');
+        log('guide',course.answer(topic));say(text);
+      });catalogResults.append(button);
+    }
+  }
+  query('.xrm-assistant-lesson-open').addEventListener('click',()=>{
+    if(!selectedLesson)return;
+    if(selectedLesson.route){window.location.assign(new URL(selectedLesson.route,location.href).href);return;}
+    if(selectedLesson.mileage){
+      const button=document.getElementById('xrm-mileage-nav');
+      if(button){button.click();return;}
+    }
+    if(selectedLesson.view){
+      const target=document.querySelector('.fleet-main-nav [data-view="'+selectedLesson.view+'"]');
+      target?.click();
+    }
+  });
+  query('.xrm-assistant-lesson-hear').addEventListener('click',()=>{if(selectedLesson)say(fullLessonText(selectedLesson));});
+  for(const [direction,offset] of [['prev',-1],['next',1]]){
+    query('.xrm-assistant-lesson-'+direction).addEventListener('click',()=>{
+      if(!course||!selectedLesson)return;
+      const index=course.topics.findIndex(t=>t.id===selectedLesson.id)+offset;
+      const topic=course.topics[index];if(!topic)return;
+      showLesson(topic);say('Aula '+(index+1)+': '+topic.title+'. '+topic.intro);
+    });
+  }
+  courseToggle.addEventListener('click',()=>{
+    catalog.hidden=!catalog.hidden;
+    courseToggle.setAttribute('aria-expanded',String(!catalog.hidden));
+    if(!catalog.hidden){showCatalog();catalogSearch.focus();}
+  });
+  catalogSearch.addEventListener('input',showCatalog);
   function answer(question) {
     if (!context) return 'Aguardando os dados da empresa ativa. Atualize o painel.';
     const q = normalize(question);
     const current = labels[view] || context.view || 'Visão Geral';
+    // Teach procedures before numeric reports, otherwise "como cadastrar combustível"
+    // would be misread as a request for the current fuel bill.
+    const followUp = /^(e depois|qual o proximo passo|me explica melhor|onde fica isso|onde fica|como faco isso|tem outro passo|me ensina|passo a passo|continua|continuar|proxima etapa)\??$/.test(q);
+    const lesson = course && (followUp && lastCourseId ? course.getById(lastCourseId) : course.find(question));
+    const wantsTutorial = /(^| )(como|onde|aprender|ensina|ensinar|tutorial|curso|passo a passo|guia|o que e|o que significa|qual a diferenca|como funciona|explica|explicar|significa|quais sao|me fale sobre)( |$)/.test(q)
+      || /(^| )(cadastrar|registrar|adicionar|mudar|alterar|criar|gerar|configurar|salvar|baixar|exportar|concluir|atualizar|editar|vincular|recuperar|agendar|programar|corrigir|convidar|abrir chamado)( |$)/.test(q);
+    if(lesson && (wantsTutorial || followUp || course.normalize(lesson.title)===course.normalize(question))){
+      showLesson(lesson);
+      const mode=/(o que (e|significa)|qual a diferenca|significa|seria)/.test(q)?'meaning':'steps';
+      const result=course.answer(lesson,mode,context.role);
+      lastTopic='course:'+lesson.id;
+      return result+(permissionNote(lesson)?'\n'+permissionNote(lesson):'');
+    }
+    if (/(quais aulas|lista de aulas|todos os assuntos|curso completo)/.test(q)){
+      catalog.hidden=false;courseToggle.setAttribute('aria-expanded','true');showCatalog();
+      return 'Abri o Curso XRMOVI com '+(course?.topics?.length||0)+' aulas. Escolha um tema ou pesquise pelo nome do recurso.';
+    }
     const status = context.statusCounts || {};
     const total = metric('Frota Total') || 'zero';
     const operational = metric('Operacionais') || 'zero';
@@ -154,7 +259,7 @@
       if (lastTopic === 'maintenance') return 'Revisão pendente significa serviço ainda não concluído. Quando vence por prazo ou quilometragem, o sistema passa a sinalizar a pendência.';
     }
     lastTopic='help';
-    return 'Posso explicar o significado de Operacionais, Em manutenção, Inativos, Revisões pendentes e alertas. Também ensino onde alterar o status ou consulto os valores desta tela. Experimente perguntar: o que significa operacional?';
+    return 'Consigo ensinar os módulos do XRMOVI com aulas passo a passo e explicar os dados da sua empresa. Pergunte como cadastrar um veículo, concluir uma manutenção, atualizar o KM, gerar relatório, mudar plano ou usar o QR Code. Também pode clicar em Curso do XRMOVI para ver todas as aulas.';
   }
   function respond(question) {
     if (!context) return;
@@ -225,6 +330,10 @@
     launcher.setAttribute('aria-expanded','false');
     history.replaceChildren();
     lastTopic = '';
+    lastCourseId='';
+    selectedLesson=null;
+    lessonPanel.hidden=true;
+    catalog.hidden=true;
   });
   window.addEventListener('xrmovi:assistant-view', e => {
     view = e.detail?.view || 'dashboard';
@@ -233,7 +342,7 @@
   window.addEventListener('xrmovi:assistant-context', e => {
     const next = e.detail;
     if (!next || !next.companyName) return;
-    if (context && context.companyId !== next.companyId) { stop(); history.replaceChildren(); }
+    if (context && context.companyId !== next.companyId) { stop(); history.replaceChildren(); lastCourseId=''; selectedLesson=null; lessonPanel.hidden=true; catalog.hidden=true; }
     context = next;
     view = next.view || view;
     host.hidden = false;
