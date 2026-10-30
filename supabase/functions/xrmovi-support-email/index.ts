@@ -10,12 +10,17 @@ Deno.serve(async request=>{
  const ready=apiKey.startsWith("re_")&&from.includes("@");
  if(request.method==="GET")return reply({provider:"resend",configured:ready,delivery:ready?"enabled":"waiting_for_email_provider"});
  if(request.method!=="POST")return reply({error:"Method not allowed"},405);
- if(!ready)return reply({status:"not_configured",message:"Mensagem guardada na fila. Aguarda provedor de email."},503);
+ // Service-only cron token lives in Supabase Vault; no credential in repository.
+ const supplied=request.headers.get("x-xrmovi-worker-secret")||"";
+ if(!/^[a-f0-9]{64}$/i.test(supplied))return reply({error:"Worker not authorized"},401);
  const url=Deno.env.get("SUPABASE_URL")||"";
  const service=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||"";
  if(!url||!service)return reply({error:"Notification database unavailable"},503);
  try{
   const db=createClient(url,service,{auth:{persistSession:false}});
+  const {data:authorized,error:authorizationError}=await db.rpc("xrmovi_support_worker_authorized",{p_token:supplied});
+  if(authorizationError||authorized!==true)return reply({error:"Worker not authorized"},401);
+  if(!ready)return reply({status:"not_configured",message:"Mensagem guardada na fila. Aguarda provedor de email."},503);
   const {data:queue,error:claimError}=await db.rpc("xrmovi_support_mail_claim",{max_messages:10});
   if(claimError)throw claimError;
   let sent=0,failed=0;
