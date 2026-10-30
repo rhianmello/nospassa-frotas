@@ -108,6 +108,9 @@ async function handle(question,{course}={}){
   if(/mes passado/.test(q)&&state.intent.startsWith('finance:'))return financial(q,tools,data,true);
   if(/colocar em manutencao/.test(q)&&['operational','change-status'].includes(state.topic))
    return respond(question,'Ao marcar Em manutenção, o veículo deixa de ser contado entre os Operacionais. O status muda no cadastro e fica registrado no histórico. A revisão vencida é um alerta separado.','status-impact',{topic:'operational',lessonId:'vehicle-edit'});
+  if(/como faco para mudar|como faco isso/.test(q)&&['operational','change-status'].includes(state.topic)){
+   return respond(question,'Abra Ativos / Veículos, localize a placa, clique em Editar e altere Situação operacional para Ativo, Em manutenção ou Inativo. Salve. Só um proprietário ou gestor pode fazer isso.','course',{topic:'change-status',lessonId:'vehicle-edit'});
+  }
   if(/me mostra|onde fica|onde encontro/.test(q)){
    if(state.topic==='operational'||state.lessonId==='vehicle-edit'){
     const action=tools.navigate({view:'assets'});if(action.ok)highlight('assets');
@@ -160,8 +163,21 @@ async function handle(question,{course}={}){
  }
  if(/ultimo km|ultima quilometragem|historico do km|quem (alterou|registrou) (a )?(quilometragem|km)|leitura inconsistente/.test(q)){
   if(!vehicle)return respond(question,'De qual placa? Preciso identificar o veículo antes de consultar seu KM.','clarify',{topic:'assets'});
-  if(/quem|historico|inconsisten/.test(q))
-   return respond(question,'O histórico e a autoria do KM de '+vehicle.plate+' ficam em KM e Troca de Óleo > Histórico KM. Essa trilha não veio nos dados do painel, então não vou inventar o responsável.','mileage',{topic:'assets',vehicleId:vehicle.id});
+  if(/quem|historico|inconsisten/.test(q)){
+   try{
+    const readings=await tools.mileageHistory({vehicleId:vehicle.id});
+    if(!readings.length)return respond(question,'Não há leituras de KM registradas para '+vehicle.plate+'. O hodômetro atual é '+count(vehicle.odometer)+' km.','mileage',{topic:'assets',vehicleId:vehicle.id});
+    const chosen=readings.find(r=>r.status==='accepted')||readings[0];
+    if(/inconsisten/.test(q)){
+     const pending=readings.filter(r=>r.status==='pending');
+     const lower=readings.filter(r=>r.meter!=null&&r.appliedMeter!=null&&Number(r.meter)!==Number(r.appliedMeter));
+     return respond(question,'Para '+vehicle.plate+' encontrei '+pending.length+' leitura(s) pendente(s) e '+lower.length+' leitura(s) com KM aplicado diferente do informado, nas últimas '+readings.length+' leituras disponíveis. Revise no Histórico KM.','mileage',{topic:'assets',vehicleId:vehicle.id});
+    }
+    return respond(question,'Leitura de '+vehicle.plate+': '+(chosen.appliedMeter??chosen.meter??'não informada')+' km; situação '+(chosen.status||'não informada')+'; origem '+(chosen.source||'não informada')+'; data '+(chosen.submittedAt||'não informada')+'. Quem enviou: '+(chosen.submitter||'não registrado')+'. Quem conferiu: '+(chosen.reviewer||'não registrado')+'. A trilha completa está em Histórico KM.','mileage',{topic:'assets',vehicleId:vehicle.id});
+   }catch(error){
+    return respond(question,'O histórico do KM de '+vehicle.plate+' não pôde ser consultado com sua permissão atual: '+String(error?.message||'erro de consulta').slice(0,100)+'. Abra KM e Troca de Óleo > Histórico KM.','mileage',{topic:'assets',vehicleId:vehicle.id});
+   }
+  }
   return respond(question,'O hodômetro atual de '+vehicle.plate+' é '+count(vehicle.odometer)+' km. Para confirmar data e autoria, abra Histórico KM.','mileage',{topic:'assets',vehicleId:vehicle.id});
  }
  if(/empresa.*mais gast|comparar empresas/.test(q))
