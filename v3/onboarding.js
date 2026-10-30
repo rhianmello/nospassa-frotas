@@ -29,6 +29,7 @@ export async function showXrmoviOnboarding({login,client,onCreated,onLogout,exis
  form.querySelector('.wizard-exit').onclick=onLogout;
  let plans=[];
  let pendingSnapshot=null;
+ let pendingCheckout=null;
  if(existing?.id){
   try{
    const {data,error}=await client.rpc('xrmovi_onboarding_snapshot',{cid:existing.id});
@@ -39,6 +40,20 @@ export async function showXrmoviOnboarding({login,client,onCreated,onLogout,exis
    form.elements.namedItem('customer').value=String(data.contract_client||'');
    form.elements.namedItem('code').value=String(data.contract_code||'');
    setSummary();
+   const {data:attempt,error:attemptError}=await client.rpc('xrmovi_checkout_reconcile_lookup',{cid:existing.id});
+   if(attemptError)throw attemptError;
+   if(attempt?.intent_id&&['created','pending'].includes(attempt.intent_status)&&attempt.requested_plan){
+    pendingCheckout=attempt;
+    const info=document.createElement('p');
+    info.className='wizard-pending-payment';
+    const title=document.createElement('strong');
+    title.textContent='Pagamento já iniciado · '+String(attempt.requested_plan).toUpperCase();
+    const detail=document.createElement('span');
+    detail.textContent='Seu cadastro foi preservado. Continue o pagamento do plano original sem criar outra assinatura. Para alterar o plano, é necessário concluir ou cancelar a tentativa anterior.';
+    info.append(title,detail);
+    select.closest('label').after(info);
+    form.querySelector('[data-action-label]').textContent='Retomar pagamento pendente';
+   }
   }catch(error){status.textContent='Não foi possível recuperar o cadastro anterior: '+error.message;}
  }
 
@@ -61,6 +76,13 @@ export async function showXrmoviOnboarding({login,client,onCreated,onLogout,exis
   select.replaceChildren();
   for(const p of plans){const option=document.createElement('option');option.value=p.code;option.textContent=p.title+' — '+Number(p.monthly_brl).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})+'/mês';select.append(option)}
   if(pendingSnapshot&&plans.some(p=>p.code===pendingSnapshot.plan))select.value=pendingSnapshot.plan;
+  if(pendingCheckout){
+   const original=String(pendingCheckout.requested_plan);
+   if(!plans.some(p=>p.code===original))throw Error('O plano da tentativa anterior não está disponível. Fale com o suporte antes de iniciar outra assinatura.');
+   select.value=original;
+   for(const item of select.options)item.disabled=item.value!==original;
+   select.title='Plano fixado à tentativa de pagamento que já está em andamento.';
+  }
   select.disabled=false;submit.disabled=false;showPlan();
  }catch(err){status.textContent='Não foi possível consultar os planos: '+err.message}
  form.onsubmit=async event=>{
