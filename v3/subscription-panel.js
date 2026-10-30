@@ -191,8 +191,8 @@ export function setupSubscriptionPanel({client,getCompany,onCompanyCreated,onDat
   text('xrm-bill-plan',info.plan+' · '+(info.vehicle_limit??'sob medida')+' veículos');
   text('xrm-bill-price',info.price_brl==null?'Sob consulta':money(info.price_brl)+'/mês');
   const expired=info.status==='trial'&&info.trial_end&&new Date(info.trial_end)<new Date();
-  text('xrm-bill-status',expired?'Teste expirado':info.status==='trial'?'Período de teste':info.status==='active'?'Ativa':info.status);
-  text('xrm-bill-details',(info.trial_end&&info.status==='trial'?'Teste até '+formatDate(info.trial_end)+' · ':'')+'Limites totais da assinatura, não por empresa');
+  text('xrm-bill-status',expired?'Teste expirado':info.status==='trial'?'Aguardando pagamento':info.status==='pending'?'Aguardando pagamento':info.status==='active'?'Ativa':info.status);
+  text('xrm-bill-details',(['pending','trial'].includes(info.status)?'Escolha um plano e conclua o pagamento para liberar veículos, contratos e demais operações. · ':'')+'Limites totais da assinatura, não por empresa');
   const quotas=root.querySelector('#xrm-bill-quotas');quotas.replaceChildren(
    renderQuota('Empresas',info.companies_used,info.company_limit),
    renderQuota('Veículos',info.vehicles_used,info.vehicle_limit),
@@ -211,7 +211,7 @@ export function setupSubscriptionPanel({client,getCompany,onCompanyCreated,onDat
   const companyForm=root.querySelector('#xrm-bill-company-form');
   companyForm.querySelector('button').disabled=info.company_limit!=null&&info.companies_used>=info.company_limit;
   const planSelect=root.querySelector('#xrm-bill-plan-form select');planSelect.value=info.plan_code;
-  feedback('xrm-bill-feedback','Capacidade atualizada no banco de dados.');
+  feedback('xrm-bill-feedback',['pending','trial'].includes(info.status)?'Cadastro concluído. Aguardando pagamento para liberar o sistema.':'Capacidade atualizada no banco de dados.');
  }
  async function refresh(){
   const base=getCompany();if(!base)return;
