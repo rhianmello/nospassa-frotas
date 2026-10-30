@@ -84,7 +84,13 @@ export async function showXrmoviOnboarding({login,client,onCreated,onLogout,exis
    const readiness=await client.functions.invoke('xrmovi-billing-readiness',{method:'GET'});
    if(readiness.error||readiness.data?.enabled!==true)return;
    const checkout=await client.functions.invoke('xrmovi-create-subscription',{body:{company_id:data.company_id,plan}});
-   if(checkout.error)throw checkout.error;
+   if(checkout.error){
+    let msg=checkout.error.name==='FunctionsFetchError'
+     ?'Falha de conexão com o Supabase. Seu cadastro foi preservado; abra Minha assinatura e tente pagar novamente.'
+     :(checkout.error.message||'Não foi possível iniciar o pagamento.');
+    try{const details=await checkout.error.context?.json?.();if(details?.error)msg=String(details.error)}catch{}
+    throw new Error(msg);
+   }
    const url=new URL(String(checkout.data?.checkout_url||''));
    if(url.protocol!=='https:'||!['mercadopago.com','mercadopago.com.br'].some(h=>url.hostname===h||url.hostname.endsWith('.'+h)))throw Error('URL de pagamento inválida.');
    window.location.assign(url.href);
