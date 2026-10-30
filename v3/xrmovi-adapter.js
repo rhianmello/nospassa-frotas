@@ -872,6 +872,8 @@ const xrmAssistantBridge=Object.freeze({
    contractName:el('xrm-contract-filter')?.selectedOptions?.[0]?.textContent||'Todos',
    filters:(el('active-filter-summary')?.textContent||'').trim().slice(0,300),
    financialReady:!financialState,financialPeriod:range,
+   activeForm:!v3Overlay.hidden?{kind:v3Editing?.kind||'formulário',vehicleId:v3Editing?.record?.vehicle_id||null}:null,
+   validationNotice:(el('v3-edit-feedback')?.textContent||el('page-notice')?.textContent||'').trim().slice(0,220),
    financialNote:financialState?'Dados financeiros não carregados.':'Valores registrados no período consultado (sem estimar lançamentos ausentes).',
    contracts:contracts.map(c=>({id:c.id,name:c.name||'Contrato sem nome'})),
    vehicles:vehiclesInView,
