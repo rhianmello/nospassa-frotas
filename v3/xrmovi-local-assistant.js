@@ -11,6 +11,7 @@
   const course = window.XrmoviGuideCourse || null;
   let selectedLesson = null;
   let lastCourseId = '';
+  let responseTicket = 0;
   const labels = {dashboard:'Visão Geral',assets:'Ativos / Veículos',maintenance:'Manutenção / Despesas',drivers:'Motoristas',documents:'Documentação',alerts:'Alertas',history:'Histórico',fuel:'Abastecimentos',financial:'Relatórios financeiros',subscription:'Minha assinatura'};
   const host = document.createElement('section');
   host.id = 'xrm-local-assistant';
@@ -273,18 +274,49 @@
     lastTopic='help';
     return 'Consigo ensinar os módulos do XRMOVI com aulas passo a passo e explicar os dados da sua empresa. Pergunte como cadastrar um veículo, concluir uma manutenção, atualizar o KM, gerar relatório, mudar plano ou usar o QR Code. Também pode clicar em Curso do XRMOVI para ver todas as aulas.';
   }
-  function respond(question) {
+  async function respond(question) {
     if (!context) return;
     const clean = String(question || '').trim().slice(0,220);
     if (!clean) return;
     log('user', clean);
-    const response = answer(clean);
+    const requestedCompany = context.companyId;
+    const ticket = ++responseTicket;
+    state.textContent = 'Analisando sua pergunta…';
+    let brainAnswer = null;
+    try {
+      if (window.XrmoviAssistantBrain?.handle)
+        brainAnswer = await window.XrmoviAssistantBrain.handle(clean, {course});
+    } catch (error) {
+      console.warn('XRMOVI VOZ: consulta não concluída:', error?.message||'falha');
+    }
+    if (ticket !== responseTicket || !context || requestedCompany !== context.companyId) return;
+    let response = '';
+    if (brainAnswer?.matched) {
+      response = brainAnswer.text;
+      if (brainAnswer.lessonId && course?.getById(brainAnswer.lessonId)) {
+        const lesson = course.getById(brainAnswer.lessonId);
+        showLesson(lesson);
+        lastCourseId = lesson.id;
+      } else {
+        lessonPanel.hidden = true;
+        panel.classList.remove('is-teaching');
+        chatDetails.open = true;
+      }
+    } else {
+      response = answer(clean);
+      if (!lastTopic.startsWith('course:')) {
+        lessonPanel.hidden = true;
+        panel.classList.remove('is-teaching');
+        chatDetails.open = true;
+      }
+    }
     log('guide', response);
-    if(!lastTopic.startsWith('course:') && !catalog.hidden){catalog.hidden=true;courseToggle.setAttribute('aria-expanded','false');}
-    if(!lastTopic.startsWith('course:') && lessonPanel.hidden){chatDetails.open=true;panel.classList.remove('is-teaching');}
+    if (!catalog.hidden) {catalog.hidden=true;courseToggle.setAttribute('aria-expanded','false');}
     say(response);
+    if (!voiceOn || !synthesis) state.textContent = 'Pronto para outra pergunta.';
   }
   function stop() {
+    ++responseTicket;
     if (synthesis) synthesis.cancel();
     host.classList.remove('speaking', 'listening');
     if (recognizer && recognizing) { try { recognizer.abort(); } catch {} }
@@ -338,6 +370,7 @@
   window.addEventListener('xrmovi:assistant-clear', () => {
     stop();
     context = null;
+    window.XrmoviAssistantBrain?.reset?.();
     host.hidden = true;
     panel.hidden = true;
     active = false;
@@ -359,7 +392,7 @@
   window.addEventListener('xrmovi:assistant-context', e => {
     const next = e.detail;
     if (!next || !next.companyName) return;
-    if (context && context.companyId !== next.companyId) { stop(); history.replaceChildren(); chatCount.textContent='0 mensagens'; chatDetails.open=true; panel.classList.remove('is-teaching'); lastCourseId=''; selectedLesson=null; lessonPanel.hidden=true; catalog.hidden=true; }
+    if (context && context.companyId !== next.companyId) { window.XrmoviAssistantBrain?.reset?.(); stop(); history.replaceChildren(); chatCount.textContent='0 mensagens'; chatDetails.open=true; panel.classList.remove('is-teaching'); lastCourseId=''; selectedLesson=null; lessonPanel.hidden=true; catalog.hidden=true; }
     context = next;
     view = next.view || view;
     host.hidden = false;
