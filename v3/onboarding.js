@@ -1,6 +1,6 @@
 // XRMOVI | Cadastro guiado sem acesso operacional antes de pagamento.
 // Valores e limites são fornecidos por xrmovi_list_plans no banco.
-export async function showXrmoviOnboarding({login,client,onCreated,onLogout}){
+export async function showXrmoviOnboarding({login,client,onCreated,onLogout,existing=null}){
  login.hidden=false;
  const form=login.querySelector('#v3login');
  form.classList.add('xrm-signup');
@@ -39,6 +39,19 @@ export async function showXrmoviOnboarding({login,client,onCreated,onLogout}){
  const elements=form.elements, select=elements.namedItem('plan'), submit=form.querySelector('.wizard-submit'), status=form.querySelector('.wizard-msg');
  form.querySelector('.wizard-exit').onclick=onLogout;
  let plans=[];
+ let pendingSnapshot=null;
+ if(existing?.id){
+  try{
+   const {data,error}=await client.rpc('xrmovi_onboarding_snapshot',{cid:existing.id});
+   if(error)throw error;
+   pendingSnapshot=data;
+   form.elements.namedItem('company').value=String(data.company_name||existing.name||'');
+   form.elements.namedItem('contract').value=String(data.contract_name||'');
+   form.elements.namedItem('customer').value=String(data.contract_client||'');
+   form.elements.namedItem('code').value=String(data.contract_code||'');
+  }catch(error){status.textContent='Não foi possível recuperar o cadastro anterior: '+error.message;}
+ }
+
  const showPlan=()=>{
   const p=plans.find(x=>x.code===select.value);
   form.querySelector('[data-plan-title]').textContent=p?.title||'Selecione um plano';
@@ -57,6 +70,7 @@ export async function showXrmoviOnboarding({login,client,onCreated,onLogout}){
   if(!plans.length)throw Error('Planos indisponíveis no momento.');
   select.replaceChildren();
   for(const p of plans){const option=document.createElement('option');option.value=p.code;option.textContent=p.title+' — '+Number(p.monthly_brl).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})+'/mês';select.append(option)}
+  if(pendingSnapshot&&plans.some(p=>p.code===pendingSnapshot.plan))select.value=pendingSnapshot.plan;
   select.disabled=false;submit.disabled=false;showPlan();
  }catch(err){status.textContent='Não foi possível consultar os planos: '+err.message}
  form.onsubmit=async event=>{
@@ -65,7 +79,8 @@ export async function showXrmoviOnboarding({login,client,onCreated,onLogout}){
   submit.disabled=true;status.textContent='Criando cadastro e contrato...';
   const plan=String(select.value);
   try{
-   const {data,error}=await client.rpc('xrmovi_onboarding_complete',{
+   const {data,error}=await client.rpc(existing?.id?'xrmovi_onboarding_update':'xrmovi_onboarding_complete',{
+    ...(existing?.id?{cid:existing.id}:{}),
     company_name:String(elements.namedItem('company').value).trim(),
     contract_name:String(elements.namedItem('contract').value).trim(),
     chosen_plan:plan,
