@@ -354,3 +354,8 @@
 .xrm-local-assistant[data-theme="hologram"] .xrm-assistant-orb{background:radial-gradient(circle at 38% 23%,#fff,#9ffdf8 24%,#18a8d4 56%,#0d2652 91%);box-shadow:0 0 20px #86f9ff99,0 0 42px #5ceeff55}
 .xrm-local-assistant[data-theme="hologram"] .xrm-assistant-core{background:radial-gradient(circle at 25% 25%,#fff,#adfffa 33%,#29b8f9 82%)}
 @media(prefers-reduced-motion:reduce){.xrm-assistant-highlight{animation:none}}
+
+/* Optional local model controls; only visible inside collapsed voice settings */
+.xrm-local-assistant .xrm-assistant-local-controls{padding:4px 10px 10px;display:flex;align-items:flex-start;gap:7px;flex-wrap:wrap}
+.xrm-local-assistant .xrm-assistant-local-toggle{border:1px solid #59bfc0;background:#134e5f;color:#e0ffff;border-radius:7px;padding:6px 9px;cursor:pointer;font-size:10px}
+.xrm-local-assistant .xrm-assistant-local-status{display:block;flex:1 1 150px;font-size:9px;line-height:1.4;color:#a5cbd1}
