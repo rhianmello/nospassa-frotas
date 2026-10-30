@@ -106,7 +106,7 @@ async function handle(question,{course}={}){
  const follow=/^(e depois|onde fica|onde encontro|me mostra|mostra ai|me explica melhor|como faco isso|e como faco para mudar isso|e como faco|e se eu colocar em manutencao|e o mes passado|e no mes passado|por que|porque|qual o proximo passo)\??$/.test(q);
  if(follow){
   if(/mes passado/.test(q)&&state.intent.startsWith('finance:'))return financial(q,tools,data,true);
-  if(/colocar em manutencao/.test(q)&&['operational','change-status'].includes(state.topic))
+  if(/colocar em manutencao/.test(q)&&(['operational','change-status'].includes(state.topic)||state.lessonId==='vehicle-edit'))
    return respond(question,'Ao marcar Em manutenção, o veículo deixa de ser contado entre os Operacionais. O status muda no cadastro e fica registrado no histórico. A revisão vencida é um alerta separado.','status-impact',{topic:'operational',lessonId:'vehicle-edit'});
   if(/como faco para mudar|como faco isso/.test(q)&&['operational','change-status'].includes(state.topic)){
    return respond(question,'Abra Ativos / Veículos, localize a placa, clique em Editar e altere Situação operacional para Ativo, Em manutenção ou Inativo. Salve. Só um proprietário ou gestor pode fazer isso.','course',{topic:'change-status',lessonId:'vehicle-edit'});
