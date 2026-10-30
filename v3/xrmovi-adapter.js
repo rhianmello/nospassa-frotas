@@ -59,6 +59,7 @@ function updatePaymentGateUI(){
   if(target)target.before(hint);
  }
  hint.hidden=!paymentRequired;
+ hint.style.display=paymentRequired?'grid':'none';
  if(paymentRequired){
   hint.replaceChildren();
   const title=document.createElement('strong');title.textContent='Assinatura necessária para liberar sua frota';title.style.cssText='font-size:19px;color:#ffe2a0';
