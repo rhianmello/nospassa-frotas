@@ -42,6 +42,20 @@ test('natural Portuguese questions route to the correct verified procedure',()=>
   ['esqueci minha senha','password'],
   ['como usar o qr code','qr'],
   ['como filtrar por contrato','filters'],
+  ['eu quero saber como faço para colocar o carro em manutenção','vehicle-edit'],
+  ['me ensina a fazer cadastro de um caminhão','vehicle-add'],
+  ['tem como lançar o km de vários carros de uma vez','km-bulk'],
+  ['como consertar o KM errado que eu cadastrei','km-history'],
+  ['tenho um motorista com a CNH vencida, o que faço','cnh'],
+  ['como é que eu gero o PDF do relatório','export'],
+  ['como pagar a mensalidade da minha assinatura','change-plan'],
+  ['quero cadastrar a logo da minha empresa','logo'],
+  ['como alterar a senha da conta','password'],
+  ['como eu vejo o histórico do abastecimento','history'],
+  ['como mudar o contrato de um carro','contracts'],
+  ['como fazer os documentos do carro','documents'],
+  ['o que significa vencido no painel','alerts'],
+  ['minha tela tá zerada, e agora?','troubleshoot'],
  ]){
   const found=c.find(q);
   if(found?.id!==id)mismatches.push(q+' -> '+(found?.id||'nenhuma')+' (esperado: '+id+')');
