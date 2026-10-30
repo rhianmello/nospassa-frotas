@@ -174,7 +174,7 @@ const topics = [
 const safe = value=>String(value||'');
 const normalize = value=>safe(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
 const stop = new Set(['como','faco','fazer','para','uma','uns','pelo','pelo','sobre','qual','quais','onde','isso','essa','esse','meu','minha','seu','sua','essa','esse','pode','posso','quero','preciso','com','tem','que','por','dos','das','do','da','de','em','no','na','um','e','o','a','os','as','ser','estar','se','pelo','aqui','pra','ai','ali','eu','voce','agora','tela']);
-function words(str){return normalize(str).split(' ').filter(w=>w.length>2&&!stop.has(w));}
+function words(str){return normalize(str).split(' ').filter(w=>(w.length>2||w==='km'||w==='qr')&&!stop.has(w));}
 function rank(question,topic){
  const q=normalize(question), qw=words(q);
  if(!qw.length)return 0;
