@@ -77,7 +77,7 @@ Deno.serve(async(req:Request)=>{
   invoices.sort((a,b)=>Date.parse(String(a?.debit_date||a?.date_created||""))-Date.parse(String(b?.debit_date||b?.date_created||"")));
   let reconciled=0;
   for(const item of invoices){
-   if(!/^\\d+$/.test(String(item?.id||""))||!/^\\d+$/.test(String(item?.payment?.id||""))||item.payment.status!=="approved")continue;
+   if(!/^\d+$/.test(String(item?.id||""))||!/^\d+$/.test(String(item?.payment?.id||""))||item.payment.status!=="approved")continue;
    const invoice=await mpGet("/authorized_payments/"+encodeURIComponent(String(item.id)));
    if(String(invoice.id)!==String(item.id)||String(invoice.preapproval_id)!==preapproval
      ||String(invoice.payment?.id)!==String(item.payment.id)
