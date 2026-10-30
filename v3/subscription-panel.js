@@ -207,8 +207,19 @@ export function setupSubscriptionPanel({client,getCompany,onCompanyCreated,onDat
     body:{company_id:base.id,plan:chosen}
    });
    if(error){
-    let description=error.message||'Não foi possível iniciar o checkout.';
-    try{const detail=await error.context?.json?.();if(detail?.error)description=String(detail.error)}catch{}
+    let description='Não foi possível iniciar o pagamento. A cobrança não foi confirmada.';
+    if(error.name==='FunctionsFetchError'){
+     description='Falha de comunicação com o Supabase. Verifique sua conexão e atualize a página antes de tentar novamente.';
+    }else if(error.name==='FunctionsRelayError'){
+     description='O serviço de pagamento está temporariamente indisponível. Tente novamente.';
+    }else{
+     description=error.message||description;
+     try{
+      const detail=await error.context?.json?.();
+      if(typeof detail?.error==='string')description=detail.error;
+      else if(typeof detail?.message==='string')description=detail.message;
+     }catch{}
+    }
     throw new Error(description);
    }
    const url=new URL(String(data?.checkout_url||''));
