@@ -43,3 +43,22 @@ O destinatário está definido como **rhian.udm@gmail.com** no worker. Não publ
 5. Verificar se o botão **Abrir caixa de mensagens** leva ao BI do proprietário.
 
 Este aviso é transacional, não um e-mail de marketing.
+
+
+## Auditoria de 30/10/2026 — implementação e verificações
+
+- A reconciliação da assinatura consulta o Mercado Pago mesmo quando o cadastro está como ativo: verifica a data `paid_through`, varre faturas paginadas, valida assinatura/fatura/pagamento, concilia apenas cobranças aprovadas e sincroniza cancelamento/pausa.
+- A reconciliação é somente de leitura no Mercado Pago: usa GET, nunca inicia cobrança ou assinatura.
+- As RPCs `xrmovi_support_mail_claim` e `xrmovi_support_mail_finish` validam `auth.jwt() ->> 'role'` e continuam disponíveis apenas ao `service_role`.
+- O worker de suporte exige segredo de 256 bits guardado exclusivamente no Vault, enviado pelo cron a cada dois minutos. O endereço público não pode processar fila sem essa credencial.
+- No celular, a barra superior contém troca de empresa e atalho para suporte, sem exigir menu lateral.
+- O login tem **Esqueci minha senha** e a página `/redefinir-senha.html` usa uma sessão válida do Supabase para efetuar a alteração.
+- Os testes de reconciliação e notificação simulam provedor e banco em memória e não geram cobrança nem enviam e-mail real.
+
+### Pendências de configuração externa
+
+**Suporte:** a verificação ao vivo do cron devolveu `503 not_configured`: faltam `XRMOVI_RESEND_API_KEY` e/ou `XRMOVI_SUPPORT_MAIL_FROM` com domínio remetente validado no Resend. O worker está autenticando corretamente, mas nenhuma entrega de e-mail pode ser garantida até concluir essa configuração. Mensagens reais ficam armazenadas na fila privada.
+
+**Recuperação de senha:** em **Supabase → Authentication → URL Configuration → Redirect URLs**, autorizar `https://frota.nospassa.com.br/redefinir-senha.html`. Também é necessário que o provedor de e-mails do Supabase Auth esteja enviando mensagens. Verificar com uma conta de teste, sem alterar senha de usuários reais.
+
+A verificação ponta a ponta de renovação com um pagamento real permanece pendente; os testes automatizados usam comprovantes e respostas simulados.
