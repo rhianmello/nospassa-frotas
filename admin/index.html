@@ -16,6 +16,11 @@ main{max-width:1530px;padding:clamp(18px,2.5vw,34px);margin:auto}.eyebrow{color:
 .notice{margin-top:17px;border:1px solid #5e5a3f;background:#332f20;border-radius:11px;padding:13px 16px;color:#e9d7aa;font-size:12px}.notice.error{border-color:#925064;background:#3e2631;color:#ffd2dc}.notice.success{border-color:#367f6d;background:#173d37;color:#c2f6e4}.status{color:#c5e6d9;font-size:12px;min-height:20px;margin-bottom:12px}.screen{display:grid;place-content:center;text-align:center;min-height:45vh;gap:12px}.screen h2{margin:0}.screen p{color:#a5c4d4}.inbox{display:grid;grid-template-columns:minmax(250px,340px) minmax(0,1fr);min-height:490px}.contacts{border-right:1px solid #2c5367;overflow-y:auto;max-height:650px}.contact{display:grid;gap:3px;width:100%;text-align:left;background:transparent;border:0;border-bottom:1px solid #234456;padding:14px;color:#dcecf6}.contact:hover,.contact.active{background:#154038}.contact b{font-size:12px}.contact small{font-size:11px;color:#92b2c4}.unread{color:#0a3033;background:#63edba;border-radius:99px;padding:2px 6px;font-size:10px;font-weight:800;float:right}.conversation{display:flex;flex-direction:column;min-width:0}.conversation-top{padding:15px;border-bottom:1px solid #2c5367;font-weight:750}.messages{min-height:280px;max-height:520px;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;flex:1;background:#091e2f}.bubble{align-self:flex-start;max-width:min(80%,550px);padding:10px 13px;background:#1b3c50;border:1px solid #356176;border-radius:12px;overflow-wrap:anywhere;white-space:pre-wrap;font-size:12px}.bubble.mine{align-self:flex-end;background:#16493f;border-color:#387c68}.bubble small{display:block;margin-top:7px;font-size:9px;color:#a0c2c9;text-align:right}.compose{display:flex;gap:10px;padding:14px;border-top:1px solid #2c5367;align-items:flex-end}.compose textarea{resize:vertical;min-height:54px;max-height:155px;border:1px solid #3a6b7e;background:#061b29;border-radius:10px;color:white;flex:1;padding:11px;font-size:12px}
 footer{padding:20px;text-align:center;color:#849eae;font-size:11px}
 @media(max-width:1200px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:860px){.two-col{grid-template-columns:1fr}.inbox{grid-template-columns:1fr}.contacts{max-height:210px;border-right:0;border-bottom:1px solid #2c5367}}@media(max-width:550px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi{padding:12px}.kpi b{font-size:21px}main{padding:17px 11px}.compose{flex-direction:column;align-items:stretch}.chart{gap:4px;padding:12px}.chart-label{font-size:8px}}
+.xrm-mail-setup{margin:10px 0 16px;padding:12px 16px;background:#0a2833;border:1px solid #386b72;border-radius:12px;color:#cce6eb;font-size:12px}
+.xrm-mail-setup summary{color:#83ecd1;font-weight:800;cursor:pointer}
+.xrm-mail-setup p{color:#b4d1dc}.xrm-mail-setup ol{padding-left:22px;display:grid;gap:9px}
+.xrm-mail-setup a{color:#83ecd1;text-decoration:underline;text-underline-offset:3px}
+.xrm-mail-setup code{background:#061927;padding:2px 5px;border-radius:4px;overflow-wrap:anywhere}
 </style></head><body>
 <header><a href="../" class="brand"><span class="logo">↗</span><span>XR<strong>MOVI</strong><small>PROPRIETÁRIO</small></span></a><div class="actions"><a class="btn ghost" href="../v3/">Frota</a><button class="btn" id="refresh">Atualizar</button><button class="btn" id="signout">Sair</button></div></header>
 <main>
@@ -33,6 +38,18 @@ footer{padding:20px;text-align:center;color:#849eae;font-size:11px}
   </div>
   <div class="notice" role="status" aria-live="polite"><strong>Diagnóstico Mercado Pago:</strong> <span id="xrm-billing-health">Validando credenciais de produção…</span></div>
   <div class="notice" role="status" aria-live="polite"><strong>Avisos de suporte por e-mail:</strong> <span id="xrm-mail-health">Verificando provedor de envio…</span></div>
+  <details id="xrm-mail-setup" class="xrm-mail-setup">
+   <summary>Ativar notificações por e-mail e recuperação de senha</summary>
+   <p>O servidor já possui a fila e o processamento automático. Para habilitar o envio é necessário vincular o Resend a um domínio verificado. Nunca informe sua chave privada neste site.</p>
+   <ol>
+    <li>Entre no <a href="https://resend.com/domains" target="_blank" rel="noopener noreferrer">Resend → Domains</a>, adicione seu domínio (por exemplo, <code>nospassa.com.br</code>) e publique no seu DNS os registros informados pelo provedor. Aguarde o status de envio verificado.</li>
+    <li>Em <a href="https://resend.com/api-keys" target="_blank" rel="noopener noreferrer">Resend → API Keys</a>, crie uma chave com permissão apenas para envio (Sending access).</li>
+    <li>Na <a href="https://supabase.com/dashboard/project/ztqtcbzjesrkuaijmylm/functions/secrets" target="_blank" rel="noopener noreferrer">área de Secrets do Supabase</a>, cadastre <code>XRMOVI_RESEND_API_KEY</code> com a chave privada e <code>XRMOVI_SUPPORT_MAIL_FROM</code> com um remetente do domínio verificado, por exemplo <code>XRMOVI &lt;avisos@nospassa.com.br&gt;</code>.</li>
+    <li>Para o cliente recuperar a senha, habilite o SMTP personalizado em Supabase → Authentication → SMTP Settings, usando host <code>smtp.resend.com</code>, porta <code>465</code>, usuário <code>resend</code> e a chave de envio como senha. Remetente sugerido: <code>acesso@nospassa.com.br</code>, após verificação do domínio.</li>
+    <li>Em Supabase → Authentication → URL Configuration, autorize exatamente <code>https://frota.nospassa.com.br/redefinir-senha.html</code> e teste com uma conta de homologação.</li>
+   </ol>
+   <p>Os novos avisos de suporte serão enviados para o e-mail do proprietário já configurado no servidor. A configuração não gera cobrança Mercado Pago.</p>
+  </details>
   <div id="feedback" class="status" role="status" aria-live="polite"></div>
   <nav class="tabs" aria-label="Áreas da administração">
    <button data-tab="overview" aria-selected="true">Visão executiva</button><button data-tab="customers" aria-selected="false">Clientes</button><button data-tab="messages" aria-selected="false">Mensagens <span id="nav-unread"></span></button><button data-tab="payments" aria-selected="false">Pagamentos</button><button data-tab="requests" aria-selected="false">Solicitações</button>
@@ -157,8 +174,9 @@ async function checkBillingStatus(){
   if(error)throw error;
   const mailLabel=el('xrm-mail-health');
   mailLabel.textContent=data?.support_email_configured===true
-   ?'Provedor de envio configurado. Novas mensagens dos clientes serão encaminhadas para rhian.udm@gmail.com.'
-   :'Mensagens registradas na fila, mas envio de e-mail aguardando configuração do provedor transacional.';
+   ?'Credenciais encontradas. Faça um teste de entrega com uma mensagem de homologação antes de considerar o envio confirmado.'
+   :'Provedor de envio ainda não configurado. Abra as instruções abaixo para ativar as notificações.';
+  el('xrm-mail-setup').open=data?.support_email_configured!==true;
   if(data?.configuration_ready===true){
    label.textContent=data.billing_switch_enabled===true
     ?'Mercado Pago: credenciais verificadas. Faça a validação do primeiro webhook antes de vender.'
