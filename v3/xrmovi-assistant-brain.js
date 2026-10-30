@@ -161,7 +161,7 @@ async function handle(question,{course}={}){
   const sorted=[...data.vehicles].filter(v=>Number.isFinite(v.odometer)).sort((a,b)=>b.odometer-a.odometer);
   return respond(question,sorted.length?'O veículo '+sorted[0].plate+' tem o maior hodômetro informado: '+count(sorted[0].odometer)+' km.':'Não existem leituras de KM nos veículos selecionados.','mileage',{topic:'assets',vehicleId:sorted[0]?.id||null});
  }
- if(/ultimo km|ultima quilometragem|historico do km|quem (alterou|registrou) (a )?(quilometragem|km)|leitura inconsistente/.test(q)){
+ if(/ultimo km|ultima quilometragem|historico do km|quem (alterou|registrou) (a |o )?(quilometragem|km)|leitura inconsistente/.test(q)){
   if(!vehicle)return respond(question,'De qual placa? Preciso identificar o veículo antes de consultar seu KM.','clarify',{topic:'assets'});
   if(/quem|historico|inconsisten/.test(q)){
    try{
@@ -197,7 +197,7 @@ async function handle(question,{course}={}){
   const ranks=grouped([...data.maintenanceCosts,...data.paidExpenses]);
   return respond(question,ranks.length?plate(data,ranks[0].vehicleId)+' teve o maior gasto realizado de manutenção e outras despesas pagas no período consultado: '+money(ranks[0].amount)+'.':'Não há gastos realizados suficientes para classificar os veículos.','finance:maintenanceCosts',{topic:'financial'});
  }
- if(/gastei|quanto.*(cust|despesa|combustivel|diesel|manutencao)|maior.*gasto|ranking.*combustivel|compar.*(mes|gasto)|ultimos meses|mes passado|cinco maiores gastos|top ?5/.test(q))
+ if(/gastei|quanto.*(cust|despesa|combustivel|diesel|manutencao)|maior.*gasto|gastou mais|veiculo.*mais.*combustivel|ranking.*combustivel|compar.*(mes|gasto)|ultimos meses|mes passado|cinco maiores gastos|top ?5/.test(q))
   return financial(question,tools,data,false);
  if(/como |onde |ensina|tutorial|passo a passo|criar |cadastrar |registrar |gerar |alterar |concluir |configurar |exportar |recuperar |vincular |explica/.test(q)&&course){
   const lesson=course.find(question);
