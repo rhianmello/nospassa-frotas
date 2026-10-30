@@ -5,6 +5,7 @@ export function setupSubscriptionPanel({client,getCompany,onCompanyCreated,onDat
  const nav=document.getElementById('xrm-subscriptions-nav');
  if(!root)return {refresh:async()=>{}};
  let current=null,loading=false,request=0;
+ let availablePlans=[];
  const money=v=>Number(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
  const formatDate=v=>v?new Date(v).toLocaleDateString('pt-BR'):'—';
  const text=(id,value)=>{const target=root.querySelector('#'+id);if(target)target.textContent=String(value);};
@@ -18,6 +19,19 @@ export function setupSubscriptionPanel({client,getCompany,onCompanyCreated,onDat
  .xrm-billing .xrm-plan-hero strong{font-size:26px;color:#f2fbff}
  .xrm-billing .xrm-plan-details{font-size:12px;color:#b8d2df;margin-top:12px}
  .xrm-billing .xrm-quotas{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px}
+ .xrm-billing .xrm-plan-selection{grid-column:1/-1}
+ .xrm-billing .xrm-plan-compare-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(270px,.85fr);gap:16px;align-items:start}
+ .xrm-billing .xrm-plan-preview{background:linear-gradient(150deg,#123d49,#122f40);border:1px solid #397e79;border-radius:13px;padding:18px;display:grid;gap:14px}
+ .xrm-billing .xrm-plan-preview .preview-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+ .xrm-billing .xrm-plan-preview .preview-head strong{font-size:20px;color:#74e9c7}
+ .xrm-billing .xrm-plan-preview .preview-head b{color:#f0fbff;font-size:23px}
+ .xrm-billing .xrm-plan-preview .preview-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .xrm-billing .xrm-plan-preview .preview-item{border:1px solid #346772;background:#0c2939;border-radius:10px;padding:12px}
+ .xrm-billing .xrm-plan-preview .preview-item strong{display:block;font-size:26px;line-height:1.25;color:white}
+ .xrm-billing .xrm-plan-preview .preview-item span{color:#add1db;font-size:11px}
+ .xrm-billing .xrm-plan-preview .preview-note{font-size:11px;color:#b1cbd4;line-height:1.55;margin:0}
+ @media(max-width:790px){.xrm-billing .xrm-plan-compare-layout{grid-template-columns:1fr}}
+
  .xrm-billing .xrm-quota{padding:16px;background:#102c41;border:1px solid #32516b;border-radius:13px;display:grid;gap:8px}
  .xrm-billing .xrm-quota small{font-size:11px;color:#b5cfe0}
  .xrm-billing .xrm-quota b{font-size:25px;color:#f7fdff}
@@ -57,10 +71,45 @@ export function setupSubscriptionPanel({client,getCompany,onCompanyCreated,onDat
    <section class="xrm-group"><h3>Adicionar empresa</h3><form id="xrm-bill-company-form"><label>Nome da nova empresa<input name="company" required minlength="2" maxlength="160" placeholder="Ex.: Empresa de Transportes"></label><button type="submit">Cadastrar empresa</button></form><div class="xrm-feedback" id="xrm-bill-company-feedback" role="status"></div></section>
    <section class="xrm-group"><h3>Criar contrato</h3><form id="xrm-bill-contract-form"><label>Empresa<select name="company" required id="xrm-bill-contract-company"></select></label><label>Contrato<input name="name" required minlength="2" maxlength="160" placeholder="Ex.: Contrato Obra 02"></label><label>Cliente (opcional)<input name="client" maxlength="160"></label><label>Código (opcional)<input name="code" maxlength="60"></label><button type="submit" class="secondary">Adicionar contrato</button></form><div class="xrm-feedback" id="xrm-bill-contract-feedback" role="status"></div></section>
    <section class="xrm-group"><h3>Adicionar usuário</h3><form id="xrm-bill-member-form"><label>Empresa<select name="company" required id="xrm-bill-member-company"></select></label><label>E-mail cadastrado e confirmado<input type="email" name="email" required autocomplete="off" placeholder="usuario@empresa.com.br"></label><label>Permissão<select name="role"><option value="manager">Gestor</option><option value="driver">Motorista</option></select></label><button type="submit" class="secondary">Vincular usuário</button></form><div class="xrm-feedback" id="xrm-bill-member-feedback" role="status"></div><p class="xrm-info">O usuário precisa ter conta confirmada no XRMOVI. O número de usuários é independente do número de empresas.</p></section>
-   <section class="xrm-group"><h3>Alterar plano</h3><form id="xrm-bill-plan-form"><label>Plano desejado<select name="plan" required><option value="start">Start — R$ 19,90</option><option value="pro">Pro — R$ 39,90</option><option value="business">Business — R$ 64,90</option><option value="advanced">Advanced — R$ 99,90</option></select></label><button type="submit">Solicitar mudança de plano</button><button type="button" class="secondary" id="xrm-bill-checkout">Pagar com Mercado Pago</button></form><div class="xrm-feedback" id="xrm-bill-plan-feedback" role="status"></div><p class="xrm-info">Solicitar um plano não ativa cobrança nem libera cotas extras. O pagamento é feito no Mercado Pago. Após a confirmação do pagamento, o plano e os limites são atualizados automaticamente. Enquanto a integração estiver indisponível, nenhuma cobrança será iniciada. Para Enterprise, entre em contato.</p></section>
+   <section class="xrm-group xrm-plan-selection"><h3>Escolher / alterar plano</h3><div class="xrm-plan-compare-layout"><form id="xrm-bill-plan-form"><label>Plano desejado<select name="plan" required><option value="start">Start — R$ 19,90</option><option value="pro">Pro — R$ 39,90</option><option value="business">Business — R$ 64,90</option><option value="advanced">Advanced — R$ 99,90</option></select></label><button type="submit" id="xrm-plan-change-request">Solicitar mudança de plano</button><button type="button" class="secondary" id="xrm-bill-checkout">Pagar com Mercado Pago</button></form><aside class="xrm-plan-preview" aria-label="Capacidade do plano escolhido" aria-live="polite"><div class="preview-head"><strong id="xrm-plan-preview-title">Carregando plano…</strong><b id="xrm-plan-preview-price">—</b></div><div class="preview-grid" id="xrm-plan-preview-limits"></div><p class="preview-note">As empresas compartilham as cotas totais de veículos e contratos. Os limites não são multiplicados pelo número de empresas.</p></aside></div><div class="xrm-feedback" id="xrm-bill-plan-feedback" role="status"></div><p class="xrm-info">A assinatura só fica ativa após o Mercado Pago confirmar a cobrança recorrente. Solicitar uma alteração de plano não cobra automaticamente. Para Enterprise, entre em contato.</p></section>
   </div>
   <p class="xrm-billing-foot">Apenas o titular da assinatura pode gerenciar empresas, usuários e planos. Todas as alterações são validadas pelo servidor.</p>
  </div>`;
+ const planSelectForPreview=root.querySelector('#xrm-bill-plan-form select');
+ function showSelectedPlan(){
+  const chosen=availablePlans.find(p=>p.code===planSelectForPreview.value);
+  text('xrm-plan-preview-title',chosen?.title||'Plano selecionado');
+  text('xrm-plan-preview-price',chosen?.monthly_brl==null?'—':money(chosen.monthly_brl)+'/mês');
+  const host=root.querySelector('#xrm-plan-preview-limits');
+  host.replaceChildren();
+  for(const [label,limit] of [['Empresas',chosen?.company_limit],['Contratos',chosen?.contract_limit],['Veículos',chosen?.vehicle_limit],['Logins',chosen?.seat_limit]]){
+   const cell=document.createElement('div');cell.className='preview-item';
+   const big=document.createElement('strong');big.textContent=limit==null?'—':String(limit);
+   const small=document.createElement('span');small.textContent=label;
+   cell.append(big,small);host.append(cell);
+  }
+ }
+ planSelectForPreview.onchange=showSelectedPlan;
+ async function loadPlansForPreview(){
+  try{
+   const {data,error}=await client.rpc('xrmovi_list_plans');
+   if(error)throw error;
+   const opts=Array.isArray(data)?data.filter(p=>['start','pro','business','advanced'].includes(p.code)):[];
+   if(!opts.length)throw Error('Não há planos disponíveis.');
+   availablePlans=opts;
+   const selected=planSelectForPreview.value;
+   planSelectForPreview.replaceChildren();
+   for(const p of opts){
+    const option=document.createElement('option');option.value=p.code;option.textContent=p.title+' — '+money(p.monthly_brl);
+    planSelectForPreview.append(option);
+   }
+   if(opts.some(p=>p.code===selected))planSelectForPreview.value=selected;
+   showSelectedPlan();
+  }catch(error){
+   text('xrm-plan-preview-title','Confira a conexão para visualizar os limites');
+  }
+ }
+ void loadPlansForPreview();
  const feedback=(id,message,error=false)=>{const node=root.querySelector('#'+id);if(node){node.textContent=message;node.classList.toggle('xrm-error',error)}};
  const run=async(form,action,callback)=>{
   const button=form.querySelector('button[type="submit"]');button.disabled=true;
@@ -211,6 +260,11 @@ export function setupSubscriptionPanel({client,getCompany,onCompanyCreated,onDat
   const companyForm=root.querySelector('#xrm-bill-company-form');
   companyForm.querySelector('button').disabled=info.company_limit!=null&&info.companies_used>=info.company_limit;
   const planSelect=root.querySelector('#xrm-bill-plan-form select');planSelect.value=info.plan_code;
+  const requestPlan=root.querySelector('#xrm-plan-change-request');
+  const isPending=['pending','trial'].includes(info.status);
+  requestPlan.hidden=isPending;
+  requestPlan.style.display=isPending?'none':'';
+  showSelectedPlan();
   feedback('xrm-bill-feedback',['pending','trial'].includes(info.status)?'Cadastro concluído. Aguardando pagamento para liberar o sistema.':'Capacidade atualizada no banco de dados.');
  }
  async function refresh(){
