@@ -24,9 +24,9 @@
     '<div class="xrm-assistant-stage"><div class="xrm-assistant-orb" aria-hidden="true"><span class="xrm-assistant-core"></span></div><p class="xrm-assistant-state" aria-live="polite">Pronto para explicar sua frota.</p><p class="xrm-assistant-caption" aria-live="polite">Abra uma conversa para ouvir seu resumo.</p></div>',
     '<div class="xrm-assistant-shortcuts"><button type="button" data-intent="resumo">Resumo da tela</button><button type="button" data-intent="o que é operacional?">Operacional?</button><button type="button" data-intent="alertas">Alertas</button><button type="button" data-intent="combustível">Combustível</button><button type="button" data-intent="manutenção">Manutenção</button></div>',
     '<div class="xrm-assistant-learning"><button class="xrm-assistant-course-toggle" type="button" aria-expanded="false">📚 Curso do XRMOVI · '+(course?.topics?.length||0)+' aulas</button><span>Aprenda cada módulo, passo a passo</span></div>',
-    '<div class="xrm-assistant-course-list" hidden><label>Buscar uma aula<input class="xrm-assistant-course-search" type="search" placeholder="Ex.: cadastrar veículo, QR Code…" aria-label="Buscar aula do XRMOVI"></label><div class="xrm-assistant-course-results" role="list"></div></div>',
+    '<div class="xrm-assistant-content"><div class="xrm-assistant-course-list" hidden><label>Buscar uma aula<input class="xrm-assistant-course-search" type="search" placeholder="Ex.: cadastrar veículo, QR Code…" aria-label="Buscar aula do XRMOVI"></label><div class="xrm-assistant-course-results" role="list"></div></div>',
     '<div class="xrm-assistant-lesson" hidden><div class="xrm-assistant-lesson-top"><small class="xrm-assistant-lesson-counter"></small><strong class="xrm-assistant-lesson-title"></strong></div><p class="xrm-assistant-lesson-intro"></p><ol class="xrm-assistant-lesson-steps"></ol><p class="xrm-assistant-lesson-note"></p><div class="xrm-assistant-lesson-actions"><button type="button" class="xrm-assistant-lesson-open">Abrir esta tela</button><button type="button" class="xrm-assistant-lesson-hear">🔊 Ouvir aula</button><button type="button" class="xrm-assistant-lesson-prev">Anterior</button><button type="button" class="xrm-assistant-lesson-next">Próxima</button></div></div>',
-    '<div class="xrm-assistant-history" role="log" aria-label="Histórico da conversa" aria-live="polite"></div>',
+    '<details class="xrm-assistant-chat-details" open><summary>Conversa <span class="xrm-assistant-chat-count">0 mensagens</span></summary><div class="xrm-assistant-history" role="log" aria-label="Histórico da conversa" aria-live="polite"></div></details></div>',
     '<form class="xrm-assistant-form"><label class="xrm-assistant-input-wrap"><span class="sr-only">Sua pergunta sobre o painel</span><input type="text" maxlength="220" autocomplete="off" placeholder="Pergunte sobre esta tela…" aria-label="Pergunte sobre esta tela" required></label><button type="submit" aria-label="Enviar pergunta" title="Enviar pergunta">➤</button><button class="xrm-assistant-mic" type="button" aria-label="Fazer pergunta por voz" title="Perguntar por voz">🎙</button></form>',
     '<div class="xrm-assistant-foot"><button type="button" class="xrm-assistant-sound" aria-pressed="true">🔊 Voz ligada</button><span>Sem API de IA. Microfone sujeito ao serviço de voz do navegador.</span></div>',
     '</div>'
@@ -46,6 +46,8 @@
   const catalogSearch = query('.xrm-assistant-course-search');
   const courseToggle = query('.xrm-assistant-course-toggle');
   const lessonPanel = query('.xrm-assistant-lesson');
+  const chatDetails = query('.xrm-assistant-chat-details');
+  const chatCount = query('.xrm-assistant-chat-count');
 
   let voiceOn = true;
   function normalize(value) {
@@ -57,7 +59,7 @@
   }
   function say(text) {
     const compact = String(text).replace(/\s+/g,' ').trim();
-    caption.textContent = compact.length > 250 ? compact.slice(0,247)+'…' : compact;
+    caption.textContent = compact.length > 96 ? compact.slice(0,93)+'…' : compact;
     if (!voiceOn || !synthesis || !active || !context) return;
     synthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
@@ -78,6 +80,7 @@
     entry.textContent = text;
     history.append(entry);
     while (history.childElementCount > 12) history.firstElementChild.remove();
+    chatCount.textContent = history.childElementCount+' mensagens';
     history.scrollTop = history.scrollHeight;
   }
   function cost(field, label) {
@@ -96,6 +99,10 @@
     selectedLesson = topic;
     lastCourseId = topic.id;
     lessonPanel.hidden = false;
+    catalog.hidden = true;
+    courseToggle.setAttribute('aria-expanded','false');
+    chatDetails.open = false;
+    panel.classList.add('is-teaching');
     const index = course.topics.findIndex(t=>t.id===topic.id);
     query('.xrm-assistant-lesson-counter').textContent = topic.group+' · Aula '+(index+1)+' de '+course.topics.length;
     query('.xrm-assistant-lesson-title').textContent = topic.title;
@@ -127,7 +134,7 @@
       if(topic.group!==lastGroup){const heading=document.createElement('strong');heading.className='xrm-assistant-course-group';heading.textContent=topic.group;catalogResults.append(heading);lastGroup=topic.group;}
       const button=document.createElement('button');button.type='button';button.className='xrm-assistant-course-item';button.textContent=topic.title;
       button.addEventListener('click',()=>{
-        showLesson(topic);catalog.hidden=true;courseToggle.setAttribute('aria-expanded','false');
+        showLesson(topic);
         const text='Aula: '+topic.title+'. '+topic.intro+' '+topic.steps.map((x,i)=>(i+1)+'. '+x).join(' ');
         log('guide',course.answer(topic));say(text);
       });catalogResults.append(button);
@@ -157,7 +164,12 @@
   courseToggle.addEventListener('click',()=>{
     catalog.hidden=!catalog.hidden;
     courseToggle.setAttribute('aria-expanded',String(!catalog.hidden));
-    if(!catalog.hidden){showCatalog();catalogSearch.focus();}
+    if(!catalog.hidden){
+      lessonPanel.hidden=true;
+      panel.classList.remove('is-teaching');
+      chatDetails.open=false;
+      showCatalog();catalogSearch.focus();
+    } else if(selectedLesson){showLesson(selectedLesson);}
   });
   catalogSearch.addEventListener('input',showCatalog);
   function answer(question) {
@@ -268,6 +280,8 @@
     log('user', clean);
     const response = answer(clean);
     log('guide', response);
+    if(!lastTopic.startsWith('course:') && !catalog.hidden){catalog.hidden=true;courseToggle.setAttribute('aria-expanded','false');}
+    if(!lastTopic.startsWith('course:') && lessonPanel.hidden){chatDetails.open=true;panel.classList.remove('is-teaching');}
     say(response);
   }
   function stop() {
@@ -329,6 +343,9 @@
     active = false;
     launcher.setAttribute('aria-expanded','false');
     history.replaceChildren();
+    chatCount.textContent='0 mensagens';
+    chatDetails.open=true;
+    panel.classList.remove('is-teaching');
     lastTopic = '';
     lastCourseId='';
     selectedLesson=null;
@@ -342,7 +359,7 @@
   window.addEventListener('xrmovi:assistant-context', e => {
     const next = e.detail;
     if (!next || !next.companyName) return;
-    if (context && context.companyId !== next.companyId) { stop(); history.replaceChildren(); lastCourseId=''; selectedLesson=null; lessonPanel.hidden=true; catalog.hidden=true; }
+    if (context && context.companyId !== next.companyId) { stop(); history.replaceChildren(); chatCount.textContent='0 mensagens'; chatDetails.open=true; panel.classList.remove('is-teaching'); lastCourseId=''; selectedLesson=null; lessonPanel.hidden=true; catalog.hidden=true; }
     context = next;
     view = next.view || view;
     host.hidden = false;
