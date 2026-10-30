@@ -34,9 +34,11 @@ Deno.serve(async(req:Request)=>{
     return json({error:"Empresa inválida."},400,origin);
   const {data:record,error:lookupError}=await client.rpc("xrmovi_checkout_reconcile_lookup",{cid});
   if(lookupError)throw new Error(lookupError.message);
-  if(record?.status==="active"&&record?.intent_status==="paid")return json({status:"active",message:"Assinatura já ativa."},200,origin);
+  // Do not trust an active flag alone: recurring payments may have arrived without webhook.
+ const paidUntil=Date.parse(String(record?.paid_through||""));
+ const currentlyPaid=record?.status==="active"&&Number.isFinite(paidUntil)&&paidUntil>Date.now();
   if(!record?.intent_id||!record?.provider_subscription_id||!["created","pending","paid"].includes(record?.intent_status))
-    return json({status:"no_payment",message:"Não foi encontrada cobrança vinculada a essa empresa."},200,origin);
+    return json({status:currentlyPaid?"active":"no_payment",message:currentlyPaid?"Assinatura vigente até "+new Date(paidUntil).toLocaleDateString("pt-BR",{timeZone:"UTC"})+".":"Não foi encontrada cobrança vinculada a essa empresa."},200,origin);
   const mpGet=async(path:string)=>{
    const result=await fetch("https://api.mercadopago.com"+path,{headers:{Authorization:"Bearer "+mpToken,Accept:"application/json"},signal:AbortSignal.timeout(10000)});
    if(!result.ok)throw new Error("Falha ao consultar o Mercado Pago. HTTP "+result.status);
@@ -48,22 +50,43 @@ Deno.serve(async(req:Request)=>{
     ||String(subscription.external_reference)!==String(record.intent_id)
     ||Number(subscription.collector_id)!==10284642)
     throw new Error("Cobrança não corresponde à conta XRMOVI.");
-  if(subscription.status!=="authorized")
-    return json({status:"pending",provider_status:subscription.status,message:"Assinatura ainda não autorizada pelo pagador."},200,origin);
-  const found=await mpGet("/authorized_payments/search?preapproval_id="+encodeURIComponent(preapproval)+"&limit=10");
-  const invoices=Array.isArray(found?.results)?found.results:[];
+
   const backend=createClient(url,serviceKey,{auth:{persistSession:false}});
+  if(["paused","canceled"].includes(String(subscription.status))){
+   const {error}=await backend.rpc("xrmovi_checkout_provider_status",{preapproval_id:preapproval,new_status:String(subscription.status)});
+   if(error)throw new Error("Não foi possível atualizar o cancelamento da assinatura.");
+   return json({status:"inactive",provider_status:subscription.status,message:"Assinatura "+(subscription.status==="canceled"?"cancelada":"pausada")+" no Mercado Pago."},200,origin);
+  }
+  if(subscription.status!=="authorized")
+   return json({status:currentlyPaid?"active":"pending",provider_status:subscription.status,message:currentlyPaid?"A assinatura ainda tem período pago vigente.":"Assinatura ainda não autorizada pelo pagador."},200,origin);
+  if(String(subscription.auto_recurring?.currency_id||"BRL")!=="BRL"||
+     Math.abs(Number(subscription.auto_recurring?.transaction_amount)-Number(record.expected_amount))>0.009)
+   throw new Error("Valor ou moeda da assinatura não corresponde ao plano contratado.");
   const expected=Number(record.expected_amount);
+  if(!Number.isFinite(expected)||expected<=0)throw new Error("Valor contratual inválido.");
+  // Scan bounded pages, so a missed webhook on a renewal is not hidden behind older invoices.
+  const invoices:any[]=[];
+  for(let offset=0;offset<500;offset+=50){
+   const result=await mpGet("/authorized_payments/search?preapproval_id="+encodeURIComponent(preapproval)+"&limit=50&offset="+offset);
+   if(!Array.isArray(result?.results))throw new Error("Mercado Pago não retornou uma lista válida de faturas.");
+   invoices.push(...result.results);
+   const total=Number(result.paging?.total);
+   if(result.results.length<50||Number.isFinite(total)&&offset+result.results.length>=total)break;
+   if(offset===450)throw new Error("Histórico de faturas excede o limite de conferência; contate o suporte.");
+  }
+  invoices.sort((a,b)=>Date.parse(String(a?.debit_date||a?.date_created||""))-Date.parse(String(b?.debit_date||b?.date_created||"")));
+  let reconciled=0;
   for(const item of invoices){
-   if(!/^\d+$/.test(String(item?.id||""))||!item?.payment?.id||item.payment.status!=="approved")continue;
+   if(!/^\\d+$/.test(String(item?.id||""))||!/^\\d+$/.test(String(item?.payment?.id||""))||item.payment.status!=="approved")continue;
    const invoice=await mpGet("/authorized_payments/"+encodeURIComponent(String(item.id)));
-   if(String(invoice.preapproval_id)!==preapproval
+   if(String(invoice.id)!==String(item.id)||String(invoice.preapproval_id)!==preapproval
      ||String(invoice.payment?.id)!==String(item.payment.id)
      ||invoice.payment?.status!=="approved"||invoice.currency_id!=="BRL"
      ||Math.abs(Number(invoice.transaction_amount)-expected)>0.009)continue;
    const payment=await mpGet("/v1/payments/"+encodeURIComponent(String(invoice.payment.id)));
-   if(payment.status!=="approved"||payment.currency_id!=="BRL"||payment.live_mode===false
-    ||Math.abs(Number(payment.transaction_amount)-expected)>0.009)continue;
+   if(String(payment.id)!==String(invoice.payment.id)||payment.status!=="approved"
+     ||payment.currency_id!=="BRL"||payment.live_mode===false
+     ||Math.abs(Number(payment.transaction_amount)-expected)>0.009)continue;
    const at=String(payment.date_approved||invoice.debit_date||"");
    if(!Number.isFinite(Date.parse(at)))continue;
    const {data:settled,error:err}=await backend.rpc("xrmovi_checkout_settle",{
@@ -71,8 +94,13 @@ Deno.serve(async(req:Request)=>{
     payment_id:String(invoice.payment.id),paid_amount:expected,payment_date:at
    });
    if(err)throw new Error("Pagamento confirmado, mas ativação pendente: "+err.message);
-   return json({status:"active",message:"Pagamento confirmado e assinatura liberada.",settlement:settled?.status||"paid"},200,origin);
+   if(settled?.status==="paid")reconciled++;
   }
-  return json({status:"pending",message:"Não foi localizada fatura aprovada para esta assinatura. Se acabou de pagar, atualize depois de alguns instantes."},200,origin);
+  const {data:updated,error:updatedError}=await client.rpc("xrmovi_checkout_reconcile_lookup",{cid});
+  if(updatedError)throw new Error("Não foi possível conferir o vencimento atualizado.");
+  const newUntil=Date.parse(String(updated?.paid_through||""));
+  const paidNow=updated?.status==="active"&&Number.isFinite(newUntil)&&newUntil>Date.now();
+  if(paidNow)return json({status:"active",message:reconciled?"Pagamento confirmado e vencimento atualizado.":"Assinatura ativa, com vencimento conferido.",paid_through:updated.paid_through,renewals_confirmed:reconciled},200,origin);
+  return json({status:"pending",message:"Nenhuma nova fatura aprovada foi localizada. O acesso só será renovado após a confirmação do pagamento.",paid_through:updated?.paid_through||null},200,origin);
  }catch(error){return json({error:error instanceof Error?error.message:"Falha na verificação de pagamento"},502,origin);}
 });
