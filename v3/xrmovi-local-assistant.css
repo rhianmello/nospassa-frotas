@@ -64,3 +64,8 @@
 .xrm-assistant-panel{max-height:min(690px,calc(100dvh - 115px))}
 .xrm-assistant-history{flex-shrink:1;min-height:42px;max-height:105px}
 @media(max-height:650px){.xrm-assistant-orb{height:65px;width:65px}.xrm-assistant-stage{padding:6px}.xrm-assistant-lesson{max-height:170px}}
+
+/* Keep every lesson and form usable on small notebook and mobile viewports. */
+.xrm-local-assistant .xrm-assistant-panel{overflow-y:auto;overscroll-behavior:contain}
+.xrm-local-assistant .xrm-assistant-form{flex-shrink:0;background:#071d2b}
+.xrm-local-assistant .xrm-assistant-foot{flex-shrink:0}
