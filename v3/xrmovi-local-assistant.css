@@ -36,3 +36,31 @@
 @keyframes xrm-orb-breathe{0%,100%{transform:scale(.90)}50%{transform:scale(1.13)}}@keyframes xrm-speaking{from{transform:scale(.91)}to{transform:scale(1.08)}}@keyframes xrm-orb-spin{from{transform:rotate(-20deg) scaleY(.59)}to{transform:rotate(340deg) scaleY(.59)}}
 @media(max-width:650px){.xrm-local-assistant{right:11px;bottom:11px}.xrm-assistant-panel{bottom:77px}.xrm-assistant-launch{width:59px;height:59px}}
 @media(prefers-reduced-motion:reduce){.xrm-assistant-launch,.xrm-assistant-orb,.xrm-assistant-core,.xrm-assistant-launch::before,.xrm-assistant-orb::before{animation:none!important;transition:none!important}}
+
+/* XRMOVI voice course: browsable step-by-step instruction with accessible controls */
+.xrm-local-assistant [hidden]{display:none!important}
+.xrm-assistant-learning{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;border-block:1px solid #21475a;background:#0b2939}
+.xrm-assistant-learning span{color:#92c2cf;font-size:10px;text-align:right}
+.xrm-assistant-course-toggle{border:1px solid #35999c;background:linear-gradient(120deg,#185862,#164d63);color:#d5fff6;border-radius:10px;font-weight:700;font-size:11px;padding:7px 10px;cursor:pointer;white-space:nowrap}
+.xrm-assistant-course-list{margin:0 12px 8px;border:1px solid #306778;border-radius:12px;background:#0a2636;padding:9px;max-height:230px;overflow-y:auto}
+.xrm-assistant-course-list label{display:block;color:#c6e9f2;font-size:10px;font-weight:700}
+.xrm-assistant-course-search{display:block;width:100%;border:1px solid #326879;border-radius:8px;background:#071c2a;color:#eaffff;margin-top:5px;padding:8px}
+.xrm-assistant-course-results{display:flex;flex-direction:column;gap:4px;margin-top:7px}
+.xrm-assistant-course-group{color:#69e4d0;font-size:11px;padding:6px 3px 2px;border-bottom:1px solid #244a61}
+.xrm-assistant-course-item{padding:6px 8px;text-align:left;background:#12384d;color:#ddf6fc;border:1px solid transparent;border-radius:8px;font-size:11px;cursor:pointer}
+.xrm-assistant-course-item:hover,.xrm-assistant-course-item:focus-visible{background:#1a5365;border-color:#46bec6}
+.xrm-assistant-lesson{margin:0 12px 9px;border:1px solid #3b8185;border-radius:12px;padding:10px 12px;background:#0c2b39;max-height:min(215px,28vh);overflow-y:auto}
+.xrm-assistant-lesson-top{display:flex;flex-direction:column;gap:3px}
+.xrm-assistant-lesson-counter{font-size:10px;font-weight:700;color:#6de7da}
+.xrm-assistant-lesson-title{font-size:13px;color:#e7ffff}
+.xrm-assistant-lesson-intro{font-size:11px;margin:7px 0;color:#c9e5ea;line-height:1.5}
+.xrm-assistant-lesson-steps{padding-left:20px;margin:6px 0;display:grid;gap:6px;font-size:11px;color:#ecf9fc}
+.xrm-assistant-lesson-steps li{padding-left:3px}
+.xrm-assistant-lesson-steps li::marker{color:#68dcd1;font-weight:700}
+.xrm-assistant-lesson-note{font-size:10px;color:#aad2d7;border-top:1px solid #315f6f;padding-top:7px;margin:6px 0}
+.xrm-assistant-lesson-actions{display:flex;gap:5px;flex-wrap:wrap}
+.xrm-assistant-lesson-actions button{background:#174e59;color:#e0fafa;border:1px solid #347d88;border-radius:8px;padding:7px;font-size:10px;cursor:pointer}
+.xrm-assistant-lesson-actions button:disabled{opacity:.35;cursor:not-allowed}
+.xrm-assistant-panel{max-height:min(690px,calc(100dvh - 115px))}
+.xrm-assistant-history{flex-shrink:1;min-height:42px;max-height:105px}
+@media(max-height:650px){.xrm-assistant-orb{height:65px;width:65px}.xrm-assistant-stage{padding:6px}.xrm-assistant-lesson{max-height:170px}}
