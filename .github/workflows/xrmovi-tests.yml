@@ -26,4 +26,4 @@ jobs:
       - name: Validate adapter JavaScript syntax
         run: node --check v3/xrmovi-adapter.js
       - name: Run isolated no-charge subscription tests
-        run: node --test supabase/tests/checkout_recovery.test.cjs supabase/tests/xrmovi_renewal.test.cjs
+        run: node --test supabase/tests/checkout_recovery.test.cjs supabase/tests/xrmovi_renewal.test.cjs supabase/tests/xrmovi_support_email.test.cjs
