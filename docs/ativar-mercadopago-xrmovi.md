@@ -31,6 +31,18 @@ Acesse o painel https://supabase.com/dashboard/project/ztqtcbzjesrkuaijmylm/sett
 Não coloque chaves no GitHub, em páginas públicas, no JavaScript do site ou em mensagens.
 SUPABASE_URL, SUPABASE_ANON_KEY e SUPABASE_SERVICE_ROLE_KEY devem existir no ambiente privado de Edge Functions.
 
+## Primeiro pagamento controlado (somente Código Kid)
+
+1. Para habilitar apenas o piloto, cadastre em **Supabase Edge Functions > Secrets**: nome `XRMOVI_BILLING_ENABLED`, valor `true`.
+2. **Não** cadastre `XRMOVI_BILLING_PILOT_ONLY=false`: o padrão seguro do backend é restringir o pagamento a usuários autorizados. O único usuário autorizado inicialmente é `codigokidniteroii@gmail.com`.
+3. Em uma janela anônima, entre no XRMOVI com a conta Código Kid; a conta antiga de empresa/assinatura foi limpa, mas o login Auth foi preservado.
+4. Crie empresa e contrato, abra **Minha assinatura**, selecione **Start (R$ 19,90/mês)**, e confira o valor antes do checkout.
+5. **Pagamento real:** será cobrado e renovará mensalmente até cancelamento. Utilize um comprador diferente da conta recebedora Mercado Pago.
+6. Concluído o pagamento, volte ao painel. Se continuar em avaliação, clique em **Verificar pagamento** em Minha assinatura. Esse botão consulta o provedor e não cria outra cobrança.
+7. Se a primeira compra foi cobrada mas o plano ainda não está ativo, **não pague novamente**. Confira o painel de notificações, logs `xrmovi-billing-webhook` e o novo endpoint `xrmovi-reconcile-subscription`.
+8. Para desligar novas cobranças, altere o secret `XRMOVI_BILLING_ENABLED` para `false`. Isso não cancela assinaturas recorrentes já contratadas: o cancelamento é gerenciado no Mercado Pago.
+9. Somente após a validação da compra, webhook, renovação e cancelamento, abra o serviço geral, definindo `XRMOVI_BILLING_PILOT_ONLY=false`. Não faça essa mudança durante o piloto.
+
 ## 3. Checklist de homologação
 
 1. Validar com credenciais e usuários de teste do Mercado Pago num ambiente separado. Testes não podem liberar acesso real.
