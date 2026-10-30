@@ -912,6 +912,21 @@ const xrmAssistantBridge=Object.freeze({
     maintenanceCosts:subset(data?.maintenance).map(r=>({vehicleId:r.vehicle_id,amount:r.actual_cost??null,date:r.completed_at||r.date||null})),
     paidExpenses:subset(data?.expenses).map(r=>({vehicleId:r.vehicle_id,amount:r.amount??null,date:r.paid_on||r.date||null}))};
  },
+ async mileageHistory({vehicleId}={}){
+  if(!company||paymentRequired)throw Error('Acesso indisponível.');
+  if(!vehicles.some(v=>v.id===vehicleId&&(!filteredVehicleIds||filteredVehicleIds.has(v.id))))
+    throw Error('Veículo fora da empresa ou dos filtros autorizados.');
+  const cid=company.id;
+  const records=await rpc('mileage_readings',{cid,vid:vehicleId});
+  if(company?.id!==cid||paymentRequired)throw Error('Empresa alterada. Repita a consulta.');
+  return (Array.isArray(records)?records:[]).slice(0,15).map(r=>({
+   submittedAt:r.submitted_at||null,status:r.status||'',source:r.source||'',
+   meter:r.meter??null,appliedMeter:r.applied_meter??null,
+   submitter:r.submitter_email||r.driver_name||null,
+   reviewer:r.reviewer_email||null,reviewedAt:r.reviewed_at||null,
+   reason:r.review_note||r.reason||null
+  }));
+ },
  navigate({view:target,filter,value}={}){
   if(!company||paymentRequired)return {ok:false,message:'Acesso operacional indisponível para esta conta.'};
   if(!viewLabels[target])return {ok:false,message:'Esta tela não existe no painel.'};
