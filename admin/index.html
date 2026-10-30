@@ -25,9 +25,9 @@ footer{padding:20px;text-align:center;color:#849eae;font-size:11px}
   <div class="head"><div><div class="eyebrow">BI COMERCIAL · CLIENTES E FATURAMENTO</div><h1>Central do proprietário</h1><p>Controle a entrada de clientes, status de acesso, mensagens e movimentações financeiras.</p></div><div class="account-identity" id="user-label"></div></div>
   <div class="kpis">
    <div class="kpi"><span>Contas cadastradas</span><b id="k-accounts">—</b><small>Todos os titulares</small></div>
-   <div class="kpi"><span>Em avaliação</span><b id="k-trial">—</b><small>Período de teste vigente</small></div>
+   <div class="kpi"><span>Aguardando pagamento</span><b id="k-trial">—</b><small>Contas sem assinatura ativa</small></div>
    <div class="kpi"><span>Assinaturas ativas</span><b id="k-active">—</b><small>Situação registrada</small></div>
-   <div class="kpi warning"><span>Testes vencidos</span><b id="k-expired">—</b><small>Avaliações expiradas</small></div>
+   <div class="kpi warning"><span>Canceladas ou vencidas</span><b id="k-expired">—</b><small>Assinatura inativa</small></div>
    <div class="kpi blocked"><span>Bloqueados</span><b id="k-blocked">—</b><small>Acesso à frota suspenso</small></div>
    <div class="kpi money"><span>Recebimentos confirmados</span><b id="k-paid">—</b><small>Histórico do banco</small></div>
   </div>
@@ -65,7 +65,7 @@ function rowCustomer(c,full=false){
  const tr=node('tr');const first=node('td');const bold=node('b',c.email),companies=node('span',(c.companies||[]).map(x=>x.name).join(' · ')||'Sem empresa','sub');first.append(bold,companies);tr.append(first);
  cell(tr,(c.plan||'—').toUpperCase()+(c.price?' · '+money(c.price):''));
  const expired=c.status==='trial'&&c.trial_end&&Date.parse(c.trial_end)<Date.now();
- pill(tr,expired?'Teste vencido':c.status||'—',expired?'blocked':c.status==='active'?'active':'trial');
+ pill(tr,expired?'Teste vencido':c.status==='pending'?'Aguardando pagamento':c.status||'—',expired?'blocked':c.status==='active'?'active':'pending');
  if(full){cell(tr,number(c.vehicles));pill(tr,c.blocked?'Bloqueado':'Liberado',c.blocked?'blocked':'active')}
  cell(tr,date(c.created_at));
  if(full){const td=node('td');const actions=node('div','','actions');
@@ -85,7 +85,7 @@ function render(){
  for(const month of months){const value=monthly.get(month)||0;const col=node('div','','chart-col'),space=node('div','','chart-space'),bar=node('div','','chart-bar');bar.style.height=Math.max(2,value/max*100)+'%';bar.title=month+': '+money(value);space.append(bar);col.append(space,node('span',month.slice(5),'chart-label'),node('span',value?money(value):'—','chart-value'));chart.append(col)}
  el('revenue-total').textContent='Total: '+money(s.paid_total);
  const portfolio=el('portfolio-breakdown');portfolio.replaceChildren();
- for(const [label,value,tone] of [['Contas em avaliação',s.trial,'trial'],['Assinaturas ativas',s.active,'active'],['Testes vencidos',s.expired,'blocked'],['Contas bloqueadas',s.blocked,'blocked'],['Mensagens não lidas',s.unread,'pending'],['Mensalidades de referência',money(s.mrr),'active']]){
+ for(const [label,value,tone] of [['Aguardando pagamento',s.trial,'pending'],['Assinaturas ativas',s.active,'active'],['Assinaturas vencidas/canceladas',s.expired,'blocked'],['Contas bloqueadas',s.blocked,'blocked'],['Mensagens não lidas',s.unread,'pending'],['Mensalidades de referência',money(s.mrr),'active']]){
   const line=node('div');line.style.cssText='display:flex;justify-content:space-between;align-items:center;gap:12px';line.append(node('span',label),node('span',value,'pill '+tone));portfolio.append(line)
  }
  const recent=el('recent-customers');recent.replaceChildren();(info.accounts||[]).slice(0,7).forEach(c=>recent.append(rowCustomer(c)));if(!recent.children.length)emptyRows(recent,4,'Ainda não há clientes.');
