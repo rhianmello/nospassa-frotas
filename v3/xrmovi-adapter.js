@@ -1,5 +1,6 @@
 import{createClient}from 'https://esm.sh/@supabase/supabase-js@2';
 import { setupSubscriptionPanel } from './subscription-panel.js?v=20261030-paywall-6';
+import { showXrmoviOnboarding } from './onboarding.js?v=20261030-signup-1';
 import { createCompanyBranding } from './company-branding.js?v=20261029-logo-1';
 import { setupMileage } from './mileage.js?v=20261029-km-audit-34';
 let branding;
@@ -92,6 +93,13 @@ async function checkSubscriptionAccess(){
  }
  await load();
 }
+async function xrmLogout(){
+ if(!sb){window.location.replace(new URL('../?login=1',location.href));return;}
+ const {error}=await sb.auth.signOut();
+ if(error){msg('Não foi possível encerrar a sessão: '+error.message);return;}
+ window.location.replace(new URL('../?login=1',location.href));
+}
+for(const id of ['xrm-fleet-logout','xrm-fleet-logout-mobile'])el(id)?.addEventListener('click',()=>void xrmLogout());
 async function init(){
  try{
   if(!sb)throw Error('Serviço de autenticação ainda não inicializado.');
@@ -237,7 +245,13 @@ function renderWriteUI(){for(const [id,label,kind]of [['assets-actions','+ Novo 
 function updateMaintenanceCost(task){openWrite('maintenance-cost',task)}
 function completeMaintenance(task){openWrite('maintenance-complete',task)}
 
-function showCompanyOnboarding(){login.hidden=false;const box=login.querySelector('#v3login');box.replaceChildren();const heading=document.createElement('h2');heading.textContent='Configurar sua primeira empresa';const intro=document.createElement('p');intro.textContent='Sua conta está conectada. Cadastre sua empresa para escolher o plano. A frota será liberada após o pagamento aprovado.';const label=document.createElement('label');label.textContent='Nome da empresa';const input=document.createElement('input');input.name='company';input.required=true;input.minLength=3;input.maxLength=120;input.placeholder='Ex.: Minha Transportadora';input.style.padding='12px';label.append(input);const save=document.createElement('button');save.type='submit';save.textContent='Continuar para escolher o plano';save.style.cssText='padding:12px;background:#30d3b6;border:0;border-radius:8px;font-weight:700';const note=document.createElement('small');note.id='v3message';note.setAttribute('role','status');box.append(heading,intro,label,save,note);box.onsubmit=async e=>{e.preventDefault();save.disabled=true;note.textContent='Criando empresa...';try{await rpc('create_company',{company_name:input.value.trim()});await init()}catch(err){note.textContent='Não foi possível criar a empresa: '+err.message}finally{save.disabled=false}}}
+function showCompanyOnboarding(){
+ void showXrmoviOnboarding({
+  login,client:sb,
+  onCreated:async()=>{await init();},
+  onLogout:async()=>{const {error}=await sb.auth.signOut();if(error){msg(error.message);return;}window.location.replace(new URL('../?login=1',location.href))}
+ }).catch(showLoadFailure);
+}
 
 function renderOverviewCharts(){
  const expiryCanvas=el('expiry-chart'),expiryEmpty=el('expiry-empty'),statusCanvas=el('situation-chart'),statusEmpty=el('situation-empty'),legend=el('situation-legend'),center=el('situation-center');
