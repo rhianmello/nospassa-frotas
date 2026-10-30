@@ -359,3 +359,17 @@
 .xrm-local-assistant .xrm-assistant-local-controls{padding:4px 10px 10px;display:flex;align-items:flex-start;gap:7px;flex-wrap:wrap}
 .xrm-local-assistant .xrm-assistant-local-toggle{border:1px solid #59bfc0;background:#134e5f;color:#e0ffff;border-radius:7px;padding:6px 9px;cursor:pointer;font-size:10px}
 .xrm-local-assistant .xrm-assistant-local-status{display:block;flex:1 1 150px;font-size:9px;line-height:1.4;color:#a5cbd1}
+
+/* Matrix theme: subtle decorative code rain, without covering learning content */
+.xrm-local-assistant[data-theme="matrix"] .xrm-assistant-stage{position:relative;overflow:hidden}
+.xrm-local-assistant[data-theme="matrix"] .xrm-assistant-stage::before{
+ content:"010101 110101 001011 101001 010110 101110 011001 010101 110011 001010 011101 101001";
+ position:absolute;top:-13px;left:6px;right:6px;
+ color:#2efa74;opacity:.17;z-index:0;
+ font-family:monospace;font-size:9px;line-height:12px;
+ letter-spacing:3px;overflow:hidden;white-space:normal;
+ pointer-events:none;animation:xrm-matrix-fall 10s linear infinite
+}
+.xrm-local-assistant[data-theme="matrix"] .xrm-assistant-stage>*{position:relative;z-index:1}
+@keyframes xrm-matrix-fall{0%{transform:translateY(-15px)}100%{transform:translateY(28px)}}
+@media(prefers-reduced-motion:reduce){.xrm-local-assistant[data-theme="matrix"] .xrm-assistant-stage::before{animation:none}}
