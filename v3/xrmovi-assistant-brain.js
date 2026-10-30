@@ -154,7 +154,14 @@ async function handle(question,{course}={}){
  }
  if(vehicle&&/(qual (e|a) (situacao|status)|esse carro.*(operacion|inativo|manutencao)|esse veiculo.*(operacion|status))/.test(q))
   return respond(question,'A situação cadastrada do veículo '+vehicle.plate+' é '+(vehicle.status||'não informada')+'. Uma revisão vencida é um alerta separado.','fleet',{topic:'assets',vehicleId:vehicle.id});
- if(/quantos? (veiculos|carros|ativos|caminhoes)|qual a quantidade de veiculos|tamanho da frota/.test(q))
+ if(/quantos? (caminhoes|caminhao|vans|van|motos|moto|inativos|ativos)/.test(q)){
+  const selected=q.includes('caminhao')?data.vehicles.filter(v=>norm(v.category)==='caminhao'):
+    q.includes('van')?data.vehicles.filter(v=>norm(v.category)==='van'):
+    q.includes('moto')?data.vehicles.filter(v=>norm(v.category)==='moto'):
+    q.includes('inativ')?data.vehicles.filter(v=>v.status==='Inativo'):data.vehicles.filter(v=>v.status==='Ativo');
+  return respond(question,'São '+count(selected.length)+' veículo(s) nessa categoria/situação, entre os veículos dos filtros atuais.','fleet',{topic:'assets'});
+ }
+ if(/quantos? (veiculos|carros)|qual a quantidade de veiculos|tamanho da frota/.test(q))
   return respond(question,'Há '+count(data.vehicles.length)+' veículos na '+scope(data)+'. '+count(data.vehicles.filter(v=>v.status==='Ativo').length)+' estão ativos (operacionais).','fleet',{topic:'assets'});
  if(/quais? (veiculos |carros )?(estao )?(inativos|em manutencao|ativos)|liste (os )?(inativos|ativos)/.test(q)){
   const status=q.includes('inativ')?'Inativo':q.includes('manutencao')?'Manutenção':'Ativo',items=data.vehicles.filter(v=>v.status===status);
