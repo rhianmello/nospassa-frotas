@@ -51,7 +51,8 @@
    return await promise;
   }catch(error){
    if(worker){worker.terminate();worker=null}
-   set('error','IA local indisponível: '+String(error?.message||'Erro de inicialização'));
+   if(status!=='off')set('error','IA local indisponível: '+String(error?.message||'Erro de inicialização'));
+   // An intentional cancellation remains Off rather than showing a false failure.
    return false;
   }
  }
