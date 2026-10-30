@@ -66,13 +66,15 @@ Deno.serve(async(req:Request)=>{
   if(!Number.isFinite(expected)||expected<=0)throw new Error("Valor contratual inválido.");
   // Scan bounded pages, so a missed webhook on a renewal is not hidden behind older invoices.
   const invoices:any[]=[];
-  for(let offset=0;offset<500;offset+=50){
+  let offset=0;
+  for(let page=0;page<20;page++){
    const result=await mpGet("/authorized_payments/search?preapproval_id="+encodeURIComponent(preapproval)+"&limit=50&offset="+offset);
    if(!Array.isArray(result?.results))throw new Error("Mercado Pago não retornou uma lista válida de faturas.");
    invoices.push(...result.results);
+   offset+=result.results.length;
    const total=Number(result.paging?.total);
-   if(result.results.length<50||Number.isFinite(total)&&offset+result.results.length>=total)break;
-   if(offset===450)throw new Error("Histórico de faturas excede o limite de conferência; contate o suporte.");
+   if(!result.results.length||(Number.isFinite(total)&&offset>=total))break;
+   if(page===19)throw new Error("Histórico de faturas excede o limite de conferência; contate o suporte.");
   }
   invoices.sort((a,b)=>Date.parse(String(a?.debit_date||a?.date_created||""))-Date.parse(String(b?.debit_date||b?.date_created||"")));
   let reconciled=0;
