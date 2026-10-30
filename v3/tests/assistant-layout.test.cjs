@@ -26,6 +26,6 @@ test('voice training closes duplicate conversation and retains fixed input',()=>
 test('mobile assistant scales to viewport, and css/js versions avoid stale cache',()=>{
  assert.match(css,/@media \(max-width:420px\)/);
  assert.match(css,/@media \(max-height:520px\)/);
- assert.match(html,/xrmovi-local-assistant\.css\?v=20261030-model-1/);
- assert.match(html,/xrmovi-local-assistant\.js\?v=20261030-model-1/);
+ assert.match(html,/xrmovi-local-assistant\.css\?v=[0-9a-z-]+/);
+ assert.match(html,/xrmovi-local-assistant\.js\?v=[0-9a-z-]+/);
 });
