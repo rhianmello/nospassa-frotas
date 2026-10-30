@@ -26,6 +26,12 @@ Deno.serve(async(req:Request)=>{
   const authClient=createClient(supabaseUrl,anonKey,{global:{headers:{Authorization:bearer}}});
   const {data:auth,error:authError}=await authClient.auth.getUser(bearer.slice(7));
   if(authError||!auth.user)return json({error:"Sessão inválida."},401,outputOrigin);
+  // Pilot gate enforced server-side independently of the browser and visible pricing.
+  // Default to restricted until owner explicitly sets XRMOVI_BILLING_PILOT_ONLY=false.
+  if(Deno.env.get("XRMOVI_BILLING_PILOT_ONLY")!=="false"){
+   const {data:pilotAllowed,error:pilotError}=await authClient.rpc("xrmovi_billing_pilot_allowed");
+   if(pilotError||pilotAllowed!==true)return json({error:"Pagamento disponível somente para a conta de homologação autorizada."},403,outputOrigin);
+  }
   const payload=await req.json();
   const cid=String(payload?.company_id||""),chosen=String(payload?.plan||"");
   if(!/^[0-9a-f-]{36}$/i.test(cid)||!["start","pro","business","advanced"].includes(chosen))
