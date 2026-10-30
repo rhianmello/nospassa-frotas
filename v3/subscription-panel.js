@@ -119,7 +119,7 @@ export function setupSubscriptionPanel({client,getCompany,onCompanyCreated,onDat
    const {data,error}=await client.functions.invoke('xrmovi-billing-readiness',{method:'GET'});
    if(error)throw error;
    checkoutState(data?.enabled===true,
-    data?.enabled===true?'Pagamento recorrente disponível. Seu plano só será liberado após confirmação efetiva do Mercado Pago.':'Pagamento em configuração: o checkout será habilitado após a ativação segura do provedor.');
+    data?.enabled===true?(data.mode==='pilot'?'Homologação autorizada: pagamento real e recorrente. Confirme o valor antes de pagar; seu plano só será liberado após aprovação no Mercado Pago.':'Pagamento recorrente disponível. Seu plano só será liberado após confirmação efetiva do Mercado Pago.'):'Pagamento em configuração: o checkout será habilitado após a ativação segura do provedor.');
   }catch(err){
    checkoutState(false,'Serviço de cobrança indisponível neste momento. Tente atualizar a página.');
   }
