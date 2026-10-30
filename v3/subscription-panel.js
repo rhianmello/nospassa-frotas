@@ -125,6 +125,29 @@ export function setupSubscriptionPanel({client,getCompany,onCompanyCreated,onDat
   }
  }
  void checkBillingReadiness();
+ const verifyPaymentButton=document.createElement('button');
+ verifyPaymentButton.type='button';
+ verifyPaymentButton.className='secondary';
+ verifyPaymentButton.textContent='Verificar pagamento';
+ verifyPaymentButton.title='Consultar uma cobrança já realizada no Mercado Pago, sem criar outra cobrança.';
+ checkoutButton.insertAdjacentElement('afterend',verifyPaymentButton);
+ verifyPaymentButton.addEventListener('click',async()=>{
+  const base=getCompany();if(!base){feedback('xrm-bill-plan-feedback','Selecione sua empresa.',true);return}
+  verifyPaymentButton.disabled=true;
+  feedback('xrm-bill-plan-feedback','Consultando o Mercado Pago. Isso não cria outra cobrança.');
+  try{
+   const {data,error}=await client.functions.invoke('xrmovi-reconcile-subscription',{body:{company_id:base.id}});
+   if(error){
+    let message=error.message||'Falha na verificação.';
+    try{const extra=await error.context?.json?.();if(extra?.error)message=String(extra.error)}catch{}
+    throw new Error(message);
+   }
+   const success=data?.status==='active';
+   feedback('xrm-bill-plan-feedback',data?.message||(success?'Assinatura ativa.':'Pagamento ainda não confirmado.'),false);
+   if(success){await refresh();await onDataChanged?.();}
+  }catch(error){feedback('xrm-bill-plan-feedback',error.message||'Falha ao verificar pagamento.',true)}
+  finally{verifyPaymentButton.disabled=false;}
+ });
  checkoutButton.addEventListener('click',async()=>{
   if(!billingReady)return;
   const base=getCompany();if(!base)return;
