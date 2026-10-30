@@ -29,7 +29,8 @@
     '<div class="xrm-assistant-lesson" hidden><div class="xrm-assistant-lesson-top"><small class="xrm-assistant-lesson-counter"></small><strong class="xrm-assistant-lesson-title"></strong></div><p class="xrm-assistant-lesson-intro"></p><ol class="xrm-assistant-lesson-steps"></ol><p class="xrm-assistant-lesson-note"></p><div class="xrm-assistant-lesson-actions"><button type="button" class="xrm-assistant-lesson-open">Abrir esta tela</button><button type="button" class="xrm-assistant-lesson-hear">🔊 Ouvir aula</button><button type="button" class="xrm-assistant-lesson-prev">Anterior</button><button type="button" class="xrm-assistant-lesson-next">Próxima</button></div></div>',
     '<details class="xrm-assistant-chat-details" open><summary>Conversa <span class="xrm-assistant-chat-count">0 mensagens</span></summary><div class="xrm-assistant-history" role="log" aria-label="Histórico da conversa" aria-live="polite"></div></details></div>',
     '<form class="xrm-assistant-form"><label class="xrm-assistant-input-wrap"><span class="sr-only">Sua pergunta sobre o painel</span><input type="text" maxlength="220" autocomplete="off" placeholder="Pergunte sobre esta tela…" aria-label="Pergunte sobre esta tela" required></label><button type="submit" aria-label="Enviar pergunta" title="Enviar pergunta">➤</button><button class="xrm-assistant-mic" type="button" aria-label="Fazer pergunta por voz" title="Perguntar por voz">🎙</button></form>',
-    '<div class="xrm-assistant-foot"><button type="button" class="xrm-assistant-sound" aria-pressed="true">🔊 Voz ligada</button><span>Sem API de IA. Microfone sujeito ao serviço de voz do navegador.</span></div>',
+    '<details class="xrm-assistant-settings"><summary>⚙ Voz e tema</summary><div class="xrm-assistant-setting-row"><label>Velocidade<select class="xrm-assistant-rate"><option value="1">1x</option><option value="1.5">1,5x</option><option value="2" selected>2x</option><option value="2.5">2,5x</option></select></label><label>Visual<select class="xrm-assistant-theme"><option value="neural">Neural Blue</option><option value="matrix">Matrix</option><option value="purple">Cyber Purple</option><option value="minimal">Minimal</option><option value="hologram">Holographic</option></select></label></div></details>',
+    '<div class="xrm-assistant-foot"><button type="button" class="xrm-assistant-stop" title="Interromper fala" aria-label="Interromper resposta">■ Parar</button><button type="button" class="xrm-assistant-sound" aria-pressed="true">🔊 Voz ligada</button><span>Sem API de IA. Microfone sujeito ao serviço de voz do navegador.</span></div>',
     '</div>'
   ].join('');
   document.body.append(host);
@@ -51,6 +52,15 @@
   const chatCount = query('.xrm-assistant-chat-count');
 
   let voiceOn = true;
+  let voiceRate = 2;
+  const rateInput = query('.xrm-assistant-rate');
+  const themeInput = query('.xrm-assistant-theme');
+  const stopButton = query('.xrm-assistant-stop');
+  try {const saved = localStorage.getItem('xrmovi-voice-theme'); if(['neural','matrix','purple','minimal','hologram'].includes(saved))themeInput.value=saved;}catch{}
+  host.dataset.theme=themeInput.value;
+  rateInput.addEventListener('change',()=>{voiceRate=Number(rateInput.value)||2;});
+  themeInput.addEventListener('change',()=>{host.dataset.theme=themeInput.value;try{localStorage.setItem('xrmovi-voice-theme',themeInput.value);}catch{}});
+  stopButton.addEventListener('click',()=>{if(synthesis)synthesis.cancel();host.classList.remove('speaking');state.textContent='Fala interrompida.';});
   function normalize(value) {
     return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR').trim();
   }
@@ -65,7 +75,7 @@
     synthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'pt-BR';
-    utterance.rate = 2;
+    utterance.rate = voiceRate; // 2x by default
     utterance.pitch = 1.02;
     const selected = synthesis.getVoices().find(v => normalize(v.lang) === 'pt-br') || synthesis.getVoices().find(v => normalize(v.lang).startsWith('pt'));
     if (selected) utterance.voice = selected;
