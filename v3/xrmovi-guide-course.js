@@ -14,7 +14,7 @@ const topics = [
    intro:'O acesso do XRMOVI é por conta autenticada. Não informe sua senha no chat e não compartilhe a mesma conta entre vários colaboradores.',
    steps:['Abra a página inicial do XRMOVI e escolha Entrar.','Informe o e-mail cadastrado e sua senha.','Depois de entrar, selecione sua empresa e abra o painel.','Para encerrar a sessão, clique em Sair da conta no menu lateral ou no topo, se estiver usando o celular.'],
    note:'Não é necessário criar outra conta para cada contrato; os acessos são organizados por empresa e pelo plano.'},
-  {id:'password',group:'Primeiros passos',title:'Recuperar senha',aliases:['esqueci senha','esqueci minha senha','redefinir senha','mudar senha','recuperacao de senha','nao consigo entrar','esqueci acesso'],view:null,
+  {id:'password',group:'Primeiros passos',title:'Recuperar senha',aliases:['esqueci senha','esqueci minha senha','alterar senha','redefinir senha','mudar senha','recuperacao de senha','nao consigo entrar','esqueci acesso'],view:null,
    intro:'Se esqueceu a senha, o caminho correto é a recuperação de acesso, não criar um novo usuário para a mesma conta.',
    steps:['Na página de entrada, procure a opção Esqueci minha senha.','Informe seu e-mail cadastrado para solicitar o link de recuperação.','Confira a caixa de entrada e o spam.','Abra o link recebido, defina a senha nova e faça login novamente.'],
    note:'O recebimento depende da configuração do serviço de e-mail. Caso o link não chegue, use Mensagens / Suporte.'},
@@ -22,7 +22,7 @@ const topics = [
    intro:'Cada empresa tem seus próprios registros. O seletor de empresa ativa define quais informações do painel serão consultadas.',
    steps:['Encontre o seletor EMPRESA ATIVA na parte superior do menu lateral.','No celular, use o seletor Empresa no topo da página.','Selecione a empresa que deseja consultar.','Aguarde os dados atualizarem antes de fazer novas consultas ou lançamentos.'],
    note:'Trocar de empresa não transfere os veículos nem os registros para outra empresa.'},
-  {id:'contracts',group:'Organização',title:'Criar e gerenciar contratos',aliases:['criar contrato','cadastrar contrato','novo contrato','adicionar contrato','incluir contrato','contrato da frota','vincular contrato'],view:'subscription',owner:true,
+  {id:'contracts',group:'Organização',title:'Criar e gerenciar contratos',aliases:['criar contrato','mudar contrato do carro','cadastrar contrato','novo contrato','adicionar contrato','incluir contrato','contrato da frota','vincular contrato'],view:'subscription',owner:true,
    intro:'Contratos ajudam a separar veículos e custos por atividade ou cliente. A criação acontece em Minha assinatura; a filtragem é feita no cabeçalho.',
    steps:['Abra Minha assinatura.','Na seção Criar contrato, selecione a empresa e preencha nome; cliente e código são opcionais.','Clique em Adicionar contrato.','Depois, use o seletor Contrato no topo da frota para consultar um contrato específico.','O seletor Contrato filtra os veículos que já possuem vínculo. Se você precisar atribuir um veículo a um contrato e não encontrar a opção, solicite ajuda em Mensagens / Suporte; essa edição não aparece no formulário atual de veículos.'],
    note:'A quantidade de contratos depende do plano. O titular gerencia a estrutura da assinatura.'},
@@ -38,7 +38,7 @@ const topics = [
    intro:'No XRMOVI, operacional é o veículo com situação Ativo. Um veículo Em manutenção ou Inativo não conta como operacional.',
    steps:['Ativo: disponível para uso, conforme a situação cadastrada pelo responsável.','Em manutenção: fora da condição de operação por serviço ou reparo em andamento.','Inativo: veículo que não está em uso por outra razão.','Revisão vencida: alerta separado; não altera o status automaticamente.','Para modificar a situação, abra Ativos / Veículos, clique em Editar, escolha Situação operacional e Salvar.'],
    note:'A classificação no sistema não substitui inspeção mecânica nem avaliação de segurança.'},
-  {id:'vehicle-add',group:'Veículos',title:'Cadastrar um veículo',aliases:['adicionar carro','adicionar veiculo','cadastrar veiculo','cadastrar carro','novo ativo','incluir caminhao','cadastrar maquina','como colocar carros'],view:'assets',writer:true,
+  {id:'vehicle-add',group:'Veículos',title:'Cadastrar um veículo',aliases:['adicionar carro','adicionar veiculo','cadastrar veiculo','cadastrar carro','novo ativo','incluir caminhao','cadastrar caminhao','cadastrar maquina','como colocar carros'],view:'assets',writer:true,
    intro:'Veículos são cadastrados em Ativos / Veículos, dentro da empresa ativa, respeitando os limites da assinatura.',
    steps:['Entre em Ativos / Veículos.','Clique em + Novo ativo.','Preencha placa/identificação, categoria, marca e modelo; informe ano, KM e unidade se aplicável.','Escolha Situação operacional: Ativo, Em manutenção ou Inativo.','Vincule um motorista ativo, se desejar, e anexe o documento do veículo quando disponível.','Clique em Salvar e confira o veículo na lista.'],
    note:'Proprietários e gestores podem cadastrar. Um motorista vinculado não recebe automaticamente acesso ao sistema.'},
@@ -74,7 +74,7 @@ const topics = [
    intro:'Registrar custo e concluir manutenção são ações diferentes. Ao concluir, o sistema exige o custo realizado e a leitura de KM/horímetro.',
    steps:['Abra Manutenção / Despesas e localize o serviço.','Clique em Detalhes ou na ação correspondente.','Use Registrar custos para informar valores sem encerrar.','Para encerrar o serviço, escolha Concluir serviço.','Informe custo realizado e KM/horímetro na execução e confirme.','Confira o resultado no histórico e no relatório financeiro.'],
    note:'Não lance o mesmo custo novamente em Outras despesas, para evitar duplicidade.'},
-  {id:'alerts',group:'Manutenção',title:'Entender os alertas e itens vencidos',aliases:['alertas','itens vencidos','em alerta','pendencias','aviso de vencimento','por que tem alerta','manutencao vencida','proxima manutencao'],view:'alerts',
+  {id:'alerts',group:'Manutenção',title:'Entender os alertas e itens vencidos',aliases:['alertas','itens vencidos','em alerta','pendencias','aviso de vencimento','por que tem alerta','vencido no painel','manutencao vencida','proxima manutencao'],view:'alerts',
    intro:'A Central de Alertas reúne pendências de manutenção, de KM/troca de óleo e outras obrigações monitoradas conforme o cadastro.',
    steps:['Abra Alertas pelo menu ou clique no indicador Em alerta ou Itens vencidos.','Leia o nome do veículo, serviço ou documento e seu vencimento.','Abra o item para consultar os detalhes.','Corrija o cadastro de origem ou conclua o serviço, conforme a situação real.','Atualize o painel para confirmar que o aviso foi recalculado.'],
    note:'Não marque um serviço como concluído se ele ainda não foi executado.'},
@@ -82,11 +82,11 @@ const topics = [
    intro:'O campo exige a leitura TOTAL atual do hodômetro, e não a quilometragem percorrida desde o último registro.',
    steps:['Abra KM e Troca de Óleo no menu lateral, que leva à área de KM dentro de Ativos / Veículos.','Localize a placa desejada.','Informe a leitura TOTAL exibida no veículo.','Confira o alerta caso o valor seja menor que o KM já confirmado.','Confirme ou envie para conferência, dependendo das regras de validação.','Use Histórico KM para verificar a origem e os registros anteriores.'],
    note:'Exemplo: se o veículo já tem 20.000 km e percorreu mais 1.500, a nova leitura total é 21.500 km.'},
-  {id:'km-bulk',group:'Quilometragem',title:'Registrar e conferir KM em lote',aliases:['km em lote','varios veiculos km','aprovar varias leituras','conferencia em lote','leitura em lote','atualizar varios km'],view:'assets',mileage:true,writer:true,
+  {id:'km-bulk',group:'Quilometragem',title:'Registrar e conferir KM em lote',aliases:['km em lote','varios veiculos km','lancar km varios carros','km em varios carros','aprovar varias leituras','conferencia em lote','leitura em lote','atualizar varios km'],view:'assets',mileage:true,writer:true,
    intro:'O controle de KM permite lançar e conferir leituras de vários veículos, com validação antes de aprovar.',
    steps:['Abra KM e Troca de Óleo.','Localize a área de atualização em lote e selecione os veículos.','Informe o KM TOTAL por veículo ou o valor comum, quando apropriado.','Confirme as leituras e revise as pendências.','Leituras menores que o total já confirmado devem ser corrigidas ou rejeitadas, não aprovadas cegamente.'],
    note:'A origem e as decisões ficam registradas no histórico. Não use a função em lote sem conferir as placas.'},
-  {id:'km-history',group:'Quilometragem',title:'Histórico e auditoria das leituras KM',aliases:['historico do km','origem da quilometragem','quem informou km','quem alterou km','auditoria km','corrigir km errado','km menor','km digitado errado'],view:'assets',mileage:true,
+  {id:'km-history',group:'Quilometragem',title:'Histórico e auditoria das leituras KM',aliases:['historico do km','origem da quilometragem','quem informou km','quem alterou km','auditoria km','corrigir km errado','km menor','km digitado errado','consertar km errado','km que cadastrei errado'],view:'assets',mileage:true,
    intro:'O histórico do KM identifica leituras recebidas, a origem do envio, conferências, correções e rejeições quando disponíveis.',
    steps:['Entre em KM e Troca de Óleo.','Na linha do veículo, clique em Histórico KM.','Confira a leitura enviada e o KM total aplicado, além do status da conferência.','Gestores também têm acesso à auditoria geral das leituras.','Se houver erro, use a correção/conferência autorizada em vez de tentar diminuir o KM pelo cadastro do veículo.'],
    note:'Registros legados podem não trazer autor ou leitura inicial completos.'},
@@ -98,7 +98,7 @@ const topics = [
    intro:'Uma troca executada pode ser registrada com a leitura do veículo, data, óleo utilizado, custo e observações.',
    steps:['Abra KM e Troca de Óleo.','Encontre o veículo com plano de óleo configurado.','Clique em Concluir óleo.','Informe KM da troca, data, óleo utilizado, custo e observações.','Confirme e consulte Histórico de óleo para revisar os serviços.'],
    note:'Informe a execução real do serviço; um alerta não desaparece corretamente se o registro estiver incompleto.'},
-  {id:'qr',group:'Quilometragem',title:'Usar o QR Code do veículo',aliases:['qr code','qrcode','codigo qr','leitura por celular','leitura por qr','qr do carro'],view:'assets',mileage:true,
+  {id:'qr',group:'Quilometragem',title:'Usar o QR Code do veículo',aliases:['qr code','qrcode','codigo qr','leitura por celular','leitura por qr','qr do carro','como usar o qr code'],view:'assets',mileage:true,
    intro:'O QR Code facilita a consulta ou o envio de leitura de quilometragem por veículo, seguindo as permissões de acesso e conferência.',
    steps:['Abra KM e Troca de Óleo na empresa correta.','Na linha do veículo, clique em QR Code quando estiver disponível.','Abra o endereço associado no celular e siga o formulário de leitura.','Confira sempre a placa e informe a leitura TOTAL do veículo.','O gestor pode consultar a origem da leitura no Histórico KM.'],
    note:'O QR Code não autoriza registrar um KM inferior sem verificação.'},
@@ -122,19 +122,19 @@ const topics = [
    intro:'Relatórios financeiros consolidam combustível, manutenção realizada e despesas pagas nos veículos e no período selecionados.',
    steps:['Abra Relatórios financeiros.','Escolha Diário, Quinzenal, Mensal, Trimestral, Semestral ou Personalizado.','Defina data de referência ou intervalo De e Até.','Clique em Consultar período.','Confirme empresa, contrato e filtros de veículos antes de interpretar os totais.','Use Exportar relatório CSV ou Imprimir / salvar em PDF conforme sua necessidade.'],
    note:'Custos em aberto e custos efetivamente realizados são coisas diferentes.'},
-  {id:'export',group:'Relatórios',title:'Exportar CSV ou salvar PDF',aliases:['exportar excel','baixar excel','exportar csv','baixar csv','salvar pdf','gerar pdf','imprimir relatorio','baixar relatorio'],view:'financial',
+  {id:'export',group:'Relatórios',title:'Exportar CSV ou salvar PDF',aliases:['exportar excel','baixar excel','exportar csv','gerar pdf do relatorio','baixar csv','salvar pdf','gerar pdf','imprimir relatorio','baixar relatorio'],view:'financial',
    intro:'Na versão atual, a exportação de dados financeiros é por CSV, que pode ser aberto no Excel, e PDF via recurso de impressão do navegador.',
    steps:['Abra Relatórios financeiros e consulte o período desejado.','Para planilha, clique em Exportar relatório CSV; depois abra o arquivo no Excel.','Para PDF, clique em Imprimir / salvar em PDF.','Na janela do navegador, escolha Salvar como PDF e confirme.','Verifique filtros, empresa e período no arquivo gerado.'],
    note:'CSV não é o mesmo formato que um arquivo .xlsx. Não prometa exportação XLSX nativa se o botão disponível é CSV.'},
-  {id:'history',group:'Relatórios',title:'Consultar o histórico da frota',aliases:['historico da frota','historico de lancamentos','registro antigo','registro passado','quem fez lancamento','auditoria historico','rastreabilidade'],view:'history',
+  {id:'history',group:'Relatórios',title:'Consultar o histórico da frota',aliases:['historico da frota','historico de lancamentos','historico do abastecimento','registro antigo','registro passado','quem fez lancamento','auditoria historico','rastreabilidade'],view:'history',
    intro:'A aba Histórico reúne registros consultáveis de manutenção, abastecimentos e despesas pagas.',
    steps:['Abra Histórico.','Selecione a data inicial em De e a final em Até.','No filtro Tipo, escolha Manutenção, Abastecimento, Despesas pagas ou Todos.','Clique em Consultar para atualizar os registros.','Para histórico de leituras KM ou alterações de programação, use os históricos específicos de cada área.'],
    note:'Nem todo histórico identifica autor; isso depende do evento e da versão em que foi registrado.'},
-  {id:'documents',group:'Documentos',title:'Anexar e consultar documentos',aliases:['documentacao','anexar documento','anexar crlv','anexar nota fiscal','upload pdf','comprovante','ver anexos','arquivo do veiculo','ver documento'],view:'documents',
+  {id:'documents',group:'Documentos',title:'Anexar e consultar documentos',aliases:['documentacao','anexar documento','anexar crlv','anexar nota fiscal','upload pdf','documentos do carro','comprovante','ver anexos','arquivo do veiculo','ver documento'],view:'documents',
    intro:'Documentação consulta anexos associados aos veículos; documentos novos são anexados nos formulários de cadastro e lançamento.',
    steps:['Para anexar documento de veículo, abra Ativos / Veículos e use Editar ou Novo ativo.','Para nota fiscal de manutenção, abastecimento ou despesa, utilize o respectivo formulário.','Escolha um arquivo PDF, JPG, PNG ou WEBP de até 10 MB, quando o campo existir.','Salve o lançamento.','Abra Documentação para consultar os anexos vinculados e clique em Visualizar.'],
    note:'O armazenamento é privado e o acesso depende da autorização da empresa; não coloque documentos pessoais no chat.'},
-  {id:'logo',group:'Organização',title:'Trocar a logo da empresa',aliases:['mudar logo','trocar logo','alterar logo','foto da empresa','imagem da empresa','personalizar logo','logomarca'],view:'dashboard',writer:true,
+  {id:'logo',group:'Organização',title:'Trocar a logo da empresa',aliases:['mudar logo','trocar logo','cadastrar logo','cadastrar a logo da minha empresa','alterar logo','foto da empresa','imagem da empresa','personalizar logo','logomarca'],view:'dashboard',writer:true,
    intro:'O painel permite personalizar a identidade visual da empresa ativa.',
    steps:['Abra a Visão Geral e localize a logo ou foto ao lado do nome da empresa.','Se tiver perfil de proprietário ou gestor, clique no ícone de lápis.','Escolha uma imagem PNG, JPG ou WEBP de até 2 MB.','Aguarde o aviso de confirmação e confira a logo atualizada.'],
    note:'A logo pode ser usada em saídas de relatório que tenham suporte à identidade da empresa.'},
@@ -142,7 +142,7 @@ const topics = [
    intro:'Minha assinatura mostra o plano, a situação da conta e as cotas de empresas, contratos, veículos e logins.',
    steps:['Abra Minha assinatura no menu.','Confira o plano e o status apresentados pelo sistema.','Verifique as cotas e o consumo disponível.','Antes de adicionar ativos ou pessoas, confirme que há capacidade livre.','Se precisar ampliar o limite, o titular pode acessar Escolher / alterar plano.'],
    note:'As cotas são totais da assinatura: não são multiplicadas pela quantidade de empresas.'},
-  {id:'change-plan',group:'Conta e plano',title:'Mudar de plano e pagar',aliases:['trocar plano','mudar plano','forma de pagamento','assinar plano','pagar assinatura','mercado pago','checkout','renovar assinatura','confirmar pagamento','assinatura bloqueada'],view:'subscription',owner:true,
+  {id:'change-plan',group:'Conta e plano',title:'Mudar de plano e pagar',aliases:['trocar plano','mudar plano','forma de pagamento','pagar mensalidade','assinar plano','pagar assinatura','mercado pago','checkout','renovar assinatura','confirmar pagamento','assinatura bloqueada'],view:'subscription',owner:true,
    intro:'O titular pode solicitar alteração de plano e iniciar pagamento pelo Mercado Pago, quando o serviço de cobrança estiver habilitado.',
    steps:['Abra Minha assinatura e localize Escolher / alterar plano.','Selecione o plano e confira os limites exibidos ao lado.','Solicitar mudança de plano registra a solicitação, mas não significa pagamento ou liberação imediata.','Quando habilitado, use Pagar com Mercado Pago e confirme o valor antes de autorizar o pagamento.','Volte ao painel e clique em Verificar pagamento se a confirmação ainda não aparecer.','Se uma tentativa já estiver pendente, use Retomar pagamento pendente em vez de iniciar outra cobrança.'],
    note:'O plano só é liberado após a confirmação efetiva do pagamento. Se o serviço estiver indisponível, converse com o suporte.'},
@@ -162,7 +162,7 @@ const topics = [
    intro:'A área Mensagens / Suporte permite ao titular conversar com a administração da plataforma.',
    steps:['No menu lateral, clique em Mensagens / Suporte.','Confira a empresa escolhida na página Minha conta e mensagens.','Digite sua dúvida no campo de mensagem.','Clique em Enviar mensagem.','Use Atualizar mensagens para consultar a resposta.'],
    note:'O assistente não envia mensagens sozinho. Não inclua senhas, tokens ou documentos sensíveis no texto.'},
-  {id:'troubleshoot',group:'Ajuda',title:'Resolver painel vazio ou dados ausentes',aliases:['nao aparece nada','dados sumiram','frota vazia','nao carrega','painel zerado','erro de carregamento','numeros diferentes','contadores errados','valor nao aparece'],view:'dashboard',
+  {id:'troubleshoot',group:'Ajuda',title:'Resolver painel vazio ou dados ausentes',aliases:['nao aparece nada','dados sumiram','frota vazia','nao carrega','painel zerado','erro de carregamento','numeros diferentes','tela zerada','contadores errados','valor nao aparece'],view:'dashboard',
    intro:'Números vazios ou diferentes podem ocorrer por empresa, contrato, filtros, período ou falha de consulta.',
    steps:['Confira a empresa ativa.','Verifique se o contrato e os filtros de busca, categoria e situação não estão limitando os resultados.','Clique em Limpar todos, se quiser ver a empresa inteira.','Confira o mês de abastecimento ou o período do relatório financeiro.','Use o botão Atualizar dados do banco.','Se o erro continuar, registre a tela e envie uma mensagem ao suporte.'],
    note:'Não recrie cadastros apenas porque uma consulta está vazia; primeiro confira os filtros.'},
@@ -174,7 +174,8 @@ const topics = [
 const safe = value=>String(value||'');
 const normalize = value=>safe(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
 const stop = new Set(['como','faco','fazer','para','uma','uns','pelo','pelo','sobre','qual','quais','onde','isso','essa','esse','meu','minha','seu','sua','essa','esse','pode','posso','quero','preciso','com','tem','que','por','dos','das','do','da','de','em','no','na','um','e','o','a','os','as','ser','estar','se','pelo','aqui','pra','ai','ali','eu','voce','agora','tela']);
-function words(str){return normalize(str).split(' ').filter(w=>(w.length>2||w==='km'||w==='qr')&&!stop.has(w));}
+const synonyms={mudo:'mudar',muda:'mudar',troco:'trocar',cadastra:'cadastrar',cadastro:'cadastrar',cadastrei:'cadastrar',altero:'alterar',alterei:'alterar',coloco:'colocar',coloca:'colocar',gero:'gerar',gera:'gerar',vejo:'ver',relatorios:'relatorio',veiculos:'veiculo',carros:'carro',motoristas:'motorista',contratos:'contrato',documentos:'documento',alertas:'alerta',despesas:'despesa',operacionais:'operacional',vencidas:'vencido',caminhoes:'caminhao',lanco:'lancar'};
+function words(str){return normalize(str).split(' ').filter(w=>(w.length>2||w==='km'||w==='qr')&&!stop.has(w)).map(w=>synonyms[w]||w);}
 function rank(question,topic){
  const q=normalize(question), qw=words(q);
  if(!qw.length)return 0;
@@ -182,7 +183,7 @@ function rank(question,topic){
  let score=0;
  for(const alias of aliases){
   if(alias===q)return 120;
-  if(q.includes(alias)&&alias.length>=8)score=Math.max(score,85);
+  if(q.includes(alias)&&alias.length>=8&&words(alias).length>=2)score=Math.max(score,85);
   const a=words(alias);
   if(a.length>1&&a.every(w=>qw.includes(w)))score=Math.max(score,56+a.length);
   if(a.length===1&&qw.includes(a[0])&&a[0].length>4&&!new Set(['carro','carros','veiculo','veiculos','empresa','motorista','sistema','status','registro','historico','tela','pagina','dados']).has(a[0]))score=Math.max(score,30);
