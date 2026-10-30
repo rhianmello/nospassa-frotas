@@ -2,7 +2,7 @@
 // Deploy com verify_jwt=true. NUNCA inserir token Mercado Pago ou service_role no GitHub.
 import { createClient } from "npm:@supabase/supabase-js@2.58.0";
 const json=(body:unknown,status=200,origin="https://frota.nospassa.com.br")=>new Response(JSON.stringify(body),{
- status,headers:{"content-type":"application/json","access-control-allow-origin":origin,"vary":"Origin"}
+ status,headers:{"content-type":"application/json; charset=utf-8","access-control-allow-origin":origin,"access-control-allow-methods":"POST, OPTIONS","access-control-allow-headers":"authorization, apikey, content-type, x-client-info, x-supabase-api-version","cache-control":"no-store","vary":"Origin"}
 });
 const originAllowed=(origin:string|null)=>origin===null||["https://frota.nospassa.com.br","https://www.frota.nospassa.com.br"].includes(origin);
 Deno.serve(async(req:Request)=>{
@@ -11,7 +11,9 @@ Deno.serve(async(req:Request)=>{
  const outputOrigin=origin||"https://frota.nospassa.com.br";
  if(req.method==="OPTIONS")return new Response(null,{status:204,headers:{
   "access-control-allow-origin":outputOrigin,"access-control-allow-methods":"POST, OPTIONS",
-  "access-control-allow-headers":"authorization, apikey, content-type","vary":"Origin"
+  "access-control-allow-headers":"authorization, apikey, content-type, x-client-info, x-supabase-api-version",
+  "access-control-max-age":"300",
+  "vary":"Origin"
  }});
  if(req.method!=="POST")return json({error:"Método não permitido"},405,outputOrigin);
  if(Deno.env.get("XRMOVI_BILLING_ENABLED")!=="true")return json({error:"Checkout ainda não habilitado."},503,outputOrigin);
