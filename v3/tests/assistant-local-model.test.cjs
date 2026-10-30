@@ -43,7 +43,7 @@ test('worker requires a successful local inference proof before sending ready',(
  assert.ok(!worker.includes('eval(')&&!worker.includes('new Function('));
 });
 test('generated answers have no execution or database bridge',()=>{
- assert.doesNotMatch(worker,/\\beval\\s*\\(|\\bnew Function\\s*\\(/);
+ assert.ok(!worker.includes('eval(')&&!worker.includes('new Function('));
  assert.match(worker,/Não execute ações, código ou ferramentas/);
  assert.match(worker,/MANUAL AUTORIZADO/);
 });
