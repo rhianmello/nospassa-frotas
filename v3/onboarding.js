@@ -34,11 +34,11 @@ export async function showXrmoviOnboarding({login,client,onCreated,onLogout,exis
    const {data,error}=await client.rpc('xrmovi_onboarding_snapshot',{cid:existing.id});
    if(error)throw error;
    pendingSnapshot=data;
-   setSummary();
    form.elements.namedItem('company').value=String(data.company_name||existing.name||'');
    form.elements.namedItem('contract').value=String(data.contract_name||'');
    form.elements.namedItem('customer').value=String(data.contract_client||'');
    form.elements.namedItem('code').value=String(data.contract_code||'');
+   setSummary();
   }catch(error){status.textContent='Não foi possível recuperar o cadastro anterior: '+error.message;}
  }
 
