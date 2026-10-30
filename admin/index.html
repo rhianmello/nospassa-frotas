@@ -32,6 +32,7 @@ footer{padding:20px;text-align:center;color:#849eae;font-size:11px}
    <div class="kpi money"><span>Recebimentos confirmados</span><b id="k-paid">—</b><small>Histórico do banco</small></div>
   </div>
   <div class="notice" role="status" aria-live="polite"><strong>Diagnóstico Mercado Pago:</strong> <span id="xrm-billing-health">Validando credenciais de produção…</span></div>
+  <div class="notice" role="status" aria-live="polite"><strong>Avisos de suporte por e-mail:</strong> <span id="xrm-mail-health">Verificando provedor de envio…</span></div>
   <div id="feedback" class="status" role="status" aria-live="polite"></div>
   <nav class="tabs" aria-label="Áreas da administração">
    <button data-tab="overview" aria-selected="true">Visão executiva</button><button data-tab="customers" aria-selected="false">Clientes</button><button data-tab="messages" aria-selected="false">Mensagens <span id="nav-unread"></span></button><button data-tab="payments" aria-selected="false">Pagamentos</button><button data-tab="requests" aria-selected="false">Solicitações</button>
@@ -154,6 +155,10 @@ async function checkBillingStatus(){
  try{
   const {data,error}=await db.functions.invoke('xrmovi-billing-diagnostics',{body:{check:'read_only'}});
   if(error)throw error;
+  const mailLabel=el('xrm-mail-health');
+  mailLabel.textContent=data?.support_email_configured===true
+   ?'Provedor de envio configurado. Novas mensagens dos clientes serão encaminhadas para rhian.udm@gmail.com.'
+   :'Mensagens registradas na fila, mas envio de e-mail aguardando configuração do provedor transacional.';
   if(data?.configuration_ready===true){
    label.textContent=data.billing_switch_enabled===true
     ?'Mercado Pago: credenciais verificadas. Faça a validação do primeiro webhook antes de vender.'
@@ -166,7 +171,10 @@ async function checkBillingStatus(){
    if(!data?.webhook_secret_configured)issues.push('assinatura secreta não cadastrada');
    label.textContent='Mercado Pago: '+(issues.join(' · ')||'configuração pendente')+'.';
   }
- }catch{label.textContent='Mercado Pago: não foi possível validar as credenciais. Confira a sessão e atualize a página.';}
+ }catch{
+  label.textContent='Mercado Pago: não foi possível validar as credenciais. Confira a sessão e atualize a página.';
+  el('xrm-mail-health').textContent='Não foi possível verificar a configuração do provedor de e-mail.';
+ }
 }
 async function start(){
  try{const cfg=await fetch('../v3/config.json',{cache:'no-store'});if(!cfg.ok)throw Error('Configuração indisponível');
