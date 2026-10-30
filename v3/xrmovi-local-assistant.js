@@ -29,7 +29,7 @@
     '<div class="xrm-assistant-lesson" hidden><div class="xrm-assistant-lesson-top"><small class="xrm-assistant-lesson-counter"></small><strong class="xrm-assistant-lesson-title"></strong></div><p class="xrm-assistant-lesson-intro"></p><ol class="xrm-assistant-lesson-steps"></ol><p class="xrm-assistant-lesson-note"></p><div class="xrm-assistant-lesson-actions"><button type="button" class="xrm-assistant-lesson-open">Abrir esta tela</button><button type="button" class="xrm-assistant-lesson-hear">🔊 Ouvir aula</button><button type="button" class="xrm-assistant-lesson-prev">Anterior</button><button type="button" class="xrm-assistant-lesson-next">Próxima</button></div></div>',
     '<details class="xrm-assistant-chat-details" open><summary>Conversa <span class="xrm-assistant-chat-count">0 mensagens</span></summary><div class="xrm-assistant-history" role="log" aria-label="Histórico da conversa" aria-live="polite"></div></details></div>',
     '<form class="xrm-assistant-form"><label class="xrm-assistant-input-wrap"><span class="sr-only">Sua pergunta sobre o painel</span><input type="text" maxlength="220" autocomplete="off" placeholder="Pergunte sobre esta tela…" aria-label="Pergunte sobre esta tela" required></label><button type="submit" aria-label="Enviar pergunta" title="Enviar pergunta">➤</button><button class="xrm-assistant-mic" type="button" aria-label="Fazer pergunta por voz" title="Perguntar por voz">🎙</button></form>',
-    '<details class="xrm-assistant-settings"><summary>⚙ Voz e tema</summary><div class="xrm-assistant-setting-row"><label>Velocidade<select class="xrm-assistant-rate"><option value="1">1x</option><option value="1.5">1,5x</option><option value="2" selected>2x</option><option value="2.5">2,5x</option></select></label><label>Visual<select class="xrm-assistant-theme"><option value="neural">Neural Blue</option><option value="matrix">Matrix</option><option value="purple">Cyber Purple</option><option value="minimal">Minimal</option><option value="hologram">Holographic</option></select></label></div></details>',
+    '<details class="xrm-assistant-settings"><summary>⚙ Voz e tema</summary><div class="xrm-assistant-setting-row"><label>Velocidade<select class="xrm-assistant-rate"><option value="1">1x</option><option value="1.5">1,5x</option><option value="2" selected>2x</option><option value="2.5">2,5x</option></select></label><label>Visual<select class="xrm-assistant-theme"><option value="neural">Neural Blue</option><option value="matrix">Matrix</option><option value="purple">Cyber Purple</option><option value="minimal">Minimal</option><option value="hologram">Holographic</option></select></label></div><div class="xrm-assistant-local-controls"><button type="button" class="xrm-assistant-local-toggle">Ativar IA local (experimental)</button><small class="xrm-assistant-local-status" role="status">Desligada. Requer WebGPU e download de centenas de MB. Não é necessária para o curso.</small></div></details>',
     '<div class="xrm-assistant-foot"><button type="button" class="xrm-assistant-stop" title="Interromper fala" aria-label="Interromper resposta">■ Parar</button><button type="button" class="xrm-assistant-sound" aria-pressed="true">🔊 Voz ligada</button><span>Sem API de IA. Microfone sujeito ao serviço de voz do navegador.</span></div>',
     '</div>'
   ].join('');
@@ -56,6 +56,20 @@
   const rateInput = query('.xrm-assistant-rate');
   const themeInput = query('.xrm-assistant-theme');
   const stopButton = query('.xrm-assistant-stop');
+  const modelButton=query('.xrm-assistant-local-toggle');
+  const modelStatus=query('.xrm-assistant-local-status');
+  window.XrmoviLocalModel?.subscribe?.(info=>{
+    modelStatus.textContent=info.message;
+    modelButton.textContent=info.status==='off'||info.status==='error'||info.status==='unsupported'?'Ativar IA local (experimental)':'Desligar / cancelar IA local';
+  });
+  modelButton.addEventListener('click',async()=>{
+    if(!window.XrmoviLocalModel){modelStatus.textContent='Módulo local indisponível neste navegador.';return}
+    if(window.XrmoviLocalModel.isReady()){window.XrmoviLocalModel.disable();return}
+    const label=modelButton.textContent;
+    if(label.startsWith('Desligar')){window.XrmoviLocalModel.disable();return}
+    modelButton.textContent='Desligar / cancelar IA local';
+    await window.XrmoviLocalModel.enable();
+  });
   try {const saved = localStorage.getItem('xrmovi-voice-theme'); if(['neural','matrix','purple','minimal','hologram'].includes(saved))themeInput.value=saved;}catch{}
   host.dataset.theme=themeInput.value;
   rateInput.addEventListener('change',()=>{voiceRate=Number(rateInput.value)||2;});
@@ -313,7 +327,18 @@
         chatDetails.open = true;
       }
     } else {
-      response = answer(clean);
+      if(window.XrmoviLocalModel?.isReady?.()){
+        try{
+          state.textContent='IA local gerando resposta…';
+          const generated=await window.XrmoviLocalModel.ask(clean);
+          if(ticket!==responseTicket||!context||requestedCompany!==context.companyId)return;
+          response='IA local experimental: '+generated+' Confira instruções e dados no painel.';
+        }catch(error){
+          response=answer(clean);
+        }
+      }else{
+        response=answer(clean);
+      }
       if (!lastTopic.startsWith('course:')) {
         lessonPanel.hidden = true;
         panel.classList.remove('is-teaching');
@@ -381,6 +406,7 @@
     stop();
     context = null;
     window.XrmoviAssistantBrain?.reset?.();
+    window.XrmoviLocalModel?.disable?.();
     host.hidden = true;
     panel.hidden = true;
     active = false;
