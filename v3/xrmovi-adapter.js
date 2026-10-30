@@ -850,6 +850,113 @@ if(el('financial-print'))el('financial-print').onclick=async()=>{
  const popup=window.open('','_blank');if(!popup){msg('Permita a abertura de pop-ups para imprimir o relatório.');return}popup.document.open();popup.document.write(markup);popup.document.close();popup.focus();popup.setTimeout(()=>popup.print(),350);
 };
 
+
+/* XRMOVI V4 read-only assistant bridge. Same authenticated data and RPC as the current screen. */
+const xrmAssistantBridge=Object.freeze({
+ snapshot(){
+  if(!company||paymentRequired)return null;
+  const currentId=company.id;
+  const scopeIds=new Set(vehicles.filter(v=>!filteredVehicleIds||filteredVehicleIds.has(v.id)).map(v=>v.id));
+  const vehiclesInView=vehicles.filter(v=>scopeIds.has(v.id)).map(v=>({
+   id:v.id,plate:v.plate,model:v.model||'',category:v.category||'',status:v.status||'',
+   odometer:Number(v.odometer_value||0),contractId:v.contract_id||null
+  }));
+  const scoped=(items)=>items.filter(x=>scopeIds.has(x.vehicle_id));
+  const month=el('fuel-ranking-month')?.value||localDay(new Date()).slice(0,7);
+  const range=xrmReportRange?.from&&xrmReportRange?.to
+   ?{from:xrmReportRange.from,to:xrmReportRange.to}
+   :{from:month+'-01',to:localDay(new Date())};
+  return {
+   companyId:currentId,companyName:company.name,role:company.role,view:currentView(),
+   contractId:el('xrm-contract-filter')?.value||null,
+   contractName:el('xrm-contract-filter')?.selectedOptions?.[0]?.textContent||'Todos',
+   filters:(el('active-filter-summary')?.textContent||'').trim().slice(0,300),
+   financialReady:!financialState,financialPeriod:range,
+   financialNote:financialState?'Dados financeiros não carregados.':'Valores registrados no período consultado (sem estimar lançamentos ausentes).',
+   vehicles:vehiclesInView,
+   maintenance:scoped(maintenance).map(m=>({
+     id:m.id,vehicleId:m.vehicle_id,title:m.title||'',status:m.status,
+     dueDate:m.due_date||null,dueMeter:m.due_meter==null?null:Number(m.due_meter),
+     alert:alertKind(m),estimatedCost:m.estimated_cost,actualCost:m.actual_cost
+   })),
+   fuel:scoped(fuelEntries).map(x=>({
+     id:x.id||null,vehicleId:x.vehicle_id,amount:x.cost??x.total_cost??null,
+     liters:x.liters??null,fuelType:x.fuel_type||x.fuel||null,date:x.fueled_on||x.date||null
+   })),
+   maintenanceCosts:scoped(maintenanceExpenses).map(x=>({
+     vehicleId:x.vehicle_id,amount:x.actual_cost??null,date:x.completed_at||x.date||null
+   })),
+   expenses:scoped(vehicleExpenses).map(x=>({
+     vehicleId:x.vehicle_id,description:x.description||'',category:x.category||'',amount:x.amount??null,
+     dueDate:x.due_date||null,paidOn:x.paid_on||null,expenseDate:x.expense_date||null
+   })),
+   paidExpenses:scoped(paidExpenses).map(x=>({
+     vehicleId:x.vehicle_id,amount:x.amount??null,date:x.paid_on||x.date||null
+   }))
+  };
+ },
+ async financePeriod({from,to,requestedCompanyId}){
+  if(!company||paymentRequired||requestedCompanyId!==company.id)throw Error('Empresa alterada. Repita a consulta.');
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(from)||!/^\d{4}-\d{2}-\d{2}$/.test(to)||from>to)throw Error('Período inválido.');
+  // Bound the query; do not allow free-form SQL, clients or other company identifiers.
+  const windowDays=(Date.parse(to+'T00:00:00Z')-Date.parse(from+'T00:00:00Z'))/86400000;
+  if(!Number.isFinite(windowDays)||windowDays>366)throw Error('O intervalo máximo é de 367 dias.');
+  const cid=company.id;
+  const ids=new Set(vehicles.filter(v=>!filteredVehicleIds||filteredVehicleIds.has(v.id)).map(v=>v.id));
+  const data=await rpc('cost_report',{cid,from_date:from,to_date:to,vid:null});
+  if(!company||paymentRequired||company.id!==cid)throw Error('Empresa mudou durante a consulta.');
+  const subset=(a)=>Array.isArray(a)?a.filter(r=>ids.has(r.vehicle_id)):[];
+  return {from,to,companyId:cid,contractId:el('xrm-contract-filter')?.value||null,
+    fuel:subset(data?.fuel).map(r=>({vehicleId:r.vehicle_id,amount:r.cost??r.total_cost??null,
+      fuelType:r.fuel_type||r.fuel||null,liters:r.liters??null,date:r.fueled_on||r.date||null})),
+    maintenanceCosts:subset(data?.maintenance).map(r=>({vehicleId:r.vehicle_id,amount:r.actual_cost??null,date:r.completed_at||r.date||null})),
+    paidExpenses:subset(data?.expenses).map(r=>({vehicleId:r.vehicle_id,amount:r.amount??null,date:r.paid_on||r.date||null}))};
+ },
+ navigate({view:target,filter,value}={}){
+  if(!company||paymentRequired)return {ok:false,message:'Acesso operacional indisponível para esta conta.'};
+  if(!viewLabels[target])return {ok:false,message:'Esta tela não existe no painel.'};
+  if(filter==='status'){
+   if(!['Ativo','Manutenção','Inativo',''].includes(value))return {ok:false,message:'Situação inválida.'};
+   el('xrm-filter-status').value=value;applyVehicleFilters();
+  }else if(filter==='category'){
+   const options=[...el('xrm-filter-category').options];
+   const found=options.find(o=>o.value.toLowerCase()===String(value||'').toLowerCase());
+   if(!found)return {ok:false,message:'Categoria indisponível nesta frota.'};
+   el('xrm-filter-category').value=found.value;applyVehicleFilters();
+  }else if(filter==='plate'){
+   const needle=String(value||'').trim().toUpperCase();
+   if(needle.length<3||needle.length>30||!/^[A-Z0-9 -]+$/.test(needle))return {ok:false,message:'Informe uma placa ou identificação válida.'};
+   el('fleet-search').value=needle;applyVehicleFilters();
+  }else if(filter)return {ok:false,message:'Filtro não autorizado.'};
+  page(target);
+  return {ok:true,message:'Abri '+viewLabels[target]+(filter?' e apliquei o filtro solicitado.':'.')};
+ },
+ openForm({kind}={}){
+  if(!company||paymentRequired)return {ok:false,message:'Acesso indisponível.'};
+  if(!canWrite())return {ok:false,message:'Somente proprietário ou gestor pode abrir este formulário.'};
+  if(!['vehicle','maintenance','fuel','driver','expense'].includes(kind))return {ok:false,message:'Formulário indisponível.'};
+  page(kind==='vehicle'?'assets':kind==='driver'?'drivers':kind==='fuel'?'fuel':'maintenance');
+  openWrite(kind);
+  return {ok:true,message:'Abri o formulário de '+({vehicle:'veículo',maintenance:'manutenção',fuel:'abastecimento',driver:'motorista',expense:'despesa'}[kind])+'. Preencha e confirme os dados manualmente.'};
+ },
+ showMaintenance({id}={}){
+  if(!company||paymentRequired)return {ok:false,message:'Acesso indisponível.'};
+  const task=maintenance.find(m=>m.id===id && (!filteredVehicleIds||filteredVehicleIds.has(m.vehicle_id)));
+  if(!task)return {ok:false,message:'Manutenção não encontrada nos filtros atuais.'};
+  openMaintenanceDetails(task.id);
+  return {ok:true,message:'Abri os detalhes da manutenção.'};
+ },
+ selectVehicle({plate}={}){
+  if(!company||paymentRequired)return {ok:false,message:'Acesso indisponível.'};
+  const query=String(plate||'').trim().toUpperCase();
+  const matches=vehicles.filter(v=>v.plate?.toUpperCase()===query);
+  if(matches.length!==1)return {ok:false,message:matches.length?'Há mais de um veículo com essa identificação.':'Não encontrei essa placa nesta empresa.'};
+  el('fleet-search').value=query;applyVehicleFilters();page('assets');
+  return {ok:true,vehicleId:matches[0].id,message:'Localizei '+matches[0].plate+' em Ativos / Veículos. Se tiver permissão, use Editar para consultar o cadastro.'};
+ }
+});
+Object.defineProperty(window,'XrmoviAssistantTools',{value:xrmAssistantBridge,configurable:false,writable:false});
+
 /* Initialize only after all module lexical state exists. */
 async function startXrmovi(){
  try{
