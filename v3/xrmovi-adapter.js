@@ -137,7 +137,33 @@ if(el('refresh-button'))el('refresh-button').onclick=load;
 if(el('new-asset-button'))el('new-asset-button').onclick=()=>openWrite('vehicle');
 
 function alertKind(m){if(m.status==='done')return'done';const vehicle=vehicles.find(v=>v.id===m.vehicle_id),today=new Date();today.setHours(0,0,0,0);const days=m.due_date?Math.ceil((new Date(m.due_date+'T00:00:00')-today)/86400000):null;const remaining=m.due_meter==null?null:Number(m.due_meter)-Number(vehicle?.odometer_value||0);return(days!==null&&days<0)||(remaining!==null&&remaining<=0)?'overdue':(days!==null&&days<=30)||(remaining!==null&&remaining<=1000)?'soon':'open'}
-function setupCompanySwitcher(){let box=el('v3-company-switch');if(!box){box=document.createElement('div');box.id='v3-company-switch';box.style.cssText='padding:12px;color:#a9c7df;font:11px system-ui';const nav=document.querySelector('.fleet-sidebar .main-nav');nav?.before(box)}box.replaceChildren();const label=document.createElement('label');label.textContent='EMPRESA ATIVA';label.htmlFor='v3-company';label.style.display='block';const select=document.createElement('select');select.id='v3-company';select.style.cssText='max-width:100%;width:100%;padding:9px;margin-top:6px;background:#112a42;color:#e8f7ff;border:1px solid #365470;border-radius:8px';for(const c of companies){const option=document.createElement('option');option.value=c.id;option.textContent=c.name;select.append(option)}select.value=company.id;select.onchange=async()=>{closeWrite(true);company=companies.find(c=>c.id===select.value);vehicles=[];maintenance=[];contracts=[];fuelRows=[];drivers=[];vehicleExpenses=[];paidExpenses=[];historyExpenses=[];await checkSubscriptionAccess();void subscriptionPanel?.refresh()};box.append(label,select)}
+function setupCompanySwitcher(){
+ let box=el('v3-company-switch');
+ if(!box){box=document.createElement('div');box.id='v3-company-switch';box.style.cssText='padding:12px;color:#a9c7df;font:11px system-ui';document.querySelector('.fleet-sidebar .main-nav')?.before(box)}
+ box.replaceChildren();
+ const label=document.createElement('label');label.textContent='EMPRESA ATIVA';label.htmlFor='v3-company';label.style.display='block';
+ const desktop=document.createElement('select');desktop.id='v3-company';
+ desktop.style.cssText='max-width:100%;width:100%;padding:9px;margin-top:6px;background:#112a42;color:#e8f7ff;border:1px solid #365470;border-radius:8px';
+ const mobile=el('v3-company-mobile');mobile?.replaceChildren();
+ for(const c of companies){
+  for(const target of [desktop,mobile].filter(Boolean)){
+   const option=document.createElement('option');option.value=c.id;option.textContent=c.name;target.append(option);
+  }
+ }
+ desktop.value=company.id;
+ if(mobile)mobile.value=company.id;
+ const switchCompany=async id=>{
+  if(!id||company?.id===id)return;
+  const selected=companies.find(c=>c.id===id);if(!selected)return;
+  closeWrite(true);company=selected;vehicles=[];maintenance=[];contracts=[];fuelRows=[];
+  drivers=[];vehicleExpenses=[];paidExpenses=[];historyExpenses=[];
+  desktop.value=id;if(mobile)mobile.value=id;
+  await checkSubscriptionAccess();void subscriptionPanel?.refresh();
+ };
+ desktop.onchange=()=>void switchCompany(desktop.value);
+ if(mobile)mobile.onchange=()=>void switchCompany(mobile.value);
+ box.append(label,desktop);
+}
 function renderExtras(){const alerts=el('alerts-content');if(alerts){alerts.replaceChildren();const attention=maintenance.filter(x=>['overdue','soon'].includes(alertKind(x)));for(const m of attention){const item=document.createElement('button');item.type='button';item.className='fleet-ptran-entry';item.onclick=()=>openMaintenanceDetails(m.id);item.textContent=(alertKind(m)==='overdue'?'VENCIDA: ':'PRÓXIMA: ')+(m.plate||vehicles.find(v=>v.id===m.vehicle_id)?.plate||'Ativo')+' — '+m.title+' · '+(m.due_date||'Por quilometragem');alerts.append(item)}if(!attention.length)alerts.textContent='Nenhuma manutenção vencida ou próxima.'}
 const preview=el('alert-preview');if(preview){preview.replaceChildren();for(const m of maintenance.filter(x=>['overdue','soon'].includes(alertKind(x))).slice(0,6)){const item=document.createElement('button');item.type='button';item.className='fleet-ptran-entry';item.textContent=(m.plate||'Veículo')+' — '+m.title;item.onclick=()=>openMaintenanceDetails(m.id);preview.append(item)}}
 el('v3-contract-overview')?.remove();
