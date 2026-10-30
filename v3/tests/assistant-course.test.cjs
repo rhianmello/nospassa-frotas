@@ -17,6 +17,7 @@ test('41 or more training chapters available by group and no network access',()=
 });
 test('natural Portuguese questions route to the correct verified procedure',()=>{
  const c=course();
+ const mismatches=[];
  for (const [q,id] of [
   ['como cadastrar um carro','vehicle-add'],
   ['onde mudo o status do carro','vehicle-edit'],
@@ -43,8 +44,9 @@ test('natural Portuguese questions route to the correct verified procedure',()=>
   ['como filtrar por contrato','filters'],
  ]){
   const found=c.find(q);
-  assert.equal(found?.id,id,q+' -> '+found?.id);
+  if(found?.id!==id)mismatches.push(q+' -> '+(found?.id||'nenhuma')+' (esperado: '+id+')');
  }
+ assert.deepEqual(mismatches,[]);
 });
 test('unsupported topics do not fabricate help',()=>{
  const c=course();
