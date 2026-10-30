@@ -26,5 +26,5 @@ test('mobile assistant scales to viewport, and css/js versions avoid stale cache
  assert.match(css,/@media \(max-width:420px\)/);
  assert.match(css,/@media \(max-height:520px\)/);
  assert.match(html,/xrmovi-local-assistant\.css\?v=20261030-compact-2/);
- assert.match(html,/xrmovi-local-assistant\.js\?v=20261030-compact-2/);
+ assert.match(html,/xrmovi-local-assistant\.js\?v=20261030-brain-1/);
 });
