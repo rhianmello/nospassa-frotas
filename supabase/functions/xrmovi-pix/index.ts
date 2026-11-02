@@ -1,0 +1,150 @@
+import {createClient} from "npm:@supabase/supabase-js@2.58.0";
+const ORIGINS=new Set(["https://frota.nospassa.com.br","https://www.frota.nospassa.com.br"]);
+function respond(data:unknown,status=200,origin=""){
+ const headers:Record<string,string>={"content-type":"application/json; charset=utf-8","cache-control":"no-store","vary":"Origin"};
+ if(ORIGINS.has(origin))headers["access-control-allow-origin"]=origin;
+ return new Response(JSON.stringify(data),{status,headers});
+}
+const uuid=/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i;
+const digits=/^\d+$/;
+function validCpf(value:string){
+ if(!/^\d{11}$/.test(value)||/^(\d)\1{10}$/.test(value))return false;
+ for(let n=9;n<11;n++){let sum=0;for(let j=0;j<n;j++)sum+=Number(value[j])*(n+1-j);
+  if(((sum*10)%11)%10!==Number(value[n]))return false;}
+ return true;
+}
+Deno.serve(async(req:Request)=>{
+ const origin=req.headers.get("origin")||"";
+ if(origin&&!ORIGINS.has(origin))return respond({error:"Origem não autorizada."},403,origin);
+ if(req.method==="OPTIONS")return new Response(null,{status:204,headers:{"access-control-allow-origin":origin||"https://frota.nospassa.com.br","access-control-allow-methods":"POST,OPTIONS","access-control-allow-headers":"authorization,apikey,content-type,x-client-info"}});
+ if(req.method!=="POST")return respond({error:"Método inválido."},405,origin);
+ const auth=req.headers.get("authorization")||"";
+ if(!auth.startsWith("Bearer "))return respond({error:"Entre na conta."},401,origin);
+ const url=Deno.env.get("SUPABASE_URL")||"";
+ const anon=Deno.env.get("SUPABASE_ANON_KEY")||"";
+ const serviceKey=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||"";
+ const token=Deno.env.get("XRMOVI_MP_ACCESS_TOKEN")||"";
+ if(!url||!anon||!serviceKey||!token.startsWith("APP_USR-")||Deno.env.get("XRMOVI_BILLING_ENABLED")!=="true")
+  return respond({error:"Pix temporariamente indisponível."},503,origin);
+ const client=createClient(url,anon,{global:{headers:{Authorization:auth}},auth:{persistSession:false}});
+ const backend=createClient(url,serviceKey,{auth:{persistSession:false}});
+ try{
+  const {data:userData,error:userError}=await client.auth.getUser(auth.slice(7));
+  if(userError||!userData.user)return respond({error:"Sessão inválida."},401,origin);
+  if(Deno.env.get("XRMOVI_BILLING_PILOT_ONLY")!=="false"){
+   const {data:pilot,error:pilotError}=await client.rpc("xrmovi_billing_pilot_allowed");
+   if(pilotError||pilot!==true)return respond({error:"Pagamento Pix em homologação. Acesso restrito a contas autorizadas para o piloto."},403,origin);
+  }
+  const body=await req.json();
+  const cid=String(body?.company_id||"");
+  const action=String(body?.action||"");
+  if(!uuid.test(cid)||!["create","check"].includes(action))return respond({error:"Requisição inválida."},400,origin);
+  const {data:account,error:accountError}=await client.rpc("xrmovi_checkout_reconcile_lookup",{cid});
+  if(accountError||!account?.account_id)return respond({error:"Titular da assinatura não autorizado."},403,origin);
+  const accountId=String(account.account_id);
+  const mp=async(path:string,method="GET",input?:unknown,idempotency?:string)=>{
+   const response=await fetch("https://api.mercadopago.com"+path,{
+    method,headers:{"Authorization":"Bearer "+token,"Content-Type":"application/json",
+      ...(idempotency?{"X-Idempotency-Key":idempotency}:{})},
+    ...(input?{body:JSON.stringify(input)}:{}),signal:AbortSignal.timeout(12000)});
+   const data=await response.json().catch(()=>({}));
+   if(!response.ok)throw Error("Mercado Pago recusou a operação (HTTP "+response.status+")."+(data?.message?" "+String(data.message).slice(0,140):""));
+   return data;
+  };
+  const getIntent=async()=>{
+   const {data,error}=await client.rpc("xrmovi_pix_lookup",{p_company:cid});
+   if(error)throw Error(error.message);
+   return data;
+  };
+  const verify=async(intent:any)=>{
+   if(!intent?.payment_id||!digits.test(String(intent.payment_id)))return {status:"not_generated"};
+   const payment=await mp("/v1/payments/"+encodeURIComponent(String(intent.payment_id)));
+   if(String(payment.id)!==String(intent.payment_id)||String(payment.external_reference)!==String(intent.id)
+    ||payment.currency_id!=="BRL"||payment.payment_method_id!=="pix"
+    ||Math.abs(Number(payment.transaction_amount)-Number(intent.amount))>0.009||payment.live_mode===false)
+     throw Error("Pagamento não pertence ao pedido XRMOVI.");
+   if(payment.status==="approved"){
+    const approved=String(payment.date_approved||"");
+    if(!Number.isFinite(Date.parse(approved)))throw Error("Data de aprovação ausente.");
+    const {data,error}=await backend.rpc("xrmovi_pix_settle",{
+      p_id:String(intent.id),p_payment:String(payment.id),p_amount:Number(intent.amount),p_approved:approved});
+    if(error)throw Error("Pagamento aprovado, mas a liberação exige revisão: "+error.message);
+    return {status:"paid",paid_through:data?.paid_through||null};
+   }
+   const expiry=Date.parse(String(payment.date_of_expiration||intent.expires_at||""));
+   if(Number.isFinite(expiry)&&expiry<Date.now())return {status:"expired"};
+   if(["cancelled","rejected","refunded","charged_back"].includes(String(payment.status)))
+    return {status:"failed"};
+   const pix=payment.point_of_interaction?.transaction_data||{};
+   return {status:"pending",qr_code:String(pix.qr_code||""),qr_code_base64:String(pix.qr_code_base64||""),
+    ticket_url:String(pix.ticket_url||""),expires_at:String(payment.date_of_expiration||intent.expires_at)};
+  };
+  if(action==="check"){
+   const intent=await getIntent();
+   if(!intent)return respond({status:"no_payment",message:"Nenhum Pix emitido."},200,origin);
+   if(intent.status==="paid")return respond({status:"paid"},200,origin);
+   if(intent.status==="failed"||intent.status==="expired")return respond({status:intent.status},200,origin);
+   return respond(await verify(intent),200,origin);
+  }
+  // Never create a Pix while a live recurring authorization may charge the same account.
+  const {data:previous,error:existingError}=await client.rpc("xrmovi_pix_existing_card",{p_company:cid});
+  if(existingError)throw Error("Não foi possível verificar cobranças anteriores.");
+  if(previous){
+
+   if(previous.provider_subscription_id){
+    const preapproval=await mp("/preapproval/"+encodeURIComponent(String(previous.provider_subscription_id)));
+    if(["authorized"].includes(String(preapproval.status)))
+     return respond({error:"Existe assinatura por cartão autorizada. Verifique ou cancele a assinatura antes de mudar para Pix."},409,origin);
+    if(preapproval.status==="pending"||preapproval.status==="paused"){
+     const canceled=await mp("/preapproval/"+encodeURIComponent(String(previous.provider_subscription_id)),"PUT",{status:"canceled"});
+     if(canceled.status!=="canceled")throw Error("Não foi possível cancelar a tentativa anterior no Mercado Pago.");
+    }else if(preapproval.status!=="canceled"){
+     return respond({error:"Não foi possível confirmar o cancelamento do checkout anterior."},409,origin);
+    }
+    const {data:released,error:releaseError}=await backend.rpc("xrmovi_pix_card_cancelled",{p_provider_id:String(previous.provider_subscription_id)});
+    if(releaseError||released!==true)throw Error("Não foi possível concluir a troca do pagamento.");
+   }else{
+    if(Date.now()-Date.parse(previous.created_at)<120000)
+     return respond({error:"Uma tentativa de cartão está sendo criada. Tente novamente em alguns instantes."},409,origin);
+    const {data:done,error}=await backend.rpc("xrmovi_pix_cancel_unlinked",{p_id:previous.id});
+    if(error||done!==true)throw Error("Não foi possível encerrar a tentativa de cartão.");
+   }
+  }
+  const {data:prepared,error:prepError}=await client.rpc("xrmovi_pix_prepare",{p_company:cid});
+  if(prepError)throw Error(prepError.message);
+  if(prepared.payment_id){
+   const present=await verify({id:prepared.id,payment_id:prepared.payment_id,amount:prepared.amount,expires_at:prepared.expires_at});
+   return respond({...present,plan:prepared.plan,amount:prepared.amount,reused:true},200,origin);
+  }
+  const name=String(body?.payer_name||"").trim().replace(/\s+/g," ");
+  const cpf=String(body?.payer_cpf||"").replace(/\D/g,"");
+  if(name.length<5||name.length>120||!name.includes(" ")||!validCpf(cpf))
+   return respond({error:"Informe nome completo e CPF válido do pagador."},400,origin);
+  const [first,...last]=name.split(" ");
+  const email=String(userData.user.email||"");
+  if(!email)return respond({error:"Conta sem e-mail confirmado."},400,origin);
+  const expiration=new Date(Date.now()+30*60*1000).toISOString();
+  const payload={
+   transaction_amount:Number(prepared.amount),description:"XRMOVI Plano "+String(prepared.plan)+" - 1 mes",
+   payment_method_id:"pix",currency_id:"BRL",external_reference:String(prepared.id),
+   notification_url:url+"/functions/v1/xrmovi-pix-webhook",
+   date_of_expiration:expiration,
+   payer:{email,first_name:first,last_name:last.join(" "),identification:{type:"CPF",number:cpf}}
+  };
+  const created=await mp("/v1/payments","POST",payload,String(prepared.id));
+  if(!digits.test(String(created.id))||created.payment_method_id!=="pix"
+   ||String(created.external_reference)!==String(prepared.id)
+   ||Math.abs(Number(created.transaction_amount)-Number(prepared.amount))>0.009)
+    throw Error("Mercado Pago devolveu um pagamento divergente.");
+  const {data:attached,error:attachError}=await backend.rpc("xrmovi_pix_attach",{
+   p_id:String(prepared.id),p_payment:String(created.id),p_expires:String(created.date_of_expiration||expiration)});
+  if(attachError||attached!==true)throw Error("Não foi possível registrar o Pix. Consulte o suporte antes de tentar novamente.");
+  const pix=created.point_of_interaction?.transaction_data||{};
+  if(!pix.qr_code)throw Error("Pix criado mas sem código. Use 'Verificar Pix' para retomar.");
+  return respond({status:"pending",plan:prepared.plan,amount:prepared.amount,
+    qr_code:String(pix.qr_code),qr_code_base64:String(pix.qr_code_base64||""),
+    ticket_url:String(pix.ticket_url||""),expires_at:String(created.date_of_expiration||expiration)},200,origin);
+ }catch(error){
+  return respond({error:error instanceof Error?error.message:"Falha no Pix."},502,origin);
+ }
+});
