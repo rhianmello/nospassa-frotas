@@ -30,9 +30,9 @@ Deno.serve(async req=>{
    headers:{Authorization:"Bearer "+token,Accept:"application/json"},signal:AbortSignal.timeout(12000)});
   if(!res.ok)throw Error("Mercado Pago verification unavailable");
   const payment=await res.json();
-  if(String(payment.id)!==id||payment.status!=="approved"||payment.payment_method_id!=="pix"
+  if(String(payment.id)!==id||payment.payment_method_id!=="pix"
    ||payment.currency_id!=="BRL"||payment.live_mode===false)
-   return respond({ok:true,ignored:"not_approved_pix"});
+   return respond({ok:true,ignored:"not_pix"});
   const service=createClient(url,serviceKey,{auth:{persistSession:false}});
   const {data:intent,error}=await service.rpc("xrmovi_pix_payment_for_webhook",{p_payment:id});
   if(error)throw Error("Unable to look up Pix intent");
@@ -40,6 +40,13 @@ Deno.serve(async req=>{
   if(String(payment.external_reference)!==String(intent.id)
    ||Math.abs(Number(payment.transaction_amount)-Number(intent.amount))>0.009)
    return respond({error:"Payment mismatch"},400);
+  if(["refunded","charged_back"].includes(String(payment.status))){
+   const {error:revokeError}=await service.rpc("xrmovi_pix_revoke",{
+    p_id:String(intent.id),p_payment:id,p_status:String(payment.status)});
+   if(revokeError)throw Error("Unable to reverse Pix entitlement");
+   return respond({ok:true,status:payment.status});
+  }
+  if(payment.status!=="approved")return respond({ok:true,ignored:"not_approved_pix"});
   const at=String(payment.date_approved||"");
   if(!Number.isFinite(Date.parse(at)))throw Error("Invalid approval timestamp");
   const {data:settled,error:settleError}=await service.rpc("xrmovi_pix_settle",{
