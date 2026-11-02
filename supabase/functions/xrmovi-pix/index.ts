@@ -63,6 +63,12 @@ Deno.serve(async(req:Request)=>{
     ||payment.currency_id!=="BRL"||payment.payment_method_id!=="pix"
     ||Math.abs(Number(payment.transaction_amount)-Number(intent.amount))>0.009||payment.live_mode===false)
      throw Error("Pagamento não pertence ao pedido XRMOVI.");
+   if(["refunded","charged_back"].includes(String(payment.status))){
+    const {error:reversedError}=await backend.rpc("xrmovi_pix_revoke",{
+     p_id:String(intent.id),p_payment:String(payment.id),p_status:String(payment.status)});
+    if(reversedError)throw Error("Falha ao registrar estorno.");
+    return {status:"failed",message:"Pagamento estornado ou contestado."};
+   }
    if(payment.status==="approved"){
     const approved=String(payment.date_approved||"");
     if(!Number.isFinite(Date.parse(approved)))throw Error("Data de aprovação ausente.");
