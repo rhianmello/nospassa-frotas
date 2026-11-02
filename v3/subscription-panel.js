@@ -1,3 +1,4 @@
+import {openPixCheckout} from './pix-checkout.js?v=20261102-pix-1';
 // XRMOVI | Central de assinatura — todas as gravações passam por RPCs autenticadas.
 // Nunca decide cotas pelo navegador: o banco aplica regras nas inserções.
 export function setupSubscriptionPanel({client,getCompany,onCompanyCreated,onDataChanged,billingEnabled=false}){
@@ -155,9 +156,25 @@ export function setupSubscriptionPanel({client,getCompany,onCompanyCreated,onDat
  billingNotice.className='xrm-info';
  billingNotice.id='xrm-billing-readiness-message';
  checkoutButton.insertAdjacentElement('afterend',billingNotice);
+ const pixButton=document.createElement('button');
+ pixButton.type='button';pixButton.id='xrm-bill-pix';pixButton.className='secondary';
+ pixButton.textContent='Pagar por Pix · mensal';
+ pixButton.title='Pix Copia e Cola ou QR Code bancário. Renovação mensal manual.';
+ checkoutButton.insertAdjacentElement('afterend',pixButton);
+ pixButton.addEventListener('click',()=>{
+  if(!billingReady)return;
+  const current=getCompany();
+  if(!current){feedback('xrm-bill-plan-feedback','Selecione a empresa.',true);return;}
+  openPixCheckout({client,companyId:current.id,onPaid:async()=>{
+   await refresh();await onDataChanged?.();
+   feedback('xrm-bill-plan-feedback','Pix confirmado. Sua assinatura foi liberada.');
+  }});
+ });
+
  const checkoutState=(ready,message)=>{
   billingReady=Boolean(ready);
   checkoutButton.disabled=!billingReady;
+  pixButton.disabled=!billingReady;
   checkoutButton.title=billingReady?'Abrir checkout seguro do Mercado Pago':'Cobrança ainda não habilitada';
   checkoutButton.textContent=billingReady?'Assinar e pagar com Mercado Pago':'Pagamento aguardando configuração';
   billingNotice.textContent=message;
