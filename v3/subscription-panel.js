@@ -1,4 +1,5 @@
 import {openPixCheckout} from './pix-checkout.js?v=20261102-pix-1';
+import {renewalNotice} from './renewal-reminder.js?v=20261103-reminders-1';
 // XRMOVI | Central de assinatura — todas as gravações passam por RPCs autenticadas.
 // Nunca decide cotas pelo navegador: o banco aplica regras nas inserções.
 export function setupSubscriptionPanel({client,getCompany,onCompanyCreated,onDataChanged,billingEnabled=false}){
@@ -66,6 +67,7 @@ export function setupSubscriptionPanel({client,getCompany,onCompanyCreated,onDat
   <header><p class="eyebrow">GESTÃO COMERCIAL</p><h2 tabindex="-1">Minha assinatura</h2><p class="xrm-billing-lead">Controle a capacidade contratada, distribua suas empresas e acompanhe os pedidos de alteração de plano.</p></header>
   <div id="xrm-bill-feedback" class="xrm-feedback" role="status" aria-live="polite">Consultando sua assinatura...</div>
   <section class="xrm-plan-hero"><div class="xrm-plan-hero-head"><div><span class="xrm-plan-pill" id="xrm-bill-status">Consultando</span><div><strong id="xrm-bill-plan">—</strong></div></div><b id="xrm-bill-price">—</b></div><div id="xrm-bill-details" class="xrm-plan-details"></div></section>
+  <section id="xrm-bill-renewal" aria-live="polite" hidden><strong id="xrm-bill-renewal-title"></strong><p id="xrm-bill-renewal-detail"></p></section>
   <div id="xrm-bill-quotas" class="xrm-quotas" aria-label="Capacidade do plano"></div>
   <section class="xrm-group"><h3>Empresas vinculadas à assinatura</h3><div class="xrm-company-cards" id="xrm-bill-companies"></div><p class="xrm-info">Veículos e contratos são compartilhados no total da assinatura, mesmo quando há várias empresas.</p></section>
   <div class="xrm-actions-grid">
@@ -286,6 +288,17 @@ export function setupSubscriptionPanel({client,getCompany,onCompanyCreated,onDat
   text('xrm-bill-price',info.price_brl==null?'Sob consulta':money(info.price_brl)+'/mês');
   const expired=info.status==='trial'&&info.trial_end&&new Date(info.trial_end)<new Date();
   text('xrm-bill-status',expired?'Teste expirado':info.status==='trial'?'Aguardando pagamento':info.status==='pending'?'Aguardando pagamento':info.status==='active'?'Ativa':info.status);
+  const renewal=renewalNotice(info);
+  const reminder=root.querySelector('#xrm-bill-renewal');
+  if(reminder){
+   reminder.hidden=!renewal;
+   if(renewal){
+    reminder.dataset.tone=renewal.tone;
+    text('xrm-bill-renewal-title',renewal.title+' · '+renewal.date);
+    text('xrm-bill-renewal-detail',renewal.detail);
+   }
+  }
+
   text('xrm-bill-details',(['pending','trial'].includes(info.status)?'Escolha um plano e conclua o pagamento para liberar veículos, contratos e demais operações. · ':'')+'Limites totais da assinatura, não por empresa');
   const quotas=root.querySelector('#xrm-bill-quotas');quotas.replaceChildren(
    renderQuota('Empresas',info.companies_used,info.company_limit),
