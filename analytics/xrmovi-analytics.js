@@ -1,0 +1,91 @@
+/* XRMOVI: Google Analytics 4. Somente páginas comerciais, mediante consentimento. */
+(function(){
+'use strict';
+var GA_ID='G-1Z1PSN1SJD',KEY='xrmovi_ga4_consent_v1';
+var allowed={xrmovi_view_plans:1,xrmovi_contact:1,xrmovi_signup_start:1,xrmovi_demo_open:1,sign_up:1};
+var status=null,loaded=false,box,notice;
+function page(){return location.origin+location.pathname;}
+function consent(value){
+ if(typeof window.gtag==='function')window.gtag('consent','update',{
+ analytics_storage:value?'granted':'denied',
+ ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied'});
+}
+function startTag(){
+ if(loaded)return;
+ loaded=true;
+ window.dataLayer=window.dataLayer||[];
+ window.gtag=function(){window.dataLayer.push(arguments);};
+ window.gtag('consent','default',{analytics_storage:'denied',ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied'});
+ consent(true);
+ window.gtag('js',new Date());
+ window.gtag('config',GA_ID,{page_location:page(),page_title:document.title,send_page_view:true,allow_google_signals:false,allow_ad_personalization_signals:false});
+ var script=document.createElement('script');
+ script.src='https://www.googletagmanager.com/gtag/js?id='+encodeURIComponent(GA_ID);
+ script.async=true;document.head.appendChild(script);
+}
+function clearAnalyticsCookies(){
+ var names=document.cookie.split(';').map(function(x){return x.split('=')[0].trim();}).filter(function(x){return /^_ga(?:_|$)/.test(x);});
+ var hosts=[location.hostname,'.'+location.hostname];
+ var parts=location.hostname.split('.');if(parts.length>=3)hosts.push('.'+parts.slice(-3).join('.'));
+ names.forEach(function(name){
+   hosts.forEach(function(domain){document.cookie=encodeURIComponent(name)+'=; Max-Age=0; path=/; domain='+domain+'; SameSite=Lax';});
+   document.cookie=encodeURIComponent(name)+'=; Max-Age=0; path=/; SameSite=Lax';
+ });
+}
+function save(value){
+ status=value;
+ try{localStorage.setItem(KEY,value);}catch(e){}
+ if(value==='accepted')startTag();
+ else if(loaded){consent(false);clearAnalyticsCookies();}
+ box.hidden=true;
+ if(notice)notice.textContent=value==='accepted'?'Medição analítica ativada.':'Medição analítica desativada.';
+}
+function track(name,data){
+ if(status!=='accepted'||!loaded||!allowed[name]||typeof window.gtag!=='function')return;
+ data=data||{};
+ var args={page_location:page()};
+ if(typeof data.plan==='string'&&['start','pro','business','advanced','enterprise'].indexOf(data.plan)>=0)args.plan=data.plan;
+ if(typeof data.location==='string'&&['landing','seo','navigation','hero','plans','footer','preview','registration'].indexOf(data.location)>=0)args.click_location=data.location;
+ if(name==='sign_up')args.method='email';
+ window.gtag('event',name,args);
+}
+window.XrmoviAnalytics=Object.freeze({track:track,getConsent:function(){return status;}});
+function element(tag,text,cls){
+ var n=document.createElement(tag);if(text)n.textContent=text;if(cls)n.className=cls;return n;
+}
+function banner(){
+ var style=document.createElement('style');
+ style.textContent='#xrm-ga4-consent[hidden]{display:none!important}#xrm-ga4-consent{position:fixed;left:14px;bottom:14px;z-index:2147483600;width:min(500px,calc(100vw - 28px));padding:18px 20px;background:#0d2a39;color:#e7f9fa;border:1px solid #5b9a98;border-radius:15px;box-shadow:0 18px 60px #0009;font:13px/1.5 system-ui,Segoe UI,sans-serif}#xrm-ga4-consent h2{font:800 17px/1.3 system-ui,Segoe UI,sans-serif;letter-spacing:0;margin:0 0 8px;color:#f0feff}#xrm-ga4-consent p{font:13px/1.5 system-ui,Segoe UI,sans-serif;margin:0 0 14px;color:#c2dbe3}#xrm-ga4-consent .ga4-buttons{display:flex;gap:8px;flex-wrap:wrap}#xrm-ga4-consent button{cursor:pointer;border-radius:9px;padding:10px 15px;font:800 12px system-ui,Segoe UI,sans-serif;background:#6ae4ba;color:#06332d;border:1px solid #6ae4ba}#xrm-ga4-consent .ga4-deny{background:transparent;color:#e6f5fc;border-color:#668b9a}#xrm-ga4-settings{background:transparent;border:0;color:#8ee7c6;text-decoration:underline;cursor:pointer;font:12px system-ui,Segoe UI,sans-serif;padding:5px}#xrm-ga4-live{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}@media(max-width:600px){#xrm-ga4-consent{left:10px;bottom:10px;width:calc(100vw - 20px);padding:15px}#xrm-ga4-consent .ga4-buttons button{flex:1}}';
+ document.head.appendChild(style);
+ box=element('section');box.id='xrm-ga4-consent';box.hidden=true;box.setAttribute('role','dialog');box.setAttribute('aria-label','Preferências de privacidade');
+ box.appendChild(element('h2','Podemos medir as visitas ao XRMOVI?'));
+ box.appendChild(element('p','Com sua autorização, usamos Google Analytics para medir visitas e cliques nas páginas comerciais. Não enviamos e-mail, senha ou dados dos veículos. Você pode recusar e alterar a escolha depois.'));
+ var actions=element('div',null,'ga4-buttons'),yes=element('button','Aceitar análise'),no=element('button','Recusar','ga4-deny');
+ yes.type=no.type='button';yes.addEventListener('click',function(){save('accepted');});no.addEventListener('click',function(){save('denied');});
+ actions.appendChild(yes);actions.appendChild(no);box.appendChild(actions);document.body.appendChild(box);
+ notice=element('div');notice.id='xrm-ga4-live';notice.setAttribute('aria-live','polite');document.body.appendChild(notice);
+ var settings=element('button','Preferências de privacidade');settings.id='xrm-ga4-settings';settings.type='button';settings.addEventListener('click',function(){box.hidden=false;yes.focus({preventScroll:true});});
+ (document.querySelector('footer .shell')||document.querySelector('footer')||document.body).appendChild(settings);
+}
+function instrument(){
+ document.addEventListener('click',function(e){
+  if(!e.target||!e.target.closest)return;
+  if(e.target.closest('[data-auth-mode="signup"]')){track('xrmovi_signup_start',{location:'registration'});return;}
+  if(e.target.closest('[data-demo]')){track('xrmovi_demo_open',{location:'preview'});return;}
+  var a=e.target.closest('a[href]');if(!a)return;
+  var u;try{u=new URL(a.href,location.href);}catch(err){return;}
+  var planContainer=a.closest('.plan'),planLabel=(planContainer&&planContainer.querySelector('h2,h3')||{}).textContent||'';
+  planLabel=planLabel.toLowerCase();
+  var plan=['start','pro','business','advanced','enterprise'].find(function(x){return planLabel.indexOf(x)>=0;})||'';
+  if(u.hostname==='wa.me'||u.hostname==='api.whatsapp.com'){track('xrmovi_contact',{location:plan?'plans':'landing',plan:plan});return;}
+  if(u.origin===location.origin&&u.hash==='#planos')track('xrmovi_view_plans',{location:location.pathname==='/'?'landing':'seo'});
+ },true);
+}
+function init(){
+ banner();instrument();
+ try{var saved=localStorage.getItem(KEY);status=saved==='accepted'||saved==='denied'?saved:null;}catch(err){status=null;}
+ if(status==='accepted')startTag();
+ else if(!status)box.hidden=false;
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+})();
