@@ -18,6 +18,10 @@ on:
       - 'v3/subscription-panel.js'
       - 'v3/pix-checkout.js'
       - 'v3/tests/pix-payment.test.cjs'
+      - 'v3/renewal-reminder.js'
+      - 'v3/renewal-reminder.css'
+      - 'v3/tests/renewal-reminders.test.cjs'
+      - 'v3/subscription-panel.js'
       - 'v3/xrmovi-guide-course.js'
       - 'v3/tests/assistant-course.test.cjs'
       - '.github/workflows/xrmovi-tests.yml'
@@ -39,6 +43,10 @@ on:
       - 'v3/subscription-panel.js'
       - 'v3/pix-checkout.js'
       - 'v3/tests/pix-payment.test.cjs'
+      - 'v3/renewal-reminder.js'
+      - 'v3/renewal-reminder.css'
+      - 'v3/tests/renewal-reminders.test.cjs'
+      - 'v3/subscription-panel.js'
       - 'v3/xrmovi-guide-course.js'
       - 'v3/tests/assistant-course.test.cjs'
       - '.github/workflows/xrmovi-tests.yml'
@@ -82,3 +90,7 @@ jobs:
           node --check v3/pix-checkout.js
       - name: Run Pix no-charge security regressions
         run: node --test v3/tests/pix-payment.test.cjs
+      - name: Validate renewal reminder module
+        run: node --check v3/renewal-reminder.js
+      - name: Test renewal notice timing and outbound security
+        run: node --test v3/tests/renewal-reminders.test.cjs
