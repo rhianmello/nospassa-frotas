@@ -11,6 +11,7 @@ Implantado em 03/11/2026.
 - Se a assinatura for renovada ou vencida antes do envio, o aviso antigo é descartado.
 - E-mail para o titular cadastrado em Supabase Auth; endereço não é enviado ao navegador nem compartilhado entre empresas.
 - **Pix:** avisar que o cliente deve renovar manualmente pela tela Minha assinatura.
+- **Renovação antecipada por Pix:** liberada nos últimos 7 dias, preservando o saldo de dias já pagos e acrescentando o próximo mês somente após confirmação.
 - **Cartão:** informar a renovação automática pelo Mercado Pago; nunca instruir o cliente a pagar novamente por Pix.
 - O acesso operacional continua sujeito ao controle de pagamentos vigente: lembretes não cobram e não liberam assinaturas.
 
