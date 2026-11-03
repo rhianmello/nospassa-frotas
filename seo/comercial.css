@@ -1,5 +1,5 @@
 /* XRMOVI | páginas comerciais públicas. Escopo isolado para preservar o painel operacional. */
-:root{color-scheme:dark;--sea:#061723;--panel:#0c2938;--panel2:#103545;--line:#2b5361;--mint:#69e4bd;--light:#effcff;--muted:#b3cad3;--gold:#ffdca2}
+body.seo-page{color-scheme:dark;--sea:#061723;--panel:#0c2938;--panel2:#103545;--line:#2b5361;--mint:#69e4bd;--light:#effcff;--muted:#b3cad3;--gold:#ffdca2}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body.seo-page{margin:0;min-height:100vh;background:radial-gradient(ellipse 900px 600px at 85% 4%,#124451 0,transparent 68%),var(--sea);color:var(--light);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;line-height:1.65}
