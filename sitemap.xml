@@ -3,4 +3,13 @@
   <url>
     <loc>https://frota.nospassa.com.br/</loc>
   </url>
+  <url>
+    <loc>https://frota.nospassa.com.br/gestao-de-frotas/</loc>
+  </url>
+  <url>
+    <loc>https://frota.nospassa.com.br/controle-de-manutencao/</loc>
+  </url>
+  <url>
+    <loc>https://frota.nospassa.com.br/controle-de-abastecimento/</loc>
+  </url>
 </urlset>
