@@ -1,5 +1,5 @@
 import{createClient}from 'https://esm.sh/@supabase/supabase-js@2';
-import { setupSubscriptionPanel } from './subscription-panel.js?v=20261102-pix-1';
+import { setupSubscriptionPanel } from './subscription-panel.js?v=20261103-reminders-1';
 import { renewalNotice } from './renewal-reminder.js?v=20261103-reminders-1';
 import { showXrmoviOnboarding } from './onboarding.js?v=20261103-payment-layout-1';
 import { createCompanyBranding } from './company-branding.js?v=20261029-logo-1';
