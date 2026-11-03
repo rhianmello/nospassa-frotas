@@ -1,5 +1,6 @@
 import{createClient}from 'https://esm.sh/@supabase/supabase-js@2';
 import { setupSubscriptionPanel } from './subscription-panel.js?v=20261102-pix-1';
+import { renewalNotice } from './renewal-reminder.js?v=20261103-reminders-1';
 import { showXrmoviOnboarding } from './onboarding.js?v=20261103-payment-layout-1';
 import { createCompanyBranding } from './company-branding.js?v=20261029-logo-1';
 import { setupMileage } from './mileage.js?v=20261029-km-audit-34';
@@ -104,11 +105,31 @@ function updatePaymentGateUI(){
  });
  if(el('fleet-mobile-view'))for(const option of el('fleet-mobile-view').options)option.disabled=paymentRequired&&option.value!=='subscription';
 }
+async function refreshRenewalBanner(){
+ const node=el('xrm-renewal-banner');
+ if(!node)return;
+ node.hidden=true;
+ const id=company?.id;
+ if(!id||!sb)return;
+ try{
+  const {data,error}=await sb.rpc('xrmovi_subscription_reminder',{cid:id});
+  if(error||company?.id!==id)return;
+  const notice=renewalNotice(data);
+  if(!notice)return;
+  const title=el('xrm-renewal-title'),detail=el('xrm-renewal-detail'),button=el('xrm-renewal-action');
+  if(title)title.textContent=notice.title+' · '+notice.date;
+  if(detail)detail.textContent=notice.detail;
+  if(button){button.hidden=!notice.owner;button.onclick=()=>page('subscription');}
+  node.dataset.tone=notice.tone;
+  node.hidden=false;
+ }catch{node.hidden=true;}
+}
 async function checkSubscriptionAccess(){
  if(!company)return;
  const state=await rpc('access_status',{cid:company.id});
  paymentRequired=!state?.allowed;
  updatePaymentGateUI();
+ void refreshRenewalBanner();
  if(paymentRequired){
   xrmAssistClear();
   ++loadRequest;
