@@ -17,6 +17,16 @@ export function renewalNotice(info,now=new Date()){
  const owner=info.owner!==false;
  const date=due.text;
  let title="",detail="",tone="warning";
+ if(info.status==="canceled"){
+  title=days<0?"Assinatura cancelada":"Assinatura cancelada · acesso termina em "+(days===0?"hoje":days+" dia(s)");
+  detail="A renovação automática está cancelada. Abra Minha assinatura para consultar as opções disponíveis.";
+  return {days,date,title,detail,tone:days<=0?"critical":"warning",pix,card,owner,action:"Abrir Minha assinatura"};
+ }
+ if(info.status==="past_due"&&days>=0){
+  title="Pagamento pendente de confirmação";
+  detail="Confira o pagamento antes do vencimento para manter o acesso.";
+  return {days,date,title,detail,tone:days===0?"critical":"warning",pix,card,owner,action:"Abrir Minha assinatura"};
+ }
  if(days<0){
   tone="critical";
   title="Assinatura vencida";
