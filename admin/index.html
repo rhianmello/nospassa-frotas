@@ -59,10 +59,10 @@ footer{padding:20px;text-align:center;color:#849eae;font-size:11px}
     <section class="panel"><div class="panel-head"><h2>Receita confirmada por mês</h2><small id="revenue-total"></small></div><div id="revenue-chart" class="chart" aria-label="Receita confirmada por mês"></div></section>
     <section class="panel"><div class="panel-head"><h2>Carteira de clientes</h2><small>Contas e acessos</small></div><div style="padding:18px;display:grid;gap:13px" id="portfolio-breakdown"></div></section>
    </div>
-   <section class="panel" style="margin-top:17px"><div class="panel-head"><h2>Últimos cadastros</h2><button class="btn ghost" data-goto="customers">Ver clientes</button></div><div class="table-wrap"><table><thead><tr><th>Cliente / empresa</th><th>Plano</th><th>Situação</th><th>Entrada</th></tr></thead><tbody id="recent-customers"></tbody></table></div></section>
+   <section class="panel" style="margin-top:17px"><div class="panel-head"><h2>Últimos cadastros</h2><button class="btn ghost" data-goto="customers">Ver clientes</button></div><div class="table-wrap"><table><thead><tr><th>Cliente / empresa</th><th>Plano</th><th>Situação</th><th>Entrada</th><th>Autorização</th></tr></thead><tbody id="recent-customers"></tbody></table></div></section>
    <div class="notice">Os valores financeiros exibidos são os recebimentos efetivamente confirmados no histórico do banco. O painel não considera mensalidades previstas como dinheiro recebido. A situação das credenciais aparece no diagnóstico acima.</div>
   </div>
-  <section id="view-customers" class="panel tab-view" hidden><div class="panel-head"><h2>Clientes cadastrados</h2><input class="search" id="customer-search" placeholder="Buscar cliente ou empresa…" type="search"></div><div class="table-wrap"><table><thead><tr><th>Cliente / empresas</th><th>Plano</th><th>Assinatura</th><th>Veículos</th><th>Acesso</th><th>Entrada</th><th>Ações</th></tr></thead><tbody id="customers-body"></tbody></table></div></section>
+  <section id="view-customers" class="panel tab-view" hidden><div class="panel-head"><h2>Clientes cadastrados</h2><input class="search" id="customer-search" placeholder="Buscar cliente ou empresa…" type="search"></div><div class="notice" style="margin:0 18px 12px">A autorização manual libera a operação por prazo definido, mas <strong>não confirma pagamento</strong>. Somente o proprietário pode conceder ou revogar. Toda ação é auditada.</div><div class="table-wrap"><table><thead><tr><th>Cliente / empresas</th><th>Plano</th><th>Assinatura</th><th>Veículos</th><th>Acesso</th><th>Entrada</th><th>Ações</th></tr></thead><tbody id="customers-body"></tbody></table></div></section>
   <section id="view-messages" class="panel tab-view" hidden><div class="panel-head"><h2>Caixa de mensagens</h2><small>Conversa privada com o titular de cada conta</small></div><div class="inbox"><div class="contacts" id="contacts"></div><div class="conversation"><div class="conversation-top" id="thread-title">Selecione um cliente</div><div class="messages" id="thread-messages"><p class="empty">Escolha uma conta para conversar.</p></div><form class="compose" id="message-form"><textarea id="message-body" placeholder="Digite sua mensagem ao cliente…" maxlength="3000" required></textarea><button class="btn primary" type="submit">Enviar</button></form></div></div></section>
   <section id="view-payments" class="panel tab-view" hidden><div class="panel-head"><h2>Recebimentos confirmados</h2><small>Não inclui tentativas sem confirmação</small></div><div class="table-wrap"><table><thead><tr><th>Data</th><th>Cliente</th><th>Valor</th><th>Provedor</th></tr></thead><tbody id="payments-body"></tbody></table></div></section>
   <section id="view-requests" class="panel tab-view" hidden><div class="panel-head"><h2>Solicitações de plano</h2><small>Acompanhe os interessados</small></div><div class="table-wrap"><table><thead><tr><th>Data</th><th>Empresa</th><th>Plano solicitado</th><th>Estado</th></tr></thead><tbody id="requests-body"></tbody></table></div></section>
@@ -80,15 +80,33 @@ let db,info={accounts:[],summary:{},revenue:[],payments:[],requests:[]},threadId
 function status(text,type=''){el('feedback').textContent=text;el('feedback').className='status '+type}
 async function rpc(fn,args){const {data,error}=await db.rpc('xrmovi_'+fn,args);if(error)throw Error(error.message);return data}
 function rowCustomer(c,full=false){
+ const manual=Boolean(c.manual_access?.active&&Date.parse(c.manual_access.valid_until)>Date.now());
+ const manualUntil=manual?date(c.manual_access.valid_until):'';
  const tr=node('tr');const first=node('td');const bold=node('b',c.email),companies=node('span',(c.companies||[]).map(x=>x.name).join(' · ')||'Sem empresa','sub');first.append(bold,companies);tr.append(first);
  cell(tr,(c.plan||'—').toUpperCase()+(c.price?' · '+money(c.price):''));
  const expired=c.status==='trial'&&c.trial_end&&Date.parse(c.trial_end)<Date.now();
  pill(tr,expired?'Teste vencido':c.status==='pending'?'Aguardando pagamento':c.status||'—',expired?'blocked':c.status==='active'?'active':'pending');
- if(full){cell(tr,number(c.vehicles));pill(tr,c.blocked?'Bloqueado':'Liberado',c.blocked?'blocked':'active')}
+ if(manual)tr.lastElementChild.append(node('span','Operação autorizada manualmente até '+manualUntil,'sub'));
+ if(full){
+  cell(tr,number(c.vehicles));
+  const accessText=c.blocked?'Bloqueado':manual?'Manual até '+manualUntil:c.status==='active'?'Assinatura ativa':'Pagamento pendente';
+  pill(tr,accessText,c.blocked?'blocked':manual||c.status==='active'?'active':'pending');
+ }
  cell(tr,date(c.created_at));
- if(full){const td=node('td');const actions=node('div','','actions');
-  const toggle=node('button',c.blocked?'Liberar':'Bloquear','btn '+(c.blocked?'primary':'danger'));toggle.type='button';toggle.onclick=()=>void changeAccess(c);const chat=node('button','Mensagem'+(c.unread?' ('+c.unread+')':''),'btn');chat.type='button';chat.onclick=()=>{threadId=c.id;openTab('messages');void loadThread()};
-  actions.append(toggle,chat);td.append(actions);tr.append(td)}
+ const td=node('td'),actions=node('div','','actions');
+ const manualButton=node('button',manual?'Revogar autorização':'Autorizar acesso','btn '+(manual?'danger':'primary'));
+ manualButton.type='button';manualButton.disabled=Boolean(c.blocked&&!manual);
+ manualButton.title=c.blocked&&!manual?'Remova o bloqueio administrativo antes de autorizar.':manual?'Revogar liberação temporária':'Permitir operação temporária sem registrar pagamento';
+ manualButton.onclick=()=>void changeManualAccess(c);
+ actions.append(manualButton);
+ if(full){
+  const toggle=node('button',c.blocked?'Desbloquear':'Bloquear','btn '+(c.blocked?'primary':'danger'));
+  toggle.type='button';toggle.onclick=()=>void changeAccess(c);
+  const chat=node('button','Mensagem'+(c.unread?' ('+c.unread+')':''),'btn');
+  chat.type='button';chat.onclick=()=>{threadId=c.id;openTab('messages');void loadThread()};
+  actions.append(toggle,chat);
+ }
+ td.append(actions);tr.append(td);
  return tr;
 }
 function render(){
@@ -106,7 +124,7 @@ function render(){
  for(const [label,value,tone] of [['Aguardando pagamento',s.trial,'pending'],['Assinaturas ativas',s.active,'active'],['Assinaturas vencidas/canceladas',s.expired,'blocked'],['Contas bloqueadas',s.blocked,'blocked'],['Mensagens não lidas',s.unread,'pending'],['Mensalidades de referência',money(s.mrr),'active']]){
   const line=node('div');line.style.cssText='display:flex;justify-content:space-between;align-items:center;gap:12px';line.append(node('span',label),node('span',value,'pill '+tone));portfolio.append(line)
  }
- const recent=el('recent-customers');recent.replaceChildren();(info.accounts||[]).slice(0,7).forEach(c=>recent.append(rowCustomer(c)));if(!recent.children.length)emptyRows(recent,4,'Ainda não há clientes.');
+ const recent=el('recent-customers');recent.replaceChildren();(info.accounts||[]).slice(0,7).forEach(c=>recent.append(rowCustomer(c)));if(!recent.children.length)emptyRows(recent,5,'Ainda não há clientes.');
  renderCustomers();renderPayments();renderRequests();renderContacts();
 }
 function renderCustomers(){
@@ -131,6 +149,26 @@ async function changeAccess(c){
  try{await rpc('admin_client_access',{p_account:c.id,p_blocked:!c.blocked,p_reason:reason.trim()});status('Acesso de '+c.email+' atualizado e auditado.','success');await refresh()}
  catch(e){status(e.message,'error')}
 }
+async function changeManualAccess(c){
+ const active=Boolean(c.manual_access?.active&&Date.parse(c.manual_access.valid_until)>Date.now());
+ let days=null;
+ if(!active){
+  const answer=prompt('Quantos dias de acesso manual para '+c.email+'? Informe 1, 7, 15 ou 30.','7');
+  if(answer===null)return;
+  days=Number(answer);
+  if(!Number.isInteger(days)||![1,7,15,30].includes(days)){status('O prazo deve ser 1, 7, 15 ou 30 dias.','error');return}
+ }
+ const reason=prompt((active?'REVOGAR':'AUTORIZAR')+' acesso de '+c.email+'. Informe uma justificativa (mínimo 10 caracteres):',active?'Liberação manual encerrada':'Falha na confirmação do pagamento');
+ if(reason===null)return;
+ if(reason.trim().length<10||reason.trim().length>500){status('A justificativa precisa ter entre 10 e 500 caracteres.','error');return}
+ const message=active?'Revogar acesso manual de '+c.email+'?':'Autorizar '+c.email+' por '+days+' dia(s), sem registrar pagamento?';
+ if(!confirm(message))return;
+ try{
+  await rpc('admin_manual_access',{p_account:c.id,p_days:days,p_reason:reason.trim(),p_revoke:active});
+  await refresh();
+  status(active?'Autorização manual revogada e registrada na auditoria.':'Acesso manual autorizado por '+days+' dia(s) e registrado na auditoria.','success');
+ }catch(e){status('Não foi possível alterar a autorização: '+e.message,'error')}
+}
 async function loadThread(){
  const a=(info.accounts||[]).find(x=>x.id===threadId);if(!a){el('thread-title').textContent='Selecione um cliente';return}
  el('thread-title').textContent=a.email+' · '+(a.companies||[]).map(x=>x.name).join(' / ');
@@ -145,7 +183,7 @@ async function loadThread(){
 }
 async function refresh(){
  const button=el('refresh');button.disabled=true;
- try{info=await rpc('commercial_admin_overview');render();show('content');if(tab==='messages'&&threadId)await loadThread()}
+ try{const [overview,grants]=await Promise.all([rpc('commercial_admin_overview'),rpc('admin_manual_access_list')]);info=overview;const grantsByAccount=new Map((grants||[]).map(g=>[g.account_id,g]));for(const account of info.accounts||[])account.manual_access=grantsByAccount.get(account.id)||null;render();show('content');if(tab==='messages'&&threadId)await loadThread()}
  catch(e){status('Erro ao consultar o BI: '+e.message,'error');if(el('content').hidden){show('unauthorized');el('denied-text').textContent=e.message}}
  finally{button.disabled=false}
 }
