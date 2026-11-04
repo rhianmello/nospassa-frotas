@@ -1,4 +1,5 @@
 import {createClient} from "npm:@supabase/supabase-js@2.58.0";
+import {cancelPreapproval, preapprovalPath} from "./preapproval-transport.js";
 const ORIGINS=new Set(["https://frota.nospassa.com.br","https://www.frota.nospassa.com.br"]);
 function respond(data:unknown,status=200,origin=""){
  const headers:Record<string,string>={"content-type":"application/json; charset=utf-8","cache-control":"no-store","vary":"Origin"};
@@ -98,16 +99,46 @@ Deno.serve(async(req:Request)=>{
   if(previous){
 
    if(previous.provider_subscription_id){
-    const preapproval=await mp("/preapproval/"+encodeURIComponent(String(previous.provider_subscription_id)));
-    if(["authorized"].includes(String(preapproval.status)))
-     return respond({error:"Existe assinatura por cartão autorizada. Verifique ou cancele a assinatura antes de mudar para Pix."},409,origin);
-    if(preapproval.status==="pending"||preapproval.status==="paused"){
-     const canceled=await mp("/preapproval/"+encodeURIComponent(String(previous.provider_subscription_id)),"PUT",{status:"canceled"});
-     if(canceled.status!=="canceled")throw Error("Não foi possível cancelar a tentativa anterior no Mercado Pago.");
-    }else if(preapproval.status!=="canceled"){
-     return respond({error:"Não foi possível confirmar o cancelamento do checkout anterior."},409,origin);
+    const providerId=String(previous.provider_subscription_id);
+    const path=preapprovalPath(providerId);
+    const preapproval=await mp(path);
+    // Only the provider's exact checkout for this account may be cancelled.
+    const sameCheckout=(item:any)=>String(item?.id)===providerId
+      && String(item?.external_reference||"")===String(previous.id)
+      && Number(item?.collector_id)===10284642;
+    if(!sameCheckout(preapproval))
+     return respond({error:"A assinatura anterior não corresponde à conta XRMOVI. Nenhum Pix foi emitido.",code:"CARD_CHECKOUT_PENDING"},409,origin);
+    const cardStatus=String(preapproval.status||"");
+    if(cardStatus==="authorized")
+     return respond({error:"Existe uma assinatura por cartão autorizada. Verifique o pagamento antes de mudar para Pix.",code:"CARD_CHECKOUT_PENDING"},409,origin);
+    if(cardStatus!=="pending"&&cardStatus!=="paused"&&cardStatus!=="canceled")
+     return respond({error:"Estado desconhecido na assinatura anterior; Pix bloqueado por segurança.",code:"CARD_CHECKOUT_PENDING"},409,origin);
+    let verified=preapproval;
+    if(cardStatus!=="canceled"){
+     try{
+      // This is PUT /preapproval/{id} with JSON body {"status":"canceled"}.
+      // Search (GET /preapproval/search) never cancels a subscription.
+      verified=await cancelPreapproval(mp,providerId);
+     }catch(failure){
+      const reason=String(failure instanceof Error?failure.message:failure);
+      // Log only endpoint, HTTP classification and known error type: never tokens or buyer data.
+      console.warn("XRMOVI preapproval cancel rejected",{
+       endpoint:"PUT /preapproval/{id}",
+       http_status:(reason.match(/HTTP (\\d{3})/)||[])[1]||"unknown",
+       provider_error:/Invalid preapproval status param/i.test(reason)?"invalid_preapproval_status":"provider_or_network"
+      });
+      // A rejected PUT may have reached the provider. Read again rather than retry.
+      try{verified=await mp(path);}
+      catch{
+       return respond({error:"Não foi possível conferir a tentativa anterior por cartão. Nenhum Pix foi emitido.",code:"CARD_CHECKOUT_PENDING"},409,origin);
+      }
+     }
     }
-    const {data:released,error:releaseError}=await backend.rpc("xrmovi_pix_card_cancelled",{p_provider_id:String(previous.provider_subscription_id)});
+    if(!sameCheckout(verified))
+     return respond({error:"Não foi possível confirmar a assinatura antiga. Nenhum Pix foi emitido.",code:"CARD_CHECKOUT_PENDING"},409,origin);
+    if(String(verified.status||"")!=="canceled")
+     return respond({error:"A tentativa anterior por cartão permanece aberta no Mercado Pago. O Pix não foi gerado para evitar cobrança duplicada. Consulte Mensagens / Suporte.",code:"CARD_CHECKOUT_PENDING"},409,origin);
+    const {data:released,error:releaseError}=await backend.rpc("xrmovi_pix_card_cancelled",{p_provider_id:providerId});
     if(releaseError||released!==true)throw Error("Não foi possível concluir a troca do pagamento.");
    }else{
     if(Date.now()-Date.parse(previous.created_at)<120000)
