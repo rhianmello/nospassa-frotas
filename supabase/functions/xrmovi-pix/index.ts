@@ -1,5 +1,5 @@
 import {createClient} from "npm:@supabase/supabase-js@2.58.0";
-import {cancelPreapproval, preapprovalPath} from "./preapproval-transport.js";
+import {cancelPreapproval, preapprovalPath, isCancelled} from "./preapproval-transport.js";
 const ORIGINS=new Set(["https://frota.nospassa.com.br","https://www.frota.nospassa.com.br"]);
 function respond(data:unknown,status=200,origin=""){
  const headers:Record<string,string>={"content-type":"application/json; charset=utf-8","cache-control":"no-store","vary":"Origin"};
@@ -49,7 +49,23 @@ Deno.serve(async(req:Request)=>{
       ...(idempotency?{"X-Idempotency-Key":idempotency}:{})},
     ...(input?{body:JSON.stringify(input)}:{}),signal:AbortSignal.timeout(12000)});
    const data=await response.json().catch(()=>({}));
-   if(!response.ok)throw Error("Mercado Pago recusou a operação (HTTP "+response.status+")."+(data?.message?" "+String(data.message).slice(0,140):""));
+   if(!response.ok){
+    // Keep useful provider diagnostics internally without exposing buyer data or tokens.
+    const redact=(v:unknown)=>String(v??"").slice(0,180)
+      .replace(/Bearer\\s+\\S+|APP_USR-\\S+|TEST-\\S+/gi,"[REDACTED]")
+      .replace(/[\\w.+-]+@[\\w.-]+\\.[a-z]{2,}/gi,"[REDACTED]")
+      .replace(/\\b\\d{9,}\\b/g,"[REDACTED]");
+    const providerMessage=redact(data?.message);
+    const failure:any=new Error("Mercado Pago recusou a operação (HTTP "+response.status+")."+(providerMessage?" "+providerMessage:""));
+    failure.httpStatus=response.status;
+    failure.providerMessage=providerMessage;
+    failure.providerError=redact(data?.error).slice(0,80);
+    failure.causes=(Array.isArray(data?.cause)?data.cause:[]).slice(0,5).map((item:any)=>({
+      code:redact(item?.code).slice(0,60),
+      description:redact(item?.description).slice(0,110)
+    }));
+    throw failure;
+   }
    return data;
   };
   const getIntent=async()=>{
@@ -110,34 +126,36 @@ Deno.serve(async(req:Request)=>{
      return respond({error:"A assinatura anterior não corresponde à conta XRMOVI. Nenhum Pix foi emitido.",code:"CARD_CHECKOUT_PENDING"},409,origin);
     const cardStatus=String(preapproval.status||"");
     if(cardStatus==="authorized")
-     return respond({error:"Existe uma assinatura por cartão autorizada. Verifique o pagamento antes de mudar para Pix.",code:"CARD_CHECKOUT_PENDING"},409,origin);
-    if(cardStatus!=="pending"&&cardStatus!=="paused"&&cardStatus!=="canceled")
-     return respond({error:"Estado desconhecido na assinatura anterior; Pix bloqueado por segurança.",code:"CARD_CHECKOUT_PENDING"},409,origin);
+     return respond({error:"Existe assinatura por cartão autorizada. Confira o pagamento antes de mudar para Pix.",code:"CARD_CHECKOUT_PENDING"},409,origin);
+    if(!["pending","paused"].includes(cardStatus)&&!isCancelled(cardStatus))
+     return respond({error:"Estado desconhecido da assinatura anterior. Nenhum Pix foi emitido.",code:"CARD_CHECKOUT_PENDING"},409,origin);
     let verified=preapproval;
-    if(cardStatus!=="canceled"){
-     try{
-      // This is PUT /preapproval/{id} with JSON body {"status":"canceled"}.
-      // Search (GET /preapproval/search) never cancels a subscription.
-      verified=await cancelPreapproval(mp,providerId);
-     }catch(failure){
-      const reason=String(failure instanceof Error?failure.message:failure);
-      // Log only endpoint, HTTP classification and known error type: never tokens or buyer data.
-      console.warn("XRMOVI preapproval cancel rejected",{
-       endpoint:"PUT /preapproval/{id}",
-       http_status:(reason.match(/HTTP (\d{3})/)||[])[1]||"unknown",
-       provider_error:/Invalid preapproval status param/i.test(reason)?"invalid_preapproval_status":"provider_or_network"
+    try{
+     if(!isCancelled(cardStatus)){
+      verified=await cancelPreapproval(mp,providerId,{
+       initial:preapproval,
+       verifyResource:sameCheckout,
+       onRejected:(variant:string,error:any)=>{
+        console.warn("XRMOVI cancel rejected",{
+         endpoint:"PUT /preapproval/{id}",
+         status_sent:variant,
+         http_status:Number(error?.httpStatus)||null,
+         provider_error:String(error?.providerError||"").slice(0,80),
+         provider_message:String(error?.providerMessage||"").slice(0,180),
+         causes:Array.isArray(error?.causes)?error.causes:[]
+        });
+       }
       });
-      // A rejected PUT may have reached the provider. Read again rather than retry.
-      try{verified=await mp(path);}
-      catch{
-       return respond({error:"Não foi possível conferir a tentativa anterior por cartão. Nenhum Pix foi emitido.",code:"CARD_CHECKOUT_PENDING"},409,origin);
-      }
+     }else{
+      verified=await mp(path);
      }
+    }catch(_failure){
+     return respond({error:"Não foi possível confirmar o estado da assinatura anterior no Mercado Pago. Para sua segurança, o Pix não foi emitido.",code:"CARD_CHECKOUT_PENDING"},409,origin);
     }
     if(!sameCheckout(verified))
-     return respond({error:"Não foi possível confirmar a assinatura antiga. Nenhum Pix foi emitido.",code:"CARD_CHECKOUT_PENDING"},409,origin);
-    if(String(verified.status||"")!=="canceled")
-     return respond({error:"A tentativa anterior por cartão permanece aberta no Mercado Pago. O Pix não foi gerado para evitar cobrança duplicada. Consulte Mensagens / Suporte.",code:"CARD_CHECKOUT_PENDING"},409,origin);
+     return respond({error:"A assinatura consultada não corresponde à conta XRMOVI. Nenhum Pix foi emitido.",code:"CARD_CHECKOUT_PENDING"},409,origin);
+    if(!isCancelled(String(verified.status||"")))
+     return respond({error:"A tentativa anterior por cartão continua aberta no Mercado Pago. O Pix não foi gerado para evitar cobrança duplicada. Consulte Mensagens / Suporte.",code:"CARD_CHECKOUT_PENDING"},409,origin);
     const {data:released,error:releaseError}=await backend.rpc("xrmovi_pix_card_cancelled",{p_provider_id:providerId});
     if(releaseError||released!==true)throw Error("Não foi possível concluir a troca do pagamento.");
    }else{
