@@ -147,3 +147,35 @@ test("search stays GET without status and rejects extra filters and timestamp",a
   assert.throws(()=>preapprovalSearchPath({payerEmail:"tester@example.invalid",status:"canceled[Timestamp: 2026-11-04]"}),/não suportado/);
   assert.throws(()=>preapprovalPath(id+"[Timestamp: 2026-11-04]"),/inválido/);
 });
+
+import {buildPixPaymentPayload} from "../supabase/functions/xrmovi-pix/pix-payment-payload.js";
+
+test("Pix POST request has no currency_id, preserves stable idempotency reference",()=>{
+  const payload=buildPixPaymentPayload({
+    amount:"19.90",plan:"start",id,
+    url:"https://example.supabase.co",
+    expiration:"2026-11-05T18:00:00Z",
+    email:"payer@example.invalid",first:"Test",last:"User",cpf:"00000000000"
+  });
+  assert.equal(payload.payment_method_id,"pix");
+  assert.equal(payload.transaction_amount,19.9);
+  assert.equal(payload.external_reference,id);
+  assert.equal(payload.payer.identification.type,"CPF");
+  assert.equal(Object.hasOwn(payload,"currency_id"),false);
+  assert.equal(JSON.stringify(payload).includes("currency_id"),false);
+  assert.equal(payload.notification_url,"https://example.supabase.co/functions/v1/xrmovi-pix-webhook");
+});
+
+test("Pix POST rejects invalid amount/reference and doesn't mutate input",()=>{
+  const fields={
+    amount:"19.90",plan:"start",id,
+    url:"https://example.supabase.co",expiration:"2026-11-05T18:00:00Z",
+    email:"payer@example.invalid",first:"Test",last:"User",cpf:"00000000000"
+  };
+  const clone={...fields};
+  assert.throws(()=>buildPixPaymentPayload({...fields,amount:0}),/Valor/);
+  assert.throws(()=>buildPixPaymentPayload({...fields,id:"bad[Timestamp: 2026]"}),/Referência/);
+  assert.throws(()=>buildPixPaymentPayload({...fields,url:"http://example.supabase.co"}),/webhook/);
+  buildPixPaymentPayload(fields);
+  assert.deepEqual(fields,clone);
+});
