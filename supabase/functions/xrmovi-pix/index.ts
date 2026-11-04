@@ -124,7 +124,7 @@ Deno.serve(async(req:Request)=>{
       // Log only endpoint, HTTP classification and known error type: never tokens or buyer data.
       console.warn("XRMOVI preapproval cancel rejected",{
        endpoint:"PUT /preapproval/{id}",
-       http_status:(reason.match(/HTTP (\\d{3})/)||[])[1]||"unknown",
+       http_status:(reason.match(/HTTP (\d{3})/)||[])[1]||"unknown",
        provider_error:/Invalid preapproval status param/i.test(reason)?"invalid_preapproval_status":"provider_or_network"
       });
       // A rejected PUT may have reached the provider. Read again rather than retry.
