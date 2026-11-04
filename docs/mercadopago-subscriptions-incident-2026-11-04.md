@@ -85,3 +85,14 @@ Documentação:
 - Uma chamada subsequente à Edge Function Pix terminou em HTTP 502. Ainda não há resposta bruta suficiente para determinar a causa desse novo erro.
 - Versão 12: log redigido para falhas em `POST /v1/payments`, preservando apenas HTTP status, tipo do erro e até cinco pares código/descrição sanitizada. **Não foi criado pagamento de teste para diagnosticar.**
 - Recomendação: nova tentativa única e autenticada pelo próprio titular; caso falhe, verificar o log interno da função `xrmovi-pix`, sem publicar CPF, token, e-mail ou dados completos do pagador.
+
+## Falha subsequente de Pix e correção (04/11/2026)
+- Evidência visual: após confirmação por e-mail do cancelamento do plano Start, criação do Pix falhou em `POST /v1/payments` com HTTP 400: `The name of the following parameters is wrong: currency_id`.
+- Causa localizada na Edge Function `xrmovi-pix`: o JSON de criação incluía `payment_method_id:"pix", currency_id:"BRL"`.
+- Documentação do Mercado Pago para criação Pix em `/v1/payments` usa `transaction_amount`, `description`, `payment_method_id:"pix"` e `payer` (não envia `currency_id`).
+- Correção: payload isolado no módulo `supabase/functions/xrmovi-pix/pix-payment-payload.js`; `currency_id` eliminado **somente da requisição POST**. Validação de `payment.currency_id==="BRL"` na consulta da resposta e no webhook foi preservada.
+- `X-Idempotency-Key` continua utilizando `prepared.id` existente. Não foi gerada nem ativada cobrança na atualização.
+- Estado de publicação: Supabase Edge Function `xrmovi-pix` versão **13**, ACTIVE, JWT habilitado; conteúdo confirmado igual ao GitHub.
+- Testes: dois novos cenários versionados em `tests/mercadopago-preapproval.test.mjs`; sete verificações locais de sintaxe/contrato no Node.js 22 passaram. CI integral ainda pendente de confirmação.
+- No instante da última verificação, a intenção Pix estava `created` sem ID de pagamento associado; ledger de cobrança sem registros. Uma nova tentativa única do titular poderá verificar a resposta real. Em caso de falha, usar o log redigido `XRMOVI Pix creation rejected`.
+- Referência: https://www.mercadopago.com.br/developers/pt/docs/checkout-api-payments/integration-configuration/integrate-pix
