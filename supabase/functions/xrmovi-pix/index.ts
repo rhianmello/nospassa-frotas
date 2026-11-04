@@ -1,5 +1,6 @@
 import {createClient} from "npm:@supabase/supabase-js@2.58.0";
 import {cancelPreapproval, preapprovalPath, isCancelled} from "./preapproval-transport.js";
+import {buildPixPaymentPayload} from "./pix-payment-payload.js";
 const ORIGINS=new Set(["https://frota.nospassa.com.br","https://www.frota.nospassa.com.br"]);
 function respond(data:unknown,status=200,origin=""){
  const headers:Record<string,string>={"content-type":"application/json; charset=utf-8","cache-control":"no-store","vary":"Origin"};
@@ -189,13 +190,10 @@ Deno.serve(async(req:Request)=>{
   const email=String(userData.user.email||"");
   if(!email)return respond({error:"Conta sem e-mail confirmado."},400,origin);
   const expiration=new Date(Date.now()+30*60*1000).toISOString();
-  const payload={
-   transaction_amount:Number(prepared.amount),description:"XRMOVI Plano "+String(prepared.plan)+" - 1 mes",
-   payment_method_id:"pix",currency_id:"BRL",external_reference:String(prepared.id),
-   notification_url:url+"/functions/v1/xrmovi-pix-webhook",
-   date_of_expiration:expiration,
-   payer:{email,first_name:first,last_name:last.join(" "),identification:{type:"CPF",number:cpf}}
-  };
+  const payload=buildPixPaymentPayload({
+    amount:prepared.amount,plan:prepared.plan,id:String(prepared.id),
+    url,expiration,email,first,last:last.join(" "),cpf
+  });
   const created=await mp("/v1/payments","POST",payload,String(prepared.id));
   if(!digits.test(String(created.id))||created.payment_method_id!=="pix"
    ||String(created.external_reference)!==String(prepared.id)
