@@ -52,9 +52,9 @@ Deno.serve(async(req:Request)=>{
    if(!response.ok){
     // Keep useful provider diagnostics internally without exposing buyer data or tokens.
     const redact=(v:unknown)=>String(v??"").slice(0,180)
-      .replace(/Bearer\\s+\\S+|APP_USR-\\S+|TEST-\\S+/gi,"[REDACTED]")
-      .replace(/[\\w.+-]+@[\\w.-]+\\.[a-z]{2,}/gi,"[REDACTED]")
-      .replace(/\\b\\d{9,}\\b/g,"[REDACTED]");
+      .replace(/Bearer\s+\S+|APP_USR-\S+|TEST-\S+/gi,"[REDACTED]")
+      .replace(/[\w.+-]+@[\w.-]+\.[a-z]{2,}/gi,"[REDACTED]")
+      .replace(/\b\d{9,}\b/g,"[REDACTED]");
     const providerMessage=redact(data?.message);
     const failure:any=new Error("Mercado Pago recusou a operação (HTTP "+response.status+")."+(providerMessage?" "+providerMessage:""));
     failure.httpStatus=response.status;
