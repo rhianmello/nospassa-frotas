@@ -27,8 +27,11 @@ export function openPixCheckout({client,companyId,onPaid=()=>{}}){
  '<a data-ticket target="_blank" rel="noopener noreferrer" hidden style="color:#6fead0">Ver Pix no Mercado Pago</a>'+
  '<small data-expiry style="color:#b7d6e2"></small>'+
  '<button type="button" data-verify style="padding:10px 16px;border-radius:8px;border:1px solid #5c8f9b;background:#173e53;color:#fff">Verificar pagamento</button>'+
- '</section><p data-state aria-live="polite" style="margin:14px 0 0;color:#c3e5ee;min-height:20px"></p>';
- backdrop.append(card);document.body.append(backdrop);
+ '</section><p data-state aria-live="polite" style="margin:14px 0 0;color:#c3e5ee;min-height:20px"></p>'+
+ '<a data-support hidden href="/cliente/" style="display:inline-block;color:#7ef5da;margin-top:10px;font-weight:700">Falar com o suporte sobre a tentativa anterior por cartão</a>';
+ const visibility=document.createElement('style');
+ visibility.textContent='#xrm-pix-dialog [hidden]{display:none!important}';
+ backdrop.append(visibility,card);document.body.append(backdrop);
  const $=s=>card.querySelector(s);
  let closed=false, busy=false, timer=null;
  function close(){closed=true;if(timer)clearInterval(timer);backdrop.remove();}
@@ -37,8 +40,11 @@ export function openPixCheckout({client,companyId,onPaid=()=>{}}){
  const state=(msg,error=false)=>{if(!closed){$('[data-state]').textContent=msg;$('[data-state]').style.color=error?'#ffacb1':'#bcefe0'}};
  async function invoke(action,extra={}){
   const {data,error}=await client.functions.invoke('xrmovi-pix',{body:{action,company_id:companyId,...extra}});
-  if(error){let message=error.message||'Erro no Pix.';try{const d=await error.context?.json?.();if(d?.error)message=String(d.error)}catch{}throw Error(message);}
-  if(data?.error)throw Error(data.error);
+  if(error){let message=error.message||'Erro no Pix.',code='';
+   try{const d=await error.context?.json?.();if(d?.error)message=String(d.error);if(d?.code)code=String(d.code);}catch{}
+   const failure=new Error(message);failure.code=code;throw failure;
+  }
+  if(data?.error){const failure=new Error(String(data.error));failure.code=String(data.code||'');throw failure;}
   return data;
  }
  async function showResult(data){
@@ -82,11 +88,15 @@ export function openPixCheckout({client,companyId,onPaid=()=>{}}){
  $('[data-form]').addEventListener('submit',async e=>{
   e.preventDefault();if(busy)return;
   busy=true;$('[data-generate]').disabled=true;
+  $('[data-support]').hidden=true;
   state('Gerando Pix no Mercado Pago...');
   try{
    const data=await invoke('create',{payer_name:$('[data-name]').value.trim(),payer_cpf:$('[data-cpf]').value.replace(/\D/g,'')});
    await showResult(data);
-  }catch(err){state(err.message||'Não foi possível gerar Pix.',true)}
+  }catch(err){
+   state(err.message||'Não foi possível gerar Pix.',true);
+   $('[data-support]').hidden=err.code!=='CARD_CHECKOUT_PENDING';
+  }
   finally{busy=false;$('[data-generate]').disabled=false;}
  });
  $('[data-verify]').onclick=()=>void check(false);
