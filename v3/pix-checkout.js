@@ -28,7 +28,7 @@ export function openPixCheckout({client,companyId,onPaid=()=>{}}){
  '<small data-expiry style="color:#b7d6e2"></small>'+
  '<button type="button" data-verify style="padding:10px 16px;border-radius:8px;border:1px solid #5c8f9b;background:#173e53;color:#fff">Verificar pagamento</button>'+
  '</section><p data-state aria-live="polite" style="margin:14px 0 0;color:#c3e5ee;min-height:20px"></p>'+
- '<a data-support hidden href="/cliente/" style="display:inline-block;color:#7ef5da;margin-top:10px;font-weight:700">Falar com o suporte sobre a tentativa anterior por cartão</a>';
+ '<section data-card-block hidden style="margin-top:12px;padding:12px;border:1px solid #6a7b83;border-radius:10px;background:#102c3d"><strong style="display:block;margin-bottom:7px">Como liberar o pagamento por Pix</strong><p style="margin:0 0 8px;color:#bbd1dc">Na conta recebedora do Mercado Pago, abra Ferramentas para vender → Assinaturas → Assinantes. Localize a tentativa antiga do XRMOVI e confira a opção de cancelamento. Não cancele outras assinaturas.</p><a target="_blank" rel="noopener noreferrer" href="https://www.mercadopago.com.br/developers/pt/docs/subscription-plans/manage-subscription-plan" style="color:#7ef5da">Consultar instruções oficiais do Mercado Pago</a></section><a data-support hidden href="/cliente/" style="display:inline-block;color:#7ef5da;margin-top:10px;font-weight:700">Falar com o suporte sobre a tentativa anterior por cartão</a>';
  const visibility=document.createElement('style');
  visibility.textContent='#xrm-pix-dialog [hidden]{display:none!important}';
  backdrop.append(visibility,card);document.body.append(backdrop);
@@ -89,6 +89,7 @@ export function openPixCheckout({client,companyId,onPaid=()=>{}}){
   e.preventDefault();if(busy)return;
   busy=true;$('[data-generate]').disabled=true;
   $('[data-support]').hidden=true;
+  $('[data-card-block]').hidden=true;
   state('Gerando Pix no Mercado Pago...');
   try{
    const data=await invoke('create',{payer_name:$('[data-name]').value.trim(),payer_cpf:$('[data-cpf]').value.replace(/\D/g,'')});
@@ -96,6 +97,7 @@ export function openPixCheckout({client,companyId,onPaid=()=>{}}){
   }catch(err){
    state(err.message||'Não foi possível gerar Pix.',true);
    $('[data-support]').hidden=err.code!=='CARD_CHECKOUT_PENDING';
+   $('[data-card-block]').hidden=err.code!=='CARD_CHECKOUT_PENDING';
   }
   finally{busy=false;$('[data-generate]').disabled=false;}
  });
