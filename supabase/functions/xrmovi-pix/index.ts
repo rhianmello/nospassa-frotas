@@ -54,6 +54,7 @@ Deno.serve(async(req:Request)=>{
     const redact=(v:unknown)=>String(v??"").slice(0,180)
       .replace(/Bearer\s+\S+|APP_USR-\S+|TEST-\S+/gi,"[REDACTED]")
       .replace(/[\w.+-]+@[\w.-]+\.[a-z]{2,}/gi,"[REDACTED]")
+      .replace(/\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b/g,"[REDACTED]")
       .replace(/\b\d{9,}\b/g,"[REDACTED]");
     const providerMessage=redact(data?.message);
     const failure:any=new Error("Mercado Pago recusou a operação (HTTP "+response.status+")."+(providerMessage?" "+providerMessage:""));
@@ -64,6 +65,15 @@ Deno.serve(async(req:Request)=>{
       code:redact(item?.code).slice(0,60),
       description:redact(item?.description).slice(0,110)
     }));
+    if(path==="/v1/payments"&&method==="POST"){
+      console.warn("XRMOVI Pix creation rejected",{
+       endpoint:"POST /v1/payments",
+       http_status:failure.httpStatus,
+       provider_error:failure.providerError,
+       provider_message:failure.providerMessage,
+       causes:failure.causes
+      });
+    }
     throw failure;
    }
    return data;
