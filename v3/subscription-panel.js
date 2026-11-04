@@ -1,4 +1,4 @@
-import {openPixCheckout} from './pix-checkout.js?v=20261102-pix-1';
+import {openPixCheckout} from './pix-checkout.js?v=20261104-pix-2';
 import {renewalNotice} from './renewal-reminder.js?v=20261103-reminders-2';
 // XRMOVI | Central de assinatura — todas as gravações passam por RPCs autenticadas.
 // Nunca decide cotas pelo navegador: o banco aplica regras nas inserções.
