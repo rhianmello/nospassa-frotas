@@ -1,7 +1,7 @@
 # XRMOVI — auditoria Mercado Pago Subscriptions (04/11/2026)
 
 ## Evidências verificadas
-- Função Supabase: `xrmovi-pix`, versão 10, `verify_jwt=true`.
+- Função Supabase: `xrmovi-pix`, versão 11, `verify_jwt=true`.
 - Origem: backend utiliza `https://api.mercadopago.com`.
 - Autenticação: variável de ambiente `XRMOVI_MP_ACCESS_TOKEN`, validada apenas pelo prefixo `APP_USR-`. Não registrar nem divulgar seu valor.
 - Tentativa antiga: ID Mercado Pago `5617d5a824a2434c939f2e19450470d6`, criada em 30/10/2026; status `pending` no banco XRMOVI. O status efetivo no provedor deve ser lido via GET.
@@ -27,7 +27,9 @@
 
 ## Correção aplicada
 - Origem versionada: `supabase/functions/xrmovi-pix/index.ts` e `preapproval-transport.js`.
-- Usa `cancelPreapproval(mp,providerId)`: `PUT` com apenas `status:"canceled"` e `GET` de confirmação.
+- Usa `cancelPreapproval(mp,providerId,{initial,verifyResource,onRejected})`: GET validado antes do PUT, `PUT` com apenas `status:"canceled"` e GET de confirmação.
+- Em caso EXATO de HTTP 400 com `Invalid preapproval status param: canceled`, se o GET ainda trouxer `pending`/`paused`, faz uma ÚNICA tentativa alternativa usando `status:"cancelled"`, seguida de GET. O fallback não é parte documentada como status canônico; requer homologação real.
+- Logs internos redigidos registram apenas status HTTP, `error` do provedor, mensagem sanitizada e até cinco `cause[].code/description`; jamais Access Token, CPF ou e-mail intencionalmente.
 - Compara `id`, `external_reference` e `collector_id` antes de liberar o estado local.
 - Ao receber erro do provedor, consulta o status novamente. Nunca considera o PUT bem-sucedido por inferência.
 - Se a assinatura continuar aberta ou seu estado for desconhecido, interrompe a emissão de Pix e responde `CARD_CHECKOUT_PENDING` / HTTP 409.
@@ -38,7 +40,7 @@
 ```bash
 node --test tests/mercadopago-preapproval.test.mjs
 ```
-Quatro testes: PUT/GET de cancelamento; GET de pesquisa sem status; rejeição de status e sufixo Timestamp; falha 400 não tratada como cancelamento realizado. **4/4 passaram localmente em Node 22.**
+Onze testes automatizados versionados cobrem cancelamento simples, fallback condicionado, 400 diferente, 403/500, cancelamento já confirmado, assinatura autorizada, divergência de identificador, falha em ambas tentativas, busca sem status e bloqueio de timestamp. Um ensaio local com nove cenários equivalentes passou em Node 22 (9/9). O workflow de CI GitHub `.github/workflows/test-mercadopago-preapproval.yml` executa a suíte versionada no push/PR; resultado de CI ainda não confirmado.
 
 ## Requests manuais (usar somente em ambiente autorizado e controlado)
 ```bash
@@ -63,9 +65,9 @@ curl -sS -X GET 'https://api.mercadopago.com/preapproval/SEU_ID_VALIDADO' \
 Não foi feito PUT real para a assinatura antiga nessa intervenção: a API já retornou 400 ao usuário, e repetir a mutação sem entender a restrição do provedor pode ser inseguro. O teste automatizado usa mock. O fato de os formatos estarem corretos não prova que o provedor aceite a transição do status atual. O acesso à criação de Pix permanece bloqueado enquanto a assinatura anterior não estiver comprovadamente cancelada.
 
 ## Publicação e acompanhamento
-1. [x] Alteração do backend `xrmovi-pix` v10 implantada no Supabase.
+1. [x] Alteração do backend `xrmovi-pix` v11 implantada no Supabase, com fallback estritamente condicionado.
 2. [x] Fonte e testes versionados no GitHub.
-3. [x] Testes de mock executados: 4/4.
+3. [x] Testes locais de mock equivalentes executados: 9/9; [ ] confirmar execução dos 11 testes no CI.
 4. [ ] Validar GET real com credencial de produção no backend, sem expor token.
 5. [ ] Se PUT seguir em 400, coletar `error` e `cause[].code` redigidos da API e abrir chamado Mercado Pago com ID da assinatura.
 6. [ ] Só depois de GET confirmar cancelamento, confirmar reconciliação XRMOVI e testar novo Pix.
