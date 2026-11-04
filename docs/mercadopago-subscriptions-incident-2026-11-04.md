@@ -1,7 +1,7 @@
 # XRMOVI — auditoria Mercado Pago Subscriptions (04/11/2026)
 
 ## Evidências verificadas
-- Função Supabase: `xrmovi-pix`, versão 11, `verify_jwt=true`.
+- Função Supabase: `xrmovi-pix`, versão 12, `verify_jwt=true`.
 - Origem: backend utiliza `https://api.mercadopago.com`.
 - Autenticação: variável de ambiente `XRMOVI_MP_ACCESS_TOKEN`, validada apenas pelo prefixo `APP_USR-`. Não registrar nem divulgar seu valor.
 - Tentativa antiga: ID Mercado Pago `5617d5a824a2434c939f2e19450470d6`, criada em 30/10/2026; status `pending` no banco XRMOVI. O status efetivo no provedor deve ser lido via GET.
@@ -65,7 +65,7 @@ curl -sS -X GET 'https://api.mercadopago.com/preapproval/SEU_ID_VALIDADO' \
 Não foi feito PUT real para a assinatura antiga nessa intervenção: a API já retornou 400 ao usuário, e repetir a mutação sem entender a restrição do provedor pode ser inseguro. O teste automatizado usa mock. O fato de os formatos estarem corretos não prova que o provedor aceite a transição do status atual. O acesso à criação de Pix permanece bloqueado enquanto a assinatura anterior não estiver comprovadamente cancelada.
 
 ## Publicação e acompanhamento
-1. [x] Alteração do backend `xrmovi-pix` v11 implantada no Supabase, com fallback estritamente condicionado.
+1. [x] Alteração do backend `xrmovi-pix` v12 implantada no Supabase, com fallback estritamente condicionado.
 2. [x] Fonte e testes versionados no GitHub.
 3. [x] Testes locais de mock equivalentes executados: 9/9; [ ] confirmar execução dos 11 testes no CI.
 4. [ ] Validar GET real com credencial de produção no backend, sem expor token.
@@ -77,3 +77,11 @@ Documentação:
 - https://www.mercadopago.com.br/developers/pt/docs/subscriptions/subscription-management
 - https://www.mercadopago.com.br/developers/pt/reference/online-payments/subscriptions/update-preapproval/put
 - https://www.mercadopago.com.br/developers/pt/reference/online-payments/subscriptions/search-preapproval/get
+
+## Resultado da tentativa real após o fallback
+- Em 04/11/2026 às 19:29 UTC, o primeiro PUT retornou HTTP 400 com `Invalid preapproval status param: canceled` (observado no log interno, com dados redigidos).
+- A tentativa antiga passou para `canceled` no banco após validação da resposta do provedor; o RPC `xrmovi_pix_card_cancelled` concluiu.
+- Foi aberta uma nova intenção Pix, mas ela permaneceu em `created`, **sem identificador de pagamento do Mercado Pago**.
+- Uma chamada subsequente à Edge Function Pix terminou em HTTP 502. Ainda não há resposta bruta suficiente para determinar a causa desse novo erro.
+- Versão 12: log redigido para falhas em `POST /v1/payments`, preservando apenas HTTP status, tipo do erro e até cinco pares código/descrição sanitizada. **Não foi criado pagamento de teste para diagnosticar.**
+- Recomendação: nova tentativa única e autenticada pelo próprio titular; caso falhe, verificar o log interno da função `xrmovi-pix`, sem publicar CPF, token, e-mail ou dados completos do pagador.
