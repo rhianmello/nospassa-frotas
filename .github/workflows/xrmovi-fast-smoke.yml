@@ -7,6 +7,7 @@ on:
       - 'v3/mobile-experience.css'
       - 'v3/index.html'
       - 'v3/xrmovi-adapter.js'
+      - 'v3/subscription-panel.js'
       - '.github/workflows/xrmovi-fast-smoke.yml'
   workflow_dispatch:
 permissions:
@@ -22,6 +23,11 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci --ignore-scripts
+      - name: Verify essential modules parse before browser launch
+        run: |
+          node --check --input-type=module < v3/subscription-panel.js
+          node --check --input-type=module < v3/xrmovi-adapter.js
+          node --check --input-type=module < v3/mobile-experience.js
       - run: npx playwright install chromium
       - name: Authenticated desktop and mobile smoke with browser diagnostics
         run: node --test --test-concurrency=1 v3/tests/mobile-smoke-diagnostic.test.cjs
