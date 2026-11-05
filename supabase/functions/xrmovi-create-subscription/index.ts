@@ -71,8 +71,12 @@ Deno.serve(async(req:Request)=>{
   // Pilot gate enforced server-side independently of the browser and visible pricing.
   // Default to restricted until owner explicitly sets XRMOVI_BILLING_PILOT_ONLY=false.
   if(Deno.env.get("XRMOVI_BILLING_PILOT_ONLY")!=="false"){
+   const {data:launch,error:launchError}=await service.from("xrmovi_billing_launch_control").select("public_enabled").eq("id",1).maybeSingle();
+   const publicLaunched=!launchError&&launch?.public_enabled===true;
+   if(!publicLaunched){
    const {data:pilotAllowed,error:pilotError}=await authClient.rpc("xrmovi_billing_pilot_allowed");
    if(pilotError||pilotAllowed!==true)return json({error:"Pagamento disponível somente para a conta de homologação autorizada."},403,outputOrigin);
+   }
   }
   const payload=await req.json();
   const cid=String(payload?.company_id||""),chosen=String(payload?.plan||"");
