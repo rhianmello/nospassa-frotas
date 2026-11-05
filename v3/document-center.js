@@ -185,7 +185,8 @@ export function createDocumentCenter({
     link.href=url.href;
     save.href=downloadUrl.href;
     save.download=name;
-    const isImage=/\\.(png|jpe?g|webp)$/i.test(name)||/\\.(png|jpe?g|webp)(?:\\?|$)/i.test(doc.path);
+    const lowerName=name.toLowerCase(),lowerPath=String(doc.path||'').toLowerCase();
+    const isImage=['.png','.jpg','.jpeg','.webp'].some(ext=>lowerName.endsWith(ext)||lowerPath.endsWith(ext));
     const image=previewQ('[data-preview-image]'),pdf=previewQ('[data-preview-pdf]');
     image.hidden=!isImage;pdf.hidden=isImage;
     if(isImage){pdf.removeAttribute('src');image.src=url.href;}
