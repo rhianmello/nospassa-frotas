@@ -308,6 +308,8 @@
         '.fleet-content table.fleet-table, .fleet-content table.xrm-mileage-table'
       );
       for(const table of tables){
+        // DocumentCenter has its own six-field card layout; do not override it.
+        if(table.closest('#vehicle-documents')||table.closest('.xrm-doc-dialog'))continue;
         table.classList.add('xrm-mobile-card-table');
         const labels=[...table.querySelectorAll('thead th')].map(th=>th.textContent.trim()||'Selecionar');
         if(!labels.length)continue;
