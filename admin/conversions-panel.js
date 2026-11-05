@@ -1,5 +1,5 @@
 // XRMOVI: painel gerencial de conversões verificadas pelo backend.
-export function renderConversionsPanel(root, data) {
+export function renderConversionsPanel(root, data, ga4 = null) {
   root.replaceChildren();
   const el=(tag,text='',className='')=>{
     const node=document.createElement(tag);
@@ -58,4 +58,24 @@ export function renderConversionsPanel(root, data) {
   const note=el('p','Os parâmetros UTM são vinculados à conta somente após o usuário aceitar a análise e fazer login. A categoria “não atribuído” inclui cadastros anteriores a este controle e pessoas sem consentimento. Tráfego do Google Analytics não é tratado como venda.','','');
   note.className='conversion-note';
   panel.append(note);root.append(panel);
+  if(ga4){
+    const audit=el('section','','panel');
+    const bar=el('div','','panel-head');
+    bar.append(el('h2','Google Analytics — compras confirmadas'),
+      el('small','Envio servidor, sem registrar tentativas como compras'));
+    audit.append(bar);
+    const kpis=el('div','','conversion-metrics');
+    for(const [label,value] of [
+      ['Consentimentos válidos',n(ga4.consented_clients)],
+      ['Eventos enviados',n(ga4.sent)],
+      ['Fila de envio',n(ga4.pending)],
+      ['Falhas de entrega',n(ga4.failed)]
+    ]){
+      const block=el('div','','conversion-metric');
+      block.append(el('span',label),el('strong',value));kpis.append(block);
+    }
+    audit.append(kpis);
+    audit.append(el('p','A transmissão HTTP bem-sucedida não comprova, sozinha, que a compra apareceu no GA4 ou foi atribuída ao Google Ads. O evento padrão é purchase, e a conversão correspondente precisa ser importada e validada no Google Ads.','conversion-note'));
+    root.append(audit);
+  }
 }
