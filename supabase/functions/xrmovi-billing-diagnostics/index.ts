@@ -51,6 +51,7 @@ Deno.serve(async (request:Request)=>{
    token_authorized:tokenAuthorized,merchant_matches:accountMatched,
    webhook_secret_configured:webhookSecretPresent,
    billing_switch_enabled:enabled,
+   billing_pilot_only:Deno.env.get('XRMOVI_BILLING_PILOT_ONLY')!=='false',
    support_email_configured:(Deno.env.get('XRMOVI_RESEND_API_KEY')||'').startsWith('re_')&&(Deno.env.get('XRMOVI_SUPPORT_MAIL_FROM')||'').includes('@'),
    configuration_ready:eligible,
    note:eligible&&!enabled?"Credentials verified. Production payments remain disabled pending end-to-end webhook testing.":
