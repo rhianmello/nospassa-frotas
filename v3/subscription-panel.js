@@ -354,7 +354,7 @@ export function setupSubscriptionPanel({client,getCompany,onCompanyCreated,onDat
    }
   }
 
-  text('xrm-bill-details',info.status==='canceled'?'Renovação cancelada no Mercado Pago. Acesso disponível até '+formatDate(info.paid_through)+'. Não haverá novas cobranças automáticas para esta assinatura.':(['pending','trial'].includes(info.status)?'Escolha um plano e conclua o pagamento para liberar veículos, contratos e demais operações. · ':'')+'Limites totais da assinatura, não por empresa'));
+  text('xrm-bill-details',info.status==='canceled'?'Renovação cancelada no Mercado Pago. Acesso disponível até '+formatDate(info.paid_through)+'. Não haverá novas cobranças automáticas para esta assinatura.':(['pending','trial'].includes(info.status)?'Escolha um plano e conclua o pagamento para liberar veículos, contratos e demais operações. · ':'')+'Limites totais da assinatura, não por empresa');
    const recurring=info.provider==='mercadopago'&&Boolean(info.paid_through)&&['active','canceled'].includes(info.status);
    cancelSection.hidden=!recurring;
    cancelButton.hidden=info.status==='canceled';
