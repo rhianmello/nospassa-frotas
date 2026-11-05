@@ -60,7 +60,9 @@ test('first onboarding screen offers a payment-only verification for existing ch
  assert.match(onboarding,/Já paguei · Verificar pagamento/);
  assert.match(onboarding,/functions\.invoke\('xrmovi-reconcile-subscription'/);
  assert.match(onboarding,/company_id:existing\.id/);
- assert.match(onboarding,/Nenhuma nova cobrança foi criada/);
+ assert.match(onboarding,/Nenhuma cobrança será feita/);
+ assert.match(onboarding,/window.location.hash==='#subscription'/);
+ assert.match(onboarding,/checkExistingPayment\(\)/);
  const email=read('v3/payment-email-notice.js');
  assert.match(email,/border:0;background:transparent/);
  assert.doesNotMatch(email,/background:#3d1920/);
