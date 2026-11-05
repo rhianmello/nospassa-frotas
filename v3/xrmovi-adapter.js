@@ -5,6 +5,7 @@ import { showXrmoviOnboarding } from './onboarding.js?v=20261103-payment-layout-
 import { createCompanyBranding } from './company-branding.js?v=20261029-logo-1';
 import { setupMileage } from './mileage.js?v=20261029-km-audit-34';
 import { createDocumentCenter } from './document-center.js?v=20261105-center-3';
+import { printFuelEvidenceReport } from './finance-receipts-report.js?v=20261105-receipts-1';
 let branding;
 let mileage=null;
 let subscriptionPanel=null;
@@ -1034,6 +1035,47 @@ if(el('financial-print'))el('financial-print').onclick=async()=>{
  const popup=window.open('','_blank');if(!popup){msg('Permita a abertura de pop-ups para imprimir o relatório.');return}popup.document.open();popup.document.write(markup);popup.document.close();popup.focus();popup.setTimeout(()=>popup.print(),350);
 };
 
+
+// Financial PDF mode with private receipts, grouped by vehicle.
+if(el('financial-print-evidence'))el('financial-print-evidence').onclick=async()=>{
+ if(financialState||!company||paymentRequired){
+  msg('Consulte os dados financeiros e confirme seu acesso antes de gerar o PDF.');
+  return;
+ }
+ const button=el('financial-print-evidence'), status=el('financial-print-status');
+ const selectedCompany=company,selectedCompanyId=company.id;
+ const scopeIds=filteredVehicleIds?new Set(filteredVehicleIds):null;
+ const rows=xrmFinancialExportRows();
+ const range=xrmReportRange?xrmReportRange.from+' a '+xrmReportRange.to:
+  el('fuel-ranking-month')?.value||'Mês atual';
+ button.disabled=true;
+ if(status)status.textContent='Iniciando geração do relatório com comprovantes...';
+ try{
+  const result=await printFuelEvidenceReport({
+   client:sb,
+   company:{id:selectedCompanyId,name:selectedCompany.name||''},
+   vehicles:vehicles.map(v=>({id:v.id,plate:v.plate,model:v.model||''})),
+   fuelEntries:fuelEntries.map(f=>({...f})),
+   rows,range,scopeIds,
+   stillCurrent:()=>company?.id===selectedCompanyId&&!paymentRequired,
+   getLogo:async()=>{
+    const pdfBrand=await branding?.forPdf();
+    return pdfBrand?.companyId===selectedCompanyId?pdfBrand.logoDataUrl||'':'';
+   },
+   onProgress:text=>{if(status&&company?.id===selectedCompanyId)status.textContent=text;}
+  });
+  if(status&&company?.id===selectedCompanyId){
+   status.textContent='Impressão preparada: '+result.vehicles+' veículo(s), '+
+    result.receipts+' comprovante(s) carregado(s). Selecione “Salvar como PDF”.';
+  }
+ }catch(error){
+  if(company?.id===selectedCompanyId){
+   const explanation='Não foi possível gerar o PDF com comprovantes: '+(error?.message||'Erro desconhecido');
+   if(status)status.textContent=explanation;
+   msg(explanation);
+  }
+ }finally{button.disabled=false;}
+};
 
 /* XRMOVI V4 read-only assistant bridge. Same authenticated data and RPC as the current screen. */
 const xrmAssistantBridge=Object.freeze({
