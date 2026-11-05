@@ -4,12 +4,16 @@ const respond=(data:unknown,status=200)=>new Response(JSON.stringify(data),{
 async function authenticatedWebhook(request:Request,id:string,secret:string){
  const parts=new Map((request.headers.get("x-signature")||"").split(",").map(x=>x.trim().split("=")).filter(x=>x.length===2));
  const time=parts.get("ts")||"",hash=parts.get("v1")||"",rid=request.headers.get("x-request-id")||"";
- if(!/^\d{10,13}$/.test(time)||!/^[a-f0-9]{64}$/i.test(hash)||!rid||!/^\d{5,22}$/.test(id))return false;
+ if(!request.headers.get('x-signature'))return {ok:false,reason:'missing_signature'};
+ if(!rid)return {ok:false,reason:'missing_request_id'};
+ if(!/^\d{5,22}$/.test(id))return {ok:false,reason:'invalid_resource_id'};
+ if(!/^\d{10,13}$/.test(time)||!/^[a-f0-9]{64}$/i.test(hash))return {ok:false,reason:'invalid_signature_format'};
  const unix=time.length===13?Number(time):Number(time)*1000;
- if(!Number.isFinite(unix)||Math.abs(Date.now()-unix)>600000)return false;
+ if(!Number.isFinite(unix)||Math.abs(Date.now()-unix)>600000)return {ok:false,reason:'timestamp_outside_window'};
  const manifest="id:"+id.toLowerCase()+";request-id:"+rid+";ts:"+time+";";
  const key=await crypto.subtle.importKey("raw",new TextEncoder().encode(secret),{name:"HMAC",hash:"SHA-256"},false,["verify"]);
- return crypto.subtle.verify("HMAC",key,Uint8Array.from(hash.match(/../g)!.map(x=>parseInt(x,16))),new TextEncoder().encode(manifest));
+ const ok=await crypto.subtle.verify("HMAC",key,Uint8Array.from(hash.match(/../g)!.map(x=>parseInt(x,16))),new TextEncoder().encode(manifest));
+ return {ok,reason:ok?'verified':'signature_mismatch'};
 }
 Deno.serve(async req=>{
  if(req.method!=="POST")return respond({error:"Method not allowed"},405);
@@ -19,8 +23,16 @@ Deno.serve(async req=>{
  if(!token.startsWith("APP_USR-")||secret.length<20||!url||!serviceKey)return respond({error:"Billing unavailable"},503);
  const reqUrl=new URL(req.url);
  const id=reqUrl.searchParams.get("data.id")||reqUrl.searchParams.get("data_id")||"";
- if(!id)return respond({error:"Missing ID"},400);
- if(!await authenticatedWebhook(req,id,secret))return respond({error:"Signature invalid"},401);
+ if(!id){
+  console.warn('XRMOVI Pix webhook rejected',{reason:'missing_data_id',legacy_ipn:reqUrl.searchParams.has('topic')});
+  return respond({error:"Missing ID"},400);
+ }
+ const signature=await authenticatedWebhook(req,id,secret);
+ if(!signature.ok){
+  // Only a bounded reason code is logged: no secret, signature, ID or payer data.
+  console.warn('XRMOVI Pix webhook rejected',{reason:signature.reason});
+  return respond({error:"Signature invalid"},401);
+ }
  try{
   const body=await req.json();
   if(body?.data?.id!=null&&String(body.data.id)!==id)return respond({error:"Resource mismatch"},400);
