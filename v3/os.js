@@ -1,4 +1,4 @@
-import{createClient}from 'https://esm.sh/@supabase/supabase-js@2';
+import{createClient}from 'https://esm.sh/@supabase/supabase-js@2.58.0';
 const $=id=>document.getElementById(id),fmt=n=>Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 let sb,companies=[],cid=null,orders=[],vehicles=[],editing=null;
 const notice=t=>{$('notice').textContent=t};

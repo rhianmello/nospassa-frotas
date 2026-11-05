@@ -1,5 +1,5 @@
-import{createClient}from 'https://esm.sh/@supabase/supabase-js@2';
-import { setupSubscriptionPanel } from './subscription-panel.js?v=20261104-pix-2';
+import{createClient}from 'https://esm.sh/@supabase/supabase-js@2.58.0';
+import { setupSubscriptionPanel } from './subscription-panel.js?v=20261105-audit-1';
 import { renewalNotice } from './renewal-reminder.js?v=20261103-reminders-2';
 import { showXrmoviOnboarding } from './onboarding.js?v=20261103-payment-layout-1';
 import { createCompanyBranding } from './company-branding.js?v=20261029-logo-1';
@@ -9,7 +9,6 @@ import { printFuelEvidenceReport } from './finance-receipts-report.js?v=20261105
 let branding;
 let mileage=null;
 let subscriptionPanel=null;
-let billingCheckoutEnabled=false;
 let paymentRequired=false;
 let drivers=[],vehicleExpenses=[],paidExpenses=[],historyExpenses=[];
 let driversState='',expensesState='',maintenanceMode='services';
@@ -175,7 +174,6 @@ async function init({skipWizard=false}={}){
   if(!subscriptionPanel){
     subscriptionPanel=setupSubscriptionPanel({
       client:sb,getCompany:()=>company,
-      billingEnabled:billingCheckoutEnabled,
       onCompanyCreated:async id=>{
         companies=await rpc('my_companies');
         company=companies.find(c=>c.id===id)||company;
@@ -1213,7 +1211,6 @@ async function startXrmovi(){
   if(!response.ok)throw Error('Não foi possível carregar a configuração do painel.');
   const config=await response.json();
   if(!config?.supabaseUrl||!config?.supabaseAnonKey)throw Error('Configuração do Supabase incompleta.');
-  billingCheckoutEnabled=config.billingEnabled===true;
   sb=createClient(config.supabaseUrl,config.supabaseAnonKey);
   branding=createCompanyBranding({
    client:sb,getCompany:()=>company,

@@ -1,4 +1,4 @@
-import{createClient}from'https://esm.sh/@supabase/supabase-js@2';
+import{createClient}from'https://esm.sh/@supabase/supabase-js@2.58.0';
 const $=id=>document.getElementById(id);
 const names={almoxarifado:'Estoque de peças',checklists:'Checklists de veículos',inspecoes:'Inspeções da frota'};
 let sb,companies=[],cid=null,moduleName='almoxarifado',records=[],orders=[],editing=null,movementRecords=[],editingModule='almoxarifado';

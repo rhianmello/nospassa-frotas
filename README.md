@@ -1,26 +1,39 @@
-# Frota — reconstrução limpa a partir da CPL
+# XRMOVI — Gestão de frotas
 
-Sistema em desenvolvimento: https://frota.nospassa.com.br/
+Site: https://frota.nospassa.com.br/
 
-## Estado atual
-- A página inicial redireciona para `/v3/`, onde está a réplica visual da Frota CPL.
-- A estrutura HTML/CSS e os SVGs de veículos foram copiados do módulo original da CPL.
-- Os scripts originais da CPL estão preservados como referência em `v3/cpl-original/js/`. **Não são executados** na V3: usam banco, senha master e RPCs próprios da CPL.
-- `v3/xrmovi-adapter.js` é o adaptador provisório ao schema XRMOVI do Supabase. Parte dos recursos da CPL ainda não está disponível.
-- A empresa de teste e registros relacionados foram excluídos do schema `xrmovi`, preservando as outras aplicações do Supabase.
-- As contas de autenticação `auth.users` foram mantidas. Um arquivo no bucket de Storage do XRMOVI necessita exclusão pelo serviço de Storage.
-- A antiga V1, V2, painel CEO e documentos legados foram removidos do branch principal.
+## Estrutura atual
+- /: apresentação, demonstração, cadastro, login e recuperação de senha.
+- /v3/: painel autenticado da frota e seleção de empresa.
+- /admin/: administração com autorização no backend.
+- /cliente/: atendimento da conta autenticada.
+- /km/: leituras por link individual do veículo.
+- auth/public-auth.js: autenticação pública separada do HTML.
+- supabase/functions/: pagamento, conciliação e e-mails.
+- supabase/migrations/ e supabase/tests/: alterações e testes do banco.
 
-## Recuperação
-Backup integral do repositório antes da limpeza:
-`backup-xrmovi-before-clean-rebuild-20261029`
+Frontend estático no GitHub Pages; dados no schema xrmovi do Supabase. Gravações passam por RPCs com autorização. v3/cpl-original/ é referência histórica e não deve ser conectado ao banco XRMOVI.
 
-## Próximas etapas
-1. Auditar scripts da CPL e mapear cada módulo ao modelo multiempresa.
-2. Criar nova autenticação/empresa inicial, mantendo isolamento por usuário.
-3. Reconstruir ativos, documentos, manutenção, abastecimento, programação semanal, histórico e relatórios.
-4. Testar login, autorização, upload, exportações e responsividade no navegador.
-5. Só habilitar rotinas de gravação e comercialização após validação funcional.
+## Contratação e acesso
+A disponibilidade vem de xrmovi-billing-readiness, que consulta a configuração privada e a autorização do piloto. config.json contém apenas a URL e a chave publicável do Supabase. O frontend nunca habilita cotas ou cobranças.
 
-## Segurança
-Não foram alterados o projeto CPL-EPC15, outras aplicações do Supabase ou dados de pagamentos de outros projetos. A cópia visual não equivale ainda à paridade funcional.
+Cartão tem cobrança recorrente; Pix tem renovação mensal manual. Cadastro, QR emitido e retorno do checkout não comprovam pagamento. Liberação exige conciliação no backend ou liberação manual autorizada e auditada.
+
+Consulte docs/ativar-mercadopago-xrmovi.md e docs/mercadopago-subscriptions-incident-2026-11-04.md. Testes simulados não equivalem à homologação financeira real.
+
+## Testes (Node.js 22+)
+```sh
+npm ci --ignore-scripts
+npm test
+npx playwright install chromium
+npm run test:browser
+```
+
+Testes de navegador interceptam a rede e usam dados fictícios. Testes SQL usam rollback e exigem schema atual e titular de homologação; devem rodar num banco de teste, como postgres. Sequências podem avançar apesar do rollback. Não configurar CI com credenciais do banco de produção.
+
+## Pendências explícitas
+- Identificar responsável e contato oficial para revisar Termos, Privacidade e Cancelamento. Rascunhos da auditoria ficam fora das rotas públicas.
+- Ativar proteção contra senhas vazadas no painel Auth, se disponível no plano. Essa configuração afeta todas as aplicações do projeto compartilhado.
+- Homologar pagamento, renovação e cancelamento com ambiente/usuário autorizado.
+
+Resultados de publicação Pages, testes de navegador e testes de contratos são independentes. Publicação concluída não comprova aprovação dos testes nem pagamento real.

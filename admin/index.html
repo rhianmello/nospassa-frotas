@@ -72,7 +72,7 @@ footer{padding:20px;text-align:center;color:#849eae;font-size:11px}
  </div>
 </main><footer>XRMOVI · Administração comercial protegida · Bloqueios auditados no Supabase</footer>
 <script type="module">
-import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
+import {createClient} from 'https://esm.sh/@supabase/supabase-js@2.58.0';
 const el=id=>document.getElementById(id),number=n=>Number(n||0).toLocaleString('pt-BR'),money=n=>Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}),date=d=>d?new Date(d).toLocaleDateString('pt-BR'):'—';
 const node=(tag,text='',className='')=>{const n=document.createElement(tag);n.textContent=String(text??'');if(className)n.className=className;return n};
 const emptyRows=(body,cols,msg)=>{const tr=node('tr'),td=node('td',msg);td.colSpan=cols;tr.append(td);body.append(tr)};

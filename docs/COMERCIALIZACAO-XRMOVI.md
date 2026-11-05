@@ -1,3 +1,5 @@
+> Atualização de 05/11/2026: o texto abaixo registra a implantação de 29/10 e não representa o estado atual do checkout. A disponibilidade atual vem de xrmovi-billing-readiness, incluindo autorização do piloto. Não existe mais billingEnabled em config.json. Cartão é recorrente e Pix é mensal manual. Consulte o README principal e o documento de incidente de 04/11 antes de operar pagamentos.
+
 # XRMOVI — Assinaturas, cotas e implantação comercial
 
 ## Estado após a implementação de 29/10/2026
