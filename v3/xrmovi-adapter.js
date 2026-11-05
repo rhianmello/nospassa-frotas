@@ -4,7 +4,7 @@ import { renewalNotice } from './renewal-reminder.js?v=20261103-reminders-2';
 import { showXrmoviOnboarding } from './onboarding.js?v=20261103-payment-layout-1';
 import { createCompanyBranding } from './company-branding.js?v=20261029-logo-1';
 import { setupMileage } from './mileage.js?v=20261029-km-audit-34';
-import { createDocumentCenter } from './document-center.js?v=20261105-center-1';
+import { createDocumentCenter } from './document-center.js?v=20261105-center-2';
 let branding;
 let mileage=null;
 let subscriptionPanel=null;
