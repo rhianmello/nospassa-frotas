@@ -36,8 +36,14 @@ form.addEventListener('submit',async event=>{
   if(!adminError&&isAdmin===true)destination=new URL('/admin/',location.origin).href;
   msg.textContent=isAdmin===true&&!adminError?'Acesso confirmado. Abrindo administração...':'Acesso confirmado. Abrindo painel...';
   // Atribuição é opcional e nunca bloqueia o login nem libera assinatura.
-  try{await Promise.race([window.XrmoviAnalytics?.syncAttribution?.(client)||Promise.resolve(false),new Promise(resolve=>setTimeout(resolve,1800))]);}catch(_error){}
+  try{await Promise.race([Promise.allSettled([window.XrmoviAnalytics?.syncAttribution?.(client)||Promise.resolve(false),window.XrmoviAnalytics?.syncPurchaseIdentity?.(client)||Promise.resolve(false)]),new Promise(resolve=>setTimeout(resolve,2800))]);}catch(_error){}
   location.replace(destination);
  }catch(error){msg.textContent=error.message||'Não foi possível autenticar.'}finally{submit.disabled=false}
 });
 // A abertura da janela de acesso é controlada pelo script da landing.
+
+// Revocation/consent changes from the landing page are mirrored to the private record.
+window.addEventListener('xrmovi:analytics-consent-changed',async()=>{
+ if(!client)return;
+ try{const {data}=await client.auth.getSession();if(data?.session)await window.XrmoviAnalytics?.syncPurchaseIdentity?.(client)}catch(_error){}
+});
