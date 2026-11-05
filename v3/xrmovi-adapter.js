@@ -4,7 +4,7 @@ import { renewalNotice } from './renewal-reminder.js?v=20261103-reminders-2';
 import { showXrmoviOnboarding } from './onboarding.js?v=20261105-public-auto-check-5';
 import { createCompanyBranding } from './company-branding.js?v=20261029-logo-1';
 import { setupMileage } from './mileage.js?v=20261029-km-audit-34';
-import { createDocumentCenter } from './document-center.js?v=20261105-mobile-preview-v41-2';
+import { createDocumentCenter } from './document-center.js?v=20261105-mobile-preview-v41-3';
 import { printFuelEvidenceReport } from './finance-receipts-report.js?v=20261105-receipts-1';
 let branding;
 let mileage=null;
