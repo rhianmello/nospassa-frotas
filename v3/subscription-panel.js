@@ -173,6 +173,13 @@ export function setupSubscriptionPanel({client,getCompany,onCompanyCreated,onDat
   }});
  });
 
+ const retryButton=document.createElement('button');
+ retryButton.type='button';retryButton.id='xrm-bill-retry-readiness';
+ retryButton.className='secondary';retryButton.textContent='Verificar disponibilidade do pagamento';
+ retryButton.hidden=true;retryButton.style.marginTop='8px';
+ billingNotice.insertAdjacentElement('afterend',retryButton);
+ retryButton.addEventListener('click',()=>void checkBillingReadiness());
+
  const checkoutState=(ready,message)=>{
   billingReady=Boolean(ready);
   checkoutButton.disabled=!billingReady;
@@ -180,14 +187,19 @@ export function setupSubscriptionPanel({client,getCompany,onCompanyCreated,onDat
   checkoutButton.title=billingReady?'Abrir checkout seguro do Mercado Pago':'Cobrança ainda não habilitada';
   checkoutButton.textContent=billingReady?'Assinar e pagar com Mercado Pago':'Pagamento aguardando configuração';
   billingNotice.textContent=message;
+  retryButton.hidden=billingReady;
  };
  checkoutState(false,'Consultando a disponibilidade do Mercado Pago...');
  async function checkBillingReadiness(){
   try{
+   checkoutState(false,'Verificando o Mercado Pago...');
    const {data,error}=await client.functions.invoke('xrmovi-billing-readiness',{method:'GET'});
    if(error)throw error;
+   const notReady=data?.reason==='pilot_only'
+    ?'O Mercado Pago está em homologação. Esta conta ainda não está autorizada para contratar. Nenhuma cobrança foi criada.'
+    :'O checkout por cartão e Pix está temporariamente indisponível. Nenhuma cobrança foi criada. Aguarde a liberação segura do Mercado Pago.';
    checkoutState(data?.enabled===true,
-    data?.enabled===true?(data.mode==='pilot'?'Homologação autorizada para esta conta. Cartão: cobrança recorrente. Pix: renovação mensal manual. Confirme o valor antes de pagar; o plano depende de pagamento aprovado.':'Pagamento disponível por cartão recorrente ou Pix com renovação mensal manual. O plano depende de confirmação efetiva do Mercado Pago.'):'Pagamento em configuração: o checkout será habilitado após a ativação segura do provedor.');
+    data?.enabled===true?(data.mode==='pilot'?'Homologação autorizada para esta conta. Cartão: cobrança recorrente mensal. Pix: renovação manual. Confirme o valor antes de pagar; o plano depende de pagamento aprovado.':'Pagamento disponível por cartão recorrente ou Pix com renovação mensal manual. O plano depende de confirmação efetiva do Mercado Pago.'):notReady);
    if(data?.enabled===true){
     const base=getCompany();
     if(base){
