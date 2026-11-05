@@ -103,19 +103,21 @@ function status(text,type=''){el('feedback').textContent=text;el('feedback').cla
 async function rpc(fn,args){const {data,error}=await db.rpc('xrmovi_'+fn,args);if(error)throw Error(error.message);return data}
 function rowCustomer(c,full=false){
  const manual=Boolean(c.manual_access?.active&&Date.parse(c.manual_access.valid_until)>Date.now());
+  const recurring=Boolean(c.recurring?.has_recurring);
  const manualUntil=manual?date(c.manual_access.valid_until):'';
  const tr=node('tr');const first=node('td');const bold=node('b',c.email),companies=node('span',(c.companies||[]).map(x=>x.name).join(' · ')||'Sem empresa','sub');first.append(bold,companies);tr.append(first);
  cell(tr,(c.plan||'—').toUpperCase()+(c.price?' · '+money(c.price):''));
  const expired=c.status==='trial'&&c.trial_end&&Date.parse(c.trial_end)<Date.now();
  // Show manual operating access in the recent list; preserve financial status in full customer details.
  const manualVisible=!full&&!c.blocked&&manual&&c.status!=='active'&&!expired;
- const displayStatus=manualVisible?'Acesso autorizado':expired?'Teste vencido':c.status==='pending'?'Aguardando pagamento':c.status||'—';
+ const displayStatus=manualVisible?'Acesso autorizado':expired?'Teste vencido':c.status==='canceled'?'Renovação cancelada':c.status==='pending'?'Aguardando pagamento':c.status||'—';
  pill(tr,displayStatus,manualVisible?'active':expired?'blocked':c.status==='active'?'active':'pending');
  if(manualVisible){
   const statusCell=tr.lastElementChild;
   statusCell.querySelector('.pill').title='Acesso liberado manualmente; não indica pagamento confirmado.';
   statusCell.append(node('span','Liberação manual até '+manualUntil,'sub'));
  }else if(manual)tr.lastElementChild.append(node('span','Operação autorizada manualmente até '+manualUntil,'sub'));
+  if(c.status==='canceled'&&c.paid_through)tr.lastElementChild.append(node('span','Acesso pago até '+date(c.paid_through),'sub'));
  if(full){
   cell(tr,number(c.vehicles));
   const accessText=c.blocked?'Bloqueado':manual?'Manual até '+manualUntil:c.status==='active'?'Assinatura ativa':'Pagamento pendente';
@@ -134,6 +136,12 @@ function rowCustomer(c,full=false){
   const chat=node('button','Mensagem'+(c.unread?' ('+c.unread+')':''),'btn');
   chat.type='button';chat.onclick=()=>{threadId=c.id;openTab('messages');void loadThread()};
   actions.append(toggle,chat);
+   if(recurring&&c.status==='active'){
+    const cancel=node('button','Cancelar renovação','btn danger');
+    cancel.type='button';cancel.title='Cancelar as próximas cobranças no Mercado Pago, mantendo o período já pago.';
+    cancel.onclick=()=>void cancelCustomerRecurring(c);
+    actions.append(cancel);
+   }
  }
  td.append(actions);tr.append(td);
  return tr;
@@ -198,6 +206,25 @@ async function changeManualAccess(c){
   status(active?'Autorização manual revogada e registrada na auditoria.':'Acesso manual autorizado por '+days+' dia(s) e registrado na auditoria.','success');
  }catch(e){status('Não foi possível alterar a autorização: '+e.message,'error')}
 }
+async function cancelCustomerRecurring(c){
+ if(!c.recurring?.has_recurring||c.status!=='active')return;
+ const reason=prompt('Cancelar a RENOVAÇÃO AUTOMÁTICA de '+c.email+'? O cliente manterá acesso até '+date(c.paid_through)+'. Informe o motivo do cancelamento (10 a 500 caracteres):','Solicitação de cancelamento da assinatura pelo cliente');
+ if(reason===null)return;
+ if(reason.trim().length<10||reason.trim().length>500){status('O motivo deve ter entre 10 e 500 caracteres.','error');return}
+ if(!confirm('CONFIRMAR cancelamento da renovação de '+c.email+' no Mercado Pago? Não haverá estorno automático e o período pago será preservado.'))return;
+ status('Cancelando a renovação no Mercado Pago. Não feche esta tela...');
+ try{
+  const {data,error}=await db.functions.invoke('xrmovi-cancel-subscription',{body:{account_id:c.id,reason:reason.trim()}});
+  if(error){
+   let detail=error.message||'Erro ao cancelar a renovação';
+   try{const item=await error.context?.json?.();if(item?.error)detail=String(item.error)}catch{}
+   throw new Error(detail);
+  }
+  if(data?.status!=='canceled'||data?.provider_confirmed!==true)throw new Error('O provedor não confirmou o cancelamento.');
+  await refresh();
+  status('Renovação de '+c.email+' cancelada no Mercado Pago. Acesso preservado até '+date(data.paid_through)+'.','success');
+ }catch(e){status('Não foi possível concluir o cancelamento: '+e.message,'error')}
+}
 async function loadThread(){
  const a=(info.accounts||[]).find(x=>x.id===threadId);if(!a){el('thread-title').textContent='Selecione um cliente';return}
  el('thread-title').textContent=a.email+' · '+(a.companies||[]).map(x=>x.name).join(' / ');
@@ -212,7 +239,7 @@ async function loadThread(){
 }
 async function refresh(){
  const button=el('refresh');button.disabled=true;
- try{const [overview,grants]=await Promise.all([rpc('commercial_admin_overview'),rpc('admin_manual_access_list')]);info=overview;const grantsByAccount=new Map((grants||[]).map(g=>[g.account_id,g]));for(const account of info.accounts||[])account.manual_access=grantsByAccount.get(account.id)||null;render();show('content');if(tab==='messages'&&threadId)await loadThread()}
+ try{const [overview,grants,subscriptions]=await Promise.all([rpc('commercial_admin_overview'),rpc('admin_manual_access_list'),rpc('admin_recurring_cancellations')]);info=overview;const grantsByAccount=new Map((grants||[]).map(g=>[g.account_id,g]));const subByAccount=new Map((subscriptions||[]).map(x=>[x.account_id,x]));for(const account of info.accounts||[]){account.manual_access=grantsByAccount.get(account.id)||null;account.recurring=subByAccount.get(account.id)||null;}render();show('content');if(tab==='messages'&&threadId)await loadThread()}
  catch(e){status('Erro ao consultar o BI: '+e.message,'error');if(el('content').hidden){show('unauthorized');el('denied-text').textContent=e.message}}
  finally{button.disabled=false}
 }
