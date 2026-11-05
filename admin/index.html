@@ -255,7 +255,9 @@ async function checkBillingStatus(){
   el('xrm-mail-setup').open=data?.support_email_configured!==true;
   if(data?.configuration_ready===true){
    label.textContent=data.billing_switch_enabled===true
-    ?'Mercado Pago: credenciais verificadas. Faça a validação do primeiro webhook antes de vender.'
+    ?(data.billing_pilot_only===true
+      ?'Mercado Pago: HOMOLOGAÇÃO RESTRITA. Apenas usuários autorizados podem pagar. Não anuncie para o público antes de validar o webhook e liberar produção.'
+      :'Mercado Pago: produção habilitada. Confira pagamentos aprovados, ativação e webhooks antes de escalar anúncios.')
     :'Mercado Pago: Access Token e assinatura secreta encontrados; conta recebedora confirmada. Pagamento real ainda desativado.';
   }else{
    const issues=[];
