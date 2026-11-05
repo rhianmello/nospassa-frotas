@@ -84,6 +84,8 @@ export function createDocumentCenter({
   const notice=text=>{query('[data-feedback]').textContent=text||'';};
   const validFor=(doc,kind,record)=>kind==='driver'
     ?doc.kind==='driver'&&doc.record_id===record.id
+    :kind==='fuel'
+    ?doc.kind==='fuel'&&doc.record_id===record.id
     :doc.vehicle_id===record.id||(doc.kind==='vehicle'&&doc.record_id===record.id);
 
   async function openFile(doc,download=false){
@@ -243,7 +245,10 @@ export function createDocumentCenter({
     if(!modalRecord||!modalKind)return;
     const cid=getCompany()?.id, record=modalRecord, kind=modalKind;
     if(!cid){close();return;}
-    const title=kind==='driver'?'Documentos do motorista: '+record.name:'Documentos do veículo: '+record.plate;
+    const title=kind==='driver'?'Documentos do motorista: '+record.name
+      :kind==='fuel'?'Comprovantes do abastecimento: '+(record.plate||getVehicles().find(v=>v.id===record.vehicle_id)?.plate||'Veículo')+
+        ' · '+(record.date||record.fueled_on||'')
+      :'Documentos do veículo: '+record.plate;
     query('[data-close]').disabled=false;
     query('[data-summary]').textContent='Arquivos privados. Visualização temporária, download e exclusão auditada.';
     byId('xrm-doc-dialog-title').textContent=title;
@@ -278,7 +283,7 @@ export function createDocumentCenter({
     }
   }
   function openRecord(kind,record){
-    if(!getCompany()||!record||!['driver','vehicle'].includes(kind))return;
+    if(!getCompany()||!record||!['driver','vehicle','fuel'].includes(kind))return;
     if(kind==='driver'&&!canWrite())return;
     previousFocus=document.activeElement;
     modalKind=kind;modalRecord={...record};
