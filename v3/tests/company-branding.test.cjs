@@ -38,7 +38,9 @@ async function open({ role = 'owner', existing = false, viewport = { width: 1440
     };
     state.client = {
       auth: { getUser: async () => ({ data: { user: { id: 'test-user' } } }) },
+      functions: { invoke: async () => ({ data: { enabled: false }, error: null }) },
       rpc: async (name, args) => {
+        if(name==='xrmovi_access_status')return {data:{allowed:true,billing_required:false,status:'active'}};
         if (name === 'xrmovi_my_companies') return { data: state.companies, error: null };
         if (name === 'xrmovi_company_logo_save') {
           state.saves.push(args);

@@ -28,7 +28,7 @@ a{color:#8ef0d9}#status{min-height:30px;font-size:13px}#status[data-error="true"
 </form>
 </main>
 <script type="module">
-import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
+import {createClient} from 'https://esm.sh/@supabase/supabase-js@2.58.0';
 const form=document.getElementById('reset-form'),button=document.getElementById('reset-submit'),status=document.getElementById('status');
 const say=(message,error=false)=>{status.textContent=message;status.dataset.error=String(error)};
 let client=null,ready=false;

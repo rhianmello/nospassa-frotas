@@ -2,7 +2,7 @@ import {openPixCheckout} from './pix-checkout.js?v=20261104-pix-2';
 import {renewalNotice} from './renewal-reminder.js?v=20261103-reminders-2';
 // XRMOVI | Central de assinatura — todas as gravações passam por RPCs autenticadas.
 // Nunca decide cotas pelo navegador: o banco aplica regras nas inserções.
-export function setupSubscriptionPanel({client,getCompany,onCompanyCreated,onDataChanged,billingEnabled=false}){
+export function setupSubscriptionPanel({client,getCompany,onCompanyCreated,onDataChanged}){
  const root=document.getElementById('xrm-subscription-content');
  const nav=document.getElementById('xrm-subscriptions-nav');
  if(!root)return {refresh:async()=>{}};

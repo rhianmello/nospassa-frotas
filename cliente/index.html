@@ -8,7 +8,7 @@
 <section class="panel" id="inbox" hidden><div class="panel-head"><b>Conversa com o XRMOVI</b><button class="btn" id="reload" type="button">Atualizar mensagens</button></div><div class="messages" id="messages"></div><form id="compose" class="compose"><textarea id="body" maxlength="3000" placeholder="Como podemos ajudar?" required></textarea><button type="submit" class="btn primary">Enviar mensagem</button></form><div class="feedback" id="feedback"></div></section>
 </main><footer>As conversas são privadas entre o titular da assinatura e o administrador da plataforma.</footer>
 <script type="module">
-import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
+import {createClient} from 'https://esm.sh/@supabase/supabase-js@2.58.0';
 const el=id=>document.getElementById(id),node=(tag,text,cls)=>{const n=document.createElement(tag);n.textContent=String(text||'');if(cls)n.className=cls;return n};
 let db,companies=[],account=null;
 const rpc=async(fn,args)=>{const {data,error}=await db.rpc('xrmovi_'+fn,args);if(error)throw Error(error.message);return data};

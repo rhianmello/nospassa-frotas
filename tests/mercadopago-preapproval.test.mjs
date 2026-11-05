@@ -152,14 +152,14 @@ import {buildPixPaymentPayload} from "../supabase/functions/xrmovi-pix/pix-payme
 
 test("Pix POST request has no currency_id, preserves stable idempotency reference",()=>{
   const payload=buildPixPaymentPayload({
-    amount:"19.90",plan:"start",id,
+    amount:"19.90",plan:"start",id:"11111111-1111-4111-8111-111111111111",
     url:"https://example.supabase.co",
     expiration:"2026-11-05T18:00:00Z",
     email:"payer@example.invalid",first:"Test",last:"User",cpf:"00000000000"
   });
   assert.equal(payload.payment_method_id,"pix");
   assert.equal(payload.transaction_amount,19.9);
-  assert.equal(payload.external_reference,id);
+  assert.equal(payload.external_reference,"11111111-1111-4111-8111-111111111111");
   assert.equal(payload.payer.identification.type,"CPF");
   assert.equal(Object.hasOwn(payload,"currency_id"),false);
   assert.equal(JSON.stringify(payload).includes("currency_id"),false);
@@ -168,7 +168,7 @@ test("Pix POST request has no currency_id, preserves stable idempotency referenc
 
 test("Pix POST rejects invalid amount/reference and doesn't mutate input",()=>{
   const fields={
-    amount:"19.90",plan:"start",id,
+    amount:"19.90",plan:"start",id:"11111111-1111-4111-8111-111111111111",
     url:"https://example.supabase.co",expiration:"2026-11-05T18:00:00Z",
     email:"payer@example.invalid",first:"Test",last:"User",cpf:"00000000000"
   };
