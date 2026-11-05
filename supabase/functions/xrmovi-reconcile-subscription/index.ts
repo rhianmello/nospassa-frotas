@@ -39,13 +39,35 @@ Deno.serve(async(req:Request)=>{
  const currentlyPaid=record?.status==="active"&&Number.isFinite(paidUntil)&&paidUntil>Date.now();
   if(!record?.intent_id||!record?.provider_subscription_id||!["created","pending","paid"].includes(record?.intent_status))
     return json({status:currentlyPaid?"active":"no_payment",message:currentlyPaid?"Assinatura vigente até "+new Date(paidUntil).toLocaleDateString("pt-BR",{timeZone:"UTC"})+".":"Não foi encontrada cobrança vinculada a essa empresa."},200,origin);
-  const mpGet=async(path:string)=>{
-   const result=await fetch("https://api.mercadopago.com"+path,{headers:{Authorization:"Bearer "+mpToken,Accept:"application/json"},signal:AbortSignal.timeout(10000)});
-   if(!result.ok)throw new Error("Falha ao consultar o Mercado Pago. HTTP "+result.status);
+  // Only GET requests: verification must never create or restart a charge.
+  // Some Mercado Pago accounts reject paging arguments on the first invoice search.
+  // Retry that same READ-ONLY filter without paging once; never mistake a failed API response for no payment.
+  const mpGet=async(path:string,operation:string,readOnlyFallback?:string)=>{
+   const read=async(urlPath:string)=>fetch("https://api.mercadopago.com"+urlPath,{
+    method:"GET",headers:{Authorization:"Bearer "+mpToken,Accept:"application/json"},
+    signal:AbortSignal.timeout(10000)
+   });
+   let result=await read(path);
+   if(result.status===400&&readOnlyFallback){
+    console.warn("XRMOVI Mercado Pago read-only paging rejected",{operation,status:400});
+    result=await read(readOnlyFallback);
+   }
+   if(!result.ok){
+    let providerCode="unavailable";
+    try{
+     const detail=await result.json();
+     const raw=String(detail?.error||detail?.code||"");
+     if(/^[a-z_0-9-]{1,60}$/i.test(raw))providerCode=raw;
+    }catch{}
+    console.warn("XRMOVI Mercado Pago reconciliation GET failed",{
+     operation,http_status:result.status,provider_code:providerCode
+    });
+    throw new Error("Falha na consulta de "+operation+" ao Mercado Pago (HTTP "+result.status+"). Nenhuma nova cobrança foi criada. Tente Verificar pagamento novamente ou procure o suporte.");
+   }
    return result.json();
   };
   const preapproval=String(record.provider_subscription_id);
-  const subscription=await mpGet("/preapproval/"+encodeURIComponent(preapproval));
+  const subscription=await mpGet("/preapproval/"+encodeURIComponent(preapproval),"assinatura");
   if(String(subscription.id)!==preapproval
     ||String(subscription.external_reference)!==String(record.intent_id)
     ||Number(subscription.collector_id)!==10284642)
@@ -68,7 +90,7 @@ Deno.serve(async(req:Request)=>{
   const invoices:any[]=[];
   let offset=0;
   for(let page=0;page<20;page++){
-   const result=await mpGet("/authorized_payments/search?preapproval_id="+encodeURIComponent(preapproval)+"&limit=50&offset="+offset);
+   const result=await mpGet("/authorized_payments/search?preapproval_id="+encodeURIComponent(preapproval)+"&limit=50&offset="+offset,"faturas",offset===0?"/authorized_payments/search?preapproval_id="+encodeURIComponent(preapproval):undefined);
    if(!Array.isArray(result?.results))throw new Error("Mercado Pago não retornou uma lista válida de faturas.");
    invoices.push(...result.results);
    offset+=result.results.length;
@@ -80,12 +102,12 @@ Deno.serve(async(req:Request)=>{
   let reconciled=0;
   for(const item of invoices){
    if(!/^\d+$/.test(String(item?.id||""))||!/^\d+$/.test(String(item?.payment?.id||""))||item.payment.status!=="approved")continue;
-   const invoice=await mpGet("/authorized_payments/"+encodeURIComponent(String(item.id)));
+   const invoice=await mpGet("/authorized_payments/"+encodeURIComponent(String(item.id)),"fatura");
    if(String(invoice.id)!==String(item.id)||String(invoice.preapproval_id)!==preapproval
      ||String(invoice.payment?.id)!==String(item.payment.id)
      ||invoice.payment?.status!=="approved"||invoice.currency_id!=="BRL"
      ||Math.abs(Number(invoice.transaction_amount)-expected)>0.009)continue;
-   const payment=await mpGet("/v1/payments/"+encodeURIComponent(String(invoice.payment.id)));
+   const payment=await mpGet("/v1/payments/"+encodeURIComponent(String(invoice.payment.id)),"pagamento");
    if(String(payment.id)!==String(invoice.payment.id)||payment.status!=="approved"
      ||payment.currency_id!=="BRL"||payment.live_mode===false
      ||Math.abs(Number(payment.transaction_amount)-expected)>0.009)continue;
