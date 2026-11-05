@@ -90,8 +90,15 @@ function rowCustomer(c,full=false){
  const tr=node('tr');const first=node('td');const bold=node('b',c.email),companies=node('span',(c.companies||[]).map(x=>x.name).join(' · ')||'Sem empresa','sub');first.append(bold,companies);tr.append(first);
  cell(tr,(c.plan||'—').toUpperCase()+(c.price?' · '+money(c.price):''));
  const expired=c.status==='trial'&&c.trial_end&&Date.parse(c.trial_end)<Date.now();
- pill(tr,expired?'Teste vencido':c.status==='pending'?'Aguardando pagamento':c.status||'—',expired?'blocked':c.status==='active'?'active':'pending');
- if(manual)tr.lastElementChild.append(node('span','Operação autorizada manualmente até '+manualUntil,'sub'));
+ // Show manual operating access in the recent list; preserve financial status in full customer details.
+ const manualVisible=!full&&!c.blocked&&manual&&c.status!=='active'&&!expired;
+ const displayStatus=manualVisible?'Acesso autorizado':expired?'Teste vencido':c.status==='pending'?'Aguardando pagamento':c.status||'—';
+ pill(tr,displayStatus,manualVisible?'active':expired?'blocked':c.status==='active'?'active':'pending');
+ if(manualVisible){
+  const statusCell=tr.lastElementChild;
+  statusCell.querySelector('.pill').title='Acesso liberado manualmente; não indica pagamento confirmado.';
+  statusCell.append(node('span','Liberação manual até '+manualUntil,'sub'));
+ }else if(manual)tr.lastElementChild.append(node('span','Operação autorizada manualmente até '+manualUntil,'sub'));
  if(full){
   cell(tr,number(c.vehicles));
   const accessText=c.blocked?'Bloqueado':manual?'Manual até '+manualUntil:c.status==='active'?'Assinatura ativa':'Pagamento pendente';
