@@ -141,6 +141,9 @@ function reportStyles(){
  '.filename{margin:9px 0;overflow-wrap:anywhere}',
  '.proof{flex:1;min-height:0;display:flex;justify-content:center;align-items:flex-start;padding:6px;border:1px solid #d8e6e8}',
  '.proof img{max-width:100%;max-height:210mm;object-fit:contain}',
+ '@media print{.print-toolbar{display:none!important}}',
+ '.print-toolbar{position:sticky;top:0;z-index:3;padding:12px;margin:-12px 0 14px;background:#e1f2f4;display:flex;gap:12px;align-items:center}',
+ '.print-toolbar button{border:0;border-radius:6px;background:#127a92;color:white;font-weight:700;padding:10px 18px;cursor:pointer}',
  '@media screen{body{background:#f7fbfd;padding:20px;max-width:860px;margin:auto}',
  '.summary,.vehicle,.receipt{background:white;padding:16px;margin-bottom:20px;box-shadow:0 1px 8px #ccd8dc}}'
  ].join('');
@@ -193,7 +196,7 @@ export function buildFuelEvidenceHtml({companyName='',range='',rows=[],groups=[]
   '<p>Não há abastecimentos neste período.</p></section>';
  const html='<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">'+
   '<title>XRMOVI — PDF com comprovantes</title><style>'+reportStyles()+
-  '</style></head><body><section class="summary"><header>'+logo+
+  '</style></head><body><div class="print-toolbar"><button type="button" onclick="window.print()">Imprimir / Salvar como PDF</button><span>Confira as imagens antes de salvar.</span></div><section class="summary"><header>'+logo+
   '<div><h1>Relatório financeiro com comprovantes</h1><div class="muted">XRMOVI · Empresa: '+
   e(companyName)+' · Período: '+e(range)+' · Emitido em: '+e(emittedAt)+
   '</div></div></header><div class="totals">'+cards+'</div>'+
