@@ -28,6 +28,15 @@ Deno.serve(async (request:Request)=>{
   const token=Deno.env.get("XRMOVI_MP_ACCESS_TOKEN")||"";
   const secret=Deno.env.get("XRMOVI_MP_WEBHOOK_SECRET")||"";
   const enabled=Deno.env.get("XRMOVI_BILLING_ENABLED")==="true";
+  const serviceKey=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||"";
+  let publicLaunched=false;
+  if(serviceKey&&url){
+   try{
+    const backend=createClient(url,serviceKey,{auth:{persistSession:false}});
+    const {data,error}=await backend.from("xrmovi_billing_launch_control").select("public_enabled").eq("id",1).maybeSingle();
+    publicLaunched=!error&&data?.public_enabled===true;
+   }catch{publicLaunched=false}
+  }
   let tokenAuthorized=false,accountMatched=false,tokenCheck="not_configured";
   if(token.startsWith("APP_USR-")){
    try{
@@ -51,7 +60,8 @@ Deno.serve(async (request:Request)=>{
    token_authorized:tokenAuthorized,merchant_matches:accountMatched,
    webhook_secret_configured:webhookSecretPresent,
    billing_switch_enabled:enabled,
-   billing_pilot_only:Deno.env.get('XRMOVI_BILLING_PILOT_ONLY')!=='false',
+   billing_pilot_only:Deno.env.get('XRMOVI_BILLING_PILOT_ONLY')!=='false'&&!publicLaunched,
+   billing_public_launch:publicLaunched,
    support_email_configured:(Deno.env.get('XRMOVI_RESEND_API_KEY')||'').startsWith('re_')&&(Deno.env.get('XRMOVI_SUPPORT_MAIL_FROM')||'').includes('@'),
    configuration_ready:eligible,
    note:eligible&&!enabled?"Credentials verified. Production payments remain disabled pending end-to-end webhook testing.":
