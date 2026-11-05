@@ -124,7 +124,15 @@ export async function showXrmoviOnboarding({login,client,onCreated,onLogout,exis
     return;
    }
    const readiness=await client.functions.invoke('xrmovi-billing-readiness',{method:'GET'});
-   if(readiness.error||readiness.data?.enabled!==true)return;
+   if(readiness.error||readiness.data?.enabled!==true){
+    const reason=readiness.data?.reason;
+    const explanation=reason==='pilot_only'
+     ?'Cadastro concluído. O Mercado Pago está em homologação e este acesso ainda não foi autorizado para pagamentos. Nenhuma cobrança foi iniciada.'
+     :'Cadastro concluído. O checkout do Mercado Pago ainda não está disponível. Nenhuma cobrança foi iniciada. Acompanhe a ativação em Minha assinatura.';
+    const feedback=document.getElementById('xrm-bill-plan-feedback');
+    if(feedback){feedback.textContent=explanation;feedback.setAttribute('role','alert');}
+    return;
+   }
    const checkout=await client.functions.invoke('xrmovi-create-subscription',{body:{company_id:data.company_id,plan}});
    if(checkout.error){
     let msg=checkout.error.name==='FunctionsFetchError'
