@@ -1,4 +1,5 @@
 import {openPixCheckout} from './pix-checkout.js?v=20261105-confirmed-pix-1';
+import {createPaymentEmailNotice} from './payment-email-notice.js?v=20261105-email-1';
 // XRMOVI | Cadastro guiado sem acesso operacional antes de pagamento.
 // Valores e limites são fornecidos por xrmovi_list_plans no banco.
 export async function showXrmoviOnboarding({login,client,onCreated,onLogout,existing=null}){
@@ -23,6 +24,12 @@ export async function showXrmoviOnboarding({login,client,onCreated,onLogout,exis
    <span class="wizard-payment-copy"><strong>Pix</strong><small>QR Code ou Copia e Cola · renovação mensal manual</small></span>
   </label>`;
  form.querySelector('[data-wizard-step="3"]').append(paymentChoice);
+ // Before redirecting to Mercado Pago, identify the payer address bound to this account.
+ const emailSlot=document.createElement('div');
+ emailSlot.id='xrm-checkout-login-email';
+ form.querySelector('[data-wizard-step="3"]').append(emailSlot);
+ void createPaymentEmailNotice(client).then(note=>emailSlot.replaceChildren(note))
+  .catch(()=>{emailSlot.textContent='Confira o e-mail do login XRMOVI antes de confirmar no Mercado Pago.';});
  const elements=form.elements, select=elements.namedItem('plan'), submit=form.querySelector('.wizard-submit'), status=form.querySelector('.wizard-msg');
 
  const setSummary=()=>{
