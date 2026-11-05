@@ -59,6 +59,11 @@ export function setupSubscriptionPanel({client,getCompany,onCompanyCreated,onDat
  .xrm-billing .xrm-info{font-size:12px;line-height:1.65;color:#a9c7d7}
  .xrm-billing .xrm-error{color:#ffb7b7}
  .xrm-billing .xrm-billing-foot{font-size:12px;color:#aac7d7}
+  .xrm-billing .xrm-cancel-section{border:1px solid #3c5c6c;border-radius:13px;padding:17px;background:#102d3c;display:grid;gap:9px}
+  .xrm-billing .xrm-cancel-section h3{font-size:15px;color:#e6f4f7;margin:0}
+  .xrm-billing .xrm-cancel-section p{font-size:12px;color:#abcbd8;line-height:1.6;margin:0}
+  .xrm-billing .xrm-cancel-section button{width:max-content;max-width:100%;background:transparent;color:#ffcbcb;border:1px solid #ae6972}
+  .xrm-billing .xrm-cancel-section button:disabled{opacity:.5}
  @media(max-width:920px){.xrm-billing .xrm-quotas{grid-template-columns:repeat(2,minmax(0,1fr))}}
  @media(max-width:670px){.xrm-billing .xrm-actions-grid,.xrm-billing .xrm-quotas{grid-template-columns:1fr}}
  `;
@@ -77,7 +82,14 @@ export function setupSubscriptionPanel({client,getCompany,onCompanyCreated,onDat
    <section class="xrm-group"><h3>Adicionar usuário</h3><form id="xrm-bill-member-form"><label>Empresa<select name="company" required id="xrm-bill-member-company"></select></label><label>E-mail cadastrado e confirmado<input type="email" name="email" required autocomplete="off" placeholder="usuario@empresa.com.br"></label><label>Permissão<select name="role"><option value="manager">Gestor</option><option value="driver">Motorista</option></select></label><button type="submit" class="secondary">Vincular usuário</button></form><div class="xrm-feedback" id="xrm-bill-member-feedback" role="status"></div><p class="xrm-info">O usuário precisa ter conta confirmada no XRMOVI. O número de usuários é independente do número de empresas.</p></section>
    <section class="xrm-group xrm-plan-selection"><h3>Escolher / alterar plano</h3><div class="xrm-plan-compare-layout"><form id="xrm-bill-plan-form"><label>Plano desejado<select name="plan" required><option value="start">Start — R$ 19,90</option><option value="pro">Pro — R$ 39,90</option><option value="business">Business — R$ 64,90</option><option value="advanced">Advanced — R$ 99,90</option></select></label><button type="submit" id="xrm-plan-change-request">Solicitar mudança de plano</button><button type="button" class="secondary" id="xrm-bill-checkout">Pagar com Mercado Pago</button></form><aside class="xrm-plan-preview" aria-label="Capacidade do plano escolhido" aria-live="polite"><div class="preview-head"><strong id="xrm-plan-preview-title">Carregando plano…</strong><b id="xrm-plan-preview-price">—</b></div><div class="preview-grid" id="xrm-plan-preview-limits"></div><p class="preview-note">As empresas compartilham as cotas totais de veículos e contratos. Os limites não são multiplicados pelo número de empresas.</p></aside></div><div class="xrm-feedback" id="xrm-bill-plan-feedback" role="status"></div><p class="xrm-info">O acesso pago é liberado após a confirmação do pagamento pelo Mercado Pago. Solicitar uma alteração de plano não cobra automaticamente. Para Enterprise, entre em contato.</p></section>
   </div>
-  <p class="xrm-billing-foot">Apenas o titular da assinatura pode gerenciar empresas, usuários e planos. Todas as alterações são validadas pelo servidor.</p>
+  <section id="xrm-bill-cancel-section" class="xrm-cancel-section" hidden>
+    <h3>Renovação da assinatura</h3>
+    <p id="xrm-bill-cancel-summary"></p>
+    <button type="button" id="xrm-bill-cancel-button">Cancelar renovação automática</button>
+    <p>Cancelar interrompe cobranças futuras do cartão no Mercado Pago. Não gera estorno. O período já pago continua disponível até o vencimento.</p>
+    <div id="xrm-bill-cancel-feedback" class="xrm-feedback" role="status" aria-live="polite"></div>
+   </section>
+   <p class="xrm-billing-foot">Apenas o titular da assinatura pode gerenciar empresas, usuários e planos. Todas as alterações são validadas pelo servidor.</p>
  </div>`;
  const planSelectForPreview=root.querySelector('#xrm-bill-plan-form select');
  function showSelectedPlan(){
@@ -115,6 +127,28 @@ export function setupSubscriptionPanel({client,getCompany,onCompanyCreated,onDat
  }
  void loadPlansForPreview();
  const feedback=(id,message,error=false)=>{const node=root.querySelector('#'+id);if(node){node.textContent=message;node.classList.toggle('xrm-error',error)}};
+  const cancelSection=root.querySelector('#xrm-bill-cancel-section');
+  const cancelButton=root.querySelector('#xrm-bill-cancel-button');
+  cancelButton.addEventListener('click',async()=>{
+   const info=current,base=getCompany();
+   if(!base||!info||info.status!=='active'||info.provider!=='mercadopago'||!info.owner)return;
+   const accessDate=info.paid_through?formatDate(info.paid_through):'a data registrada na sua assinatura';
+   if(!window.confirm('Cancelar a RENOVAÇÃO AUTOMÁTICA do plano '+info.plan+'?\\n\\nO Mercado Pago deixará de cobrar mensalidades futuras. O pagamento já realizado não será estornado e o acesso continuará até '+accessDate+'.\\n\\nDeseja confirmar?'))return;
+   cancelButton.disabled=true;
+   feedback('xrm-bill-cancel-feedback','Consultando e cancelando a renovação no Mercado Pago...');
+   try{
+    const {data,error}=await client.functions.invoke('xrmovi-cancel-subscription',{body:{company_id:base.id}});
+    if(error){
+     let explanation=error.message||'Não foi possível cancelar a renovação.';
+     try{const detail=await error.context?.json?.();if(detail?.error)explanation=String(detail.error)}catch{}
+     throw new Error(explanation);
+    }
+    if(data?.status!=='canceled'||data.provider_confirmed!==true)throw new Error('O provedor não confirmou o cancelamento.');
+    await refresh();await onDataChanged?.();
+    feedback('xrm-bill-cancel-feedback','Renovação cancelada no Mercado Pago. Nenhuma nova mensalidade será cobrada nesta assinatura.');
+   }catch(err){feedback('xrm-bill-cancel-feedback',err?.message||'Não foi possível concluir o cancelamento.',true)}
+   finally{cancelButton.disabled=false;}
+  });
  const run=async(form,action,callback)=>{
   const button=form.querySelector('button[type="submit"]');button.disabled=true;
   try{await action(new FormData(form));await refresh();if(callback)await callback()}catch(err){feedback(form.id.replace('-form','-feedback'),err?.message||'Não foi possível concluir a operação.',true)}
@@ -189,11 +223,11 @@ export function setupSubscriptionPanel({client,getCompany,onCompanyCreated,onDat
 
  const checkoutState=(ready,message)=>{
   billingReady=Boolean(ready);
-  const allowCheckout=billingReady&&current?.status!=='active';
+  const allowCheckout=billingReady&&current?.status!=='active'&&current?.status!=='canceled';
   checkoutButton.disabled=!allowCheckout;
   pixButton.disabled=!allowCheckout;
   checkoutButton.title=billingReady?'Abrir checkout seguro do Mercado Pago':'Cobrança ainda não habilitada';
-  checkoutButton.textContent=current?.status==='active'?'Assinatura ativa':billingReady?'Assinar e pagar com Mercado Pago':'Pagamento aguardando configuração';
+  checkoutButton.textContent=current?.status==='canceled'?'Renovação cancelada':current?.status==='active'?'Assinatura ativa':billingReady?'Assinar e pagar com Mercado Pago':'Pagamento aguardando configuração';
   billingNotice.textContent=message;
   retryButton.hidden=billingReady;
  };
@@ -307,8 +341,8 @@ export function setupSubscriptionPanel({client,getCompany,onCompanyCreated,onDat
   text('xrm-bill-plan',info.plan+' · '+(info.vehicle_limit??'sob medida')+' veículos');
   text('xrm-bill-price',info.price_brl==null?'Sob consulta':money(info.price_brl)+'/mês');
   const expired=info.status==='trial'&&info.trial_end&&new Date(info.trial_end)<new Date();
-  text('xrm-bill-status',expired?'Teste expirado':info.status==='trial'?'Aguardando pagamento':info.status==='pending'?'Aguardando pagamento':info.status==='active'?'Ativa':info.status);
-  const renewal=renewalNotice(info);
+  text('xrm-bill-status',expired?'Teste expirado':info.status==='trial'?'Aguardando pagamento':info.status==='pending'?'Aguardando pagamento':info.status==='active'?'Ativa':info.status==='canceled'?'Renovação cancelada':info.status);
+  const renewal=info.status==='canceled'?null:renewalNotice(info);
   const reminder=root.querySelector('#xrm-bill-renewal');
   if(reminder){
    reminder.hidden=!renewal;
@@ -319,7 +353,13 @@ export function setupSubscriptionPanel({client,getCompany,onCompanyCreated,onDat
    }
   }
 
-  text('xrm-bill-details',(['pending','trial'].includes(info.status)?'Escolha um plano e conclua o pagamento para liberar veículos, contratos e demais operações. · ':'')+'Limites totais da assinatura, não por empresa');
+  text('xrm-bill-details',info.status==='canceled'?'Renovação cancelada no Mercado Pago. Acesso disponível até '+formatDate(info.paid_through)+'. Não haverá novas cobranças automáticas para esta assinatura.':(['pending','trial'].includes(info.status)?'Escolha um plano e conclua o pagamento para liberar veículos, contratos e demais operações. · ':'')+'Limites totais da assinatura, não por empresa'));
+   const recurring=info.provider==='mercadopago'&&Boolean(info.paid_through)&&['active','canceled'].includes(info.status);
+   cancelSection.hidden=!recurring;
+   cancelButton.hidden=info.status==='canceled';
+   text('xrm-bill-cancel-summary',info.status==='canceled'
+    ?'Renovação cancelada. Acesso ao período pago até '+formatDate(info.paid_through)+'.'
+    :'Seu cartão renova mensalmente. Período já pago válido até '+formatDate(info.paid_through)+'. Você pode encerrar as próximas cobranças aqui.');
   const quotas=root.querySelector('#xrm-bill-quotas');quotas.replaceChildren(
    renderQuota('Empresas',info.companies_used,info.company_limit),
    renderQuota('Veículos',info.vehicles_used,info.vehicle_limit),
@@ -339,10 +379,10 @@ export function setupSubscriptionPanel({client,getCompany,onCompanyCreated,onDat
   companyForm.querySelector('button').disabled=info.company_limit!=null&&info.companies_used>=info.company_limit;
   const planSelect=root.querySelector('#xrm-bill-plan-form select');planSelect.value=info.plan_code;
   const requestPlan=root.querySelector('#xrm-plan-change-request');
-  const isPending=['pending','trial'].includes(info.status);
-  if(info.status==='active'){
-   checkoutButton.disabled=true;pixButton.disabled=true;checkoutButton.textContent='Assinatura ativa';
-  }
+  const isPending=['pending','trial','canceled'].includes(info.status);
+  if(['active','canceled'].includes(info.status)){
+    checkoutButton.disabled=true;pixButton.disabled=true;checkoutButton.textContent=info.status==='canceled'?'Renovação cancelada':'Assinatura ativa';
+   }
   requestPlan.hidden=isPending;
   requestPlan.style.display=isPending?'none':'';
   showSelectedPlan();
