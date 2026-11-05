@@ -17,8 +17,8 @@ test('card onboarding does not silently ignore disabled checkout', () => {
  assert.doesNotMatch(onboarding, /if\(readiness\.error\|\|readiness\.data\?\.enabled!==true\)return;/);
 });
 test('billing controls are disabled until readiness is verified, with safe retry', () => {
- assert.match(panel, /checkoutButton\.disabled=!billingReady/);
- assert.match(panel, /pixButton\.disabled=!billingReady/);
+ assert.match(panel, /checkoutButton\.disabled=!allowCheckout/);
+ assert.match(panel, /pixButton\.disabled=!allowCheckout/);
  assert.match(panel, /xrm-bill-retry-readiness/);
  assert.match(panel, /reason==='pilot_only'/);
  assert.match(panel, /Nenhuma cobrança foi criada/);
@@ -35,4 +35,20 @@ test('server readiness requires valid provider config and does not bypass pilot'
 test('admin makes pilot-only launch risk visible',()=>{
  assert.match(diagnostics, /billing_pilot_only/);
  assert.match(read('admin/index.html'), /HOMOLOGAÇÃO RESTRITA/);
+});
+
+test('payer gets exact checkout-email guidance before redirect',()=>{
+ const notice=read('v3/payment-email-notice.js');
+ assert.match(onboarding,/createPaymentEmailNotice\(client\)/);
+ assert.match(panel,/createPaymentEmailNotice\(client\)/);
+ assert.match(notice,/data\?\.user\?\.email/);
+ assert.match(notice,/ATENÇÃO — USE O E-MAIL DO CADASTRO/);
+ assert.match(notice,/No Mercado Pago, digite exatamente este e-mail/);
+});
+test('returning buyer is reconciled from Mercado Pago without a new charge',()=>{
+ assert.match(panel,/xrmovi-reconcile-subscription/);
+ assert.match(panel,/checkedAfterReturn/);
+ assert.match(panel,/reconcileOnce\(base\.id\)/);
+ assert.match(panel,/reconcili|Conferindo pagamento/);
+ assert.match(panel,/current\?\.status!=='active'/);
 });
