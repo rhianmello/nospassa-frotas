@@ -20,7 +20,7 @@ async function setup(width=390,role='owner'){
  await page.route('https://xrmovi.test/**',r=>{
   const req=new URL(r.request().url());
   if(req.pathname==='/mobile-test.html')return r.fulfill({contentType:'text/html',body:html});
-  const filename=path.resolve(root,req.pathname.replace(/^\\//,''));
+  const filename=path.resolve(root,req.pathname.slice(1));
   if(!filename.startsWith(root+path.sep))return r.fulfill({status:403,body:''});
   try{return r.fulfill({contentType:path.extname(filename)==='.js'?'text/javascript':'text/css',body:fs.readFileSync(filename)});}
   catch{return r.fulfill({status:404,body:''});}
@@ -64,7 +64,7 @@ test('iPhone document preview is an in-app PDF dialog with genuine tappable link
  await page.locator('.xrm-doc-dialog .xrm-doc-row button').filter({hasText:'Visualizar'}).click();
  await page.waitForFunction(()=>!document.querySelector('.xrm-doc-preview-backdrop').hidden);
  assert.equal(await page.locator('.xrm-doc-preview-stage iframe').getAttribute('src'),'https://secure.example.test/storage/v1/object/sign/xrmovi-record-attachments/sample/user/cnh.pdf?token=private-test');
- assert.match(await page.locator('[data-preview-open]').getAttribute('href'),/^https:\/\/secure\\.example\\.test\//);
+ assert.ok((await page.locator('[data-preview-open]').getAttribute('href')).startsWith('https://secure.example.test/'));
  assert.match(await page.locator('[data-preview-download]').getAttribute('href'),/download=/);
  assert.equal(await page.evaluate(()=>testSignedCalls.length),1);
  const pcut=await page.locator('.xrm-doc-preview-panel').evaluate(el=>el.scrollWidth-el.clientWidth);
@@ -81,7 +81,7 @@ test('download remains a native, user-tappable action and images preview inside 
  await page.waitForFunction(()=>!document.querySelector('.xrm-doc-preview-backdrop').hidden);
  assert.equal(await page.locator('[data-preview-image]').isVisible(),true);
  assert.equal(await page.locator('[data-preview-pdf]').isVisible(),false);
- assert.match(await page.locator('[data-preview-download]').getAttribute('href'),/crlv\\.png.*download=crlv\\.png/);
+ assert.ok((await page.locator('[data-preview-download]').getAttribute('href')).includes('download=crlv.png'));
  assert.deepEqual(errors,[]);
  await page.close();
 });
