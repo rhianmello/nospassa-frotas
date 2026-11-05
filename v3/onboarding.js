@@ -75,6 +75,39 @@ export async function showXrmoviOnboarding({login,client,onCreated,onLogout,exis
     info.append(title,detail);
     select.closest('label').after(info);
     form.querySelector('[data-action-label]').textContent='Retomar pagamento pendente';
+    // Buyers with an existing attempt must be able to check payment directly here.
+    const verify=document.createElement('button');
+    verify.type='button';
+    verify.className='wizard-verify-payment';
+    verify.id='xrm-onboarding-verify-payment';
+    verify.textContent='Já paguei · Verificar pagamento';
+    verify.style.cssText='display:block;width:100%;margin-top:8px;padding:13px 15px;border-radius:9px;border:1px solid #55c7ce;background:#103846;color:#d6fbfb;font-weight:750;cursor:pointer';
+    const action=form.querySelector('.wizard-submit');
+    action.insertAdjacentElement('beforebegin',verify);
+    verify.addEventListener('click',async()=>{
+     if(verify.disabled)return;
+     verify.disabled=true;
+     status.textContent='Consultando o pagamento existente no Mercado Pago. Não será realizada outra cobrança...';
+     try{
+      const {data:result,error:checkError}=await client.functions.invoke('xrmovi-reconcile-subscription',{body:{company_id:existing.id}});
+      if(checkError){
+       let message='Não foi possível verificar o pagamento agora.';
+       try{
+        const detail=await checkError.context?.json?.();
+        if(typeof detail?.error==='string')message=detail.error;
+       }catch{}
+       throw new Error(message);
+      }
+      if(result?.status==='active'){
+       status.textContent='Pagamento confirmado! Liberando a assinatura...';
+       window.location.reload();
+       return;
+      }
+      status.textContent=result?.message||'Pagamento ainda não identificado. Se seu cartão já foi cobrado, não clique em Retomar pagamento; procure o suporte.';
+     }catch(error){
+      status.textContent='A verificação falhou: '+(error?.message||'Serviço indisponível')+'. Se já pagou, não contrate de novo. Nenhuma nova cobrança foi criada.';
+     }finally{verify.disabled=false}
+    });
    }
   }catch(error){status.textContent='Não foi possível recuperar o cadastro anterior: '+error.message;}
  }
