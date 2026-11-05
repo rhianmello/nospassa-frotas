@@ -64,6 +64,7 @@ export function setupSubscriptionPanel({client,getCompany,onCompanyCreated,onDat
   .xrm-billing .xrm-cancel-section p{font-size:12px;color:#abcbd8;line-height:1.6;margin:0}
   .xrm-billing .xrm-cancel-section button{width:max-content;max-width:100%;background:transparent;color:#ffcbcb;border:1px solid #ae6972}
   .xrm-billing .xrm-cancel-section button:disabled{opacity:.5}
+  .xrm-billing .xrm-cancel-section[hidden]{display:none!important}
  @media(max-width:920px){.xrm-billing .xrm-quotas{grid-template-columns:repeat(2,minmax(0,1fr))}}
  @media(max-width:670px){.xrm-billing .xrm-actions-grid,.xrm-billing .xrm-quotas{grid-template-columns:1fr}}
  `;
@@ -133,7 +134,7 @@ export function setupSubscriptionPanel({client,getCompany,onCompanyCreated,onDat
    const info=current,base=getCompany();
    if(!base||!info||info.status!=='active'||info.provider!=='mercadopago'||!info.owner)return;
    const accessDate=info.paid_through?formatDate(info.paid_through):'a data registrada na sua assinatura';
-   if(!window.confirm('Cancelar a RENOVAÇÃO AUTOMÁTICA do plano '+info.plan+'?\\n\\nO Mercado Pago deixará de cobrar mensalidades futuras. O pagamento já realizado não será estornado e o acesso continuará até '+accessDate+'.\\n\\nDeseja confirmar?'))return;
+   if(!window.confirm('Cancelar a RENOVAÇÃO AUTOMÁTICA do plano '+info.plan+'?\n\nO Mercado Pago deixará de cobrar mensalidades futuras. O pagamento já realizado não será estornado e o acesso continuará até '+accessDate+'.\n\nDeseja confirmar?'))return;
    cancelButton.disabled=true;
    feedback('xrm-bill-cancel-feedback','Consultando e cancelando a renovação no Mercado Pago...');
    try{
