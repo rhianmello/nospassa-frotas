@@ -71,19 +71,20 @@ export async function showXrmoviOnboarding({login,client,onCreated,onLogout,exis
     const title=document.createElement('strong');
     title.textContent='Pagamento já iniciado · '+String(attempt.requested_plan).toUpperCase();
     const detail=document.createElement('span');
-    detail.textContent='Seu cadastro foi preservado. Continue o pagamento do plano original sem criar outra assinatura. Para alterar o plano, é necessário concluir ou cancelar a tentativa anterior.';
+    detail.textContent='Se você já pagou, use Verificar pagamento. Se ainda não concluiu a compra, é possível retomar o checkout original sem contratar outra assinatura.';
     info.append(title,detail);
     select.closest('label').after(info);
-    form.querySelector('[data-action-label]').textContent='Retomar pagamento pendente';
+    form.querySelector('[data-action-label]').textContent='Continuar checkout (somente se não pagou)';
     // Buyers with an existing attempt must be able to check payment directly here.
     const verify=document.createElement('button');
     verify.type='button';
     verify.className='wizard-verify-payment';
     verify.id='xrm-onboarding-verify-payment';
     verify.textContent='Já paguei · Verificar pagamento';
-    verify.style.cssText='display:block;width:100%;margin-top:8px;padding:13px 15px;border-radius:9px;border:1px solid #55c7ce;background:#103846;color:#d6fbfb;font-weight:750;cursor:pointer';
+    verify.style.cssText='display:block;width:100%;margin-top:8px;padding:13px 15px;border-radius:9px;border:1px solid #55c7ce;background:#28b5aa;color:#052c35;font-weight:800;cursor:pointer';
     const action=form.querySelector('.wizard-submit');
     action.insertAdjacentElement('beforebegin',verify);
+    action.style.cssText='background:#173b4b;color:#cce6ef;border:1px solid #396375;';
     verify.addEventListener('click',async()=>{
      if(verify.disabled)return;
      verify.disabled=true;
