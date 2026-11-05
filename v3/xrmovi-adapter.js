@@ -56,7 +56,13 @@ function xrmAssistRefresh(){
  }}));
 }
 
-function page(name,push=true){if(!viewLabels[name])name='dashboard';if(paymentRequired&&name!=='subscription')name='subscription';all('.fleet-view').forEach(x=>x.classList.toggle('hidden',x.id!=='view-'+name));all('.fleet-main-nav [data-view]').forEach(x=>{const active=x.dataset.view===name;x.classList.toggle('active',active);if(active)x.setAttribute('aria-current','page');else x.removeAttribute('aria-current')});document.querySelector('.fleet-commandbar')?.classList.toggle('hidden',name==='drivers');document.querySelector('.xrm-header-contract')?.classList.toggle('hidden',name==='drivers');put('fleet-view-label',viewLabels[name]);document.title='XRMOVI | '+viewLabels[name];document.querySelector('.fleet-hero')?.classList.toggle('hidden',name!=='dashboard');if(el('fleet-mobile-view'))el('fleet-mobile-view').value=name;const month=el('fuel-ranking-month')?.closest('label');if(month)(name==='financial'?el('financial-period-slot'):document.querySelector('.fleet-ranking-filters'))?.append(month);if(push&&location.hash!=='#'+name)history.pushState(null,'','#'+name);window.scrollTo({top:0,behavior:'instant'});el('view-'+name)?.querySelector('h2')?.focus({preventScroll:true});renderFilterSummary();window.dispatchEvent(new CustomEvent('xrmovi:assistant-view',{detail:{view:name}}))}
+function page(name,push=true){if(!viewLabels[name])name='dashboard';if(paymentRequired&&name!=='subscription')name='subscription';all('.fleet-view').forEach(x=>x.classList.toggle('hidden',x.id!=='view-'+name));all('.fleet-main-nav [data-view]').forEach(x=>{const active=x.dataset.view===name;x.classList.toggle('active',active);if(active)x.setAttribute('aria-current','page');else x.removeAttribute('aria-current')});const onlyDashboard=name==='dashboard';
+const headerFilters=document.querySelector('.fleet-commandbar');
+if(headerFilters){headerFilters.classList.toggle('hidden',!onlyDashboard);headerFilters.style.display=onlyDashboard?'':'none';}
+const filterWrapper=document.querySelector('.xrm-hero-filters');
+if(filterWrapper){filterWrapper.hidden=!onlyDashboard;filterWrapper.style.display=onlyDashboard?'':'none';}
+const filterSummary=el('active-filter-summary');
+if(filterSummary){filterSummary.hidden=!onlyDashboard;filterSummary.style.display=onlyDashboard?'':'none';}document.querySelector('.xrm-header-contract')?.classList.toggle('hidden',name==='drivers');put('fleet-view-label',viewLabels[name]);document.title='XRMOVI | '+viewLabels[name];document.querySelector('.fleet-hero')?.classList.toggle('hidden',name!=='dashboard');if(el('fleet-mobile-view'))el('fleet-mobile-view').value=name;const month=el('fuel-ranking-month')?.closest('label');if(month)(name==='financial'?el('financial-period-slot'):document.querySelector('.fleet-ranking-filters'))?.append(month);if(push&&location.hash!=='#'+name)history.pushState(null,'','#'+name);window.scrollTo({top:0,behavior:'instant'});el('view-'+name)?.querySelector('h2')?.focus({preventScroll:true});renderFilterSummary();window.dispatchEvent(new CustomEvent('xrmovi:assistant-view',{detail:{view:name}}))}
 all('[data-view]').forEach(x=>x.onclick=()=>page(x.dataset.view));if(el('xrm-mileage-nav'))el('xrm-mileage-nav').onclick=()=>{
   page('assets');
   requestAnimationFrame(()=>el('xrm-mileage-console')?.scrollIntoView({behavior:'smooth',block:'start'}));
@@ -253,7 +259,7 @@ function canWrite(){return !!company&&['owner','manager'].includes(company.role)
 function closeWrite(force=false){if(v3Editing?.saving&&!force)return;v3Overlay.hidden=true;v3Editing=null;document.body.classList.remove('fleet-dialog-open');if(lastWriteFocus?.isConnected)lastWriteFocus.focus({preventScroll:true})}
 el('v3-edit-close').onclick=()=>closeWrite();
 v3Overlay.addEventListener('click',event=>{if(event.target===v3Overlay)closeWrite()});
-function openWrite(kind,record=null){if(!canWrite()){window.alert('Somente proprietário ou gestor autorizado pode alterar registros.');return}if(v3Overlay.hidden)lastWriteFocus=document.activeElement;record=record?{...record}:null;v3Overlay.dataset.layout=record&&(kind.startsWith('maintenance-')||['driver','expense'].includes(kind))?'drawer':'modal';v3Overlay.dataset.taskId=record?.id||'';v3Overlay.dataset.expenseId=kind==='expense'?record?.id||'':'';v3Overlay.dataset.driverId=kind==='driver'?record?.id||'':'';v3Editing={kind,record,companyId:company.id};const form=el('v3-edit-form');form.replaceChildren();put('v3-edit-feedback','');put('v3-edit-title',kind==='driver'?(record?'Editar motorista':'Cadastrar motorista'):kind==='expense'?(record?'Editar despesa':'Nova despesa'):kind==='vehicle'?(record?'Editar ativo':'Cadastrar ativo'):kind==='maintenance'?'Programar manutenção':kind==='maintenance-edit'?'Editar programação':kind==='maintenance-cost'?'Registrar custos da manutenção':kind==='maintenance-complete'?'Concluir manutenção':'Registrar abastecimento');
+function openWrite(kind,record=null){if(!canWrite()){window.alert('Somente proprietário ou gestor autorizado pode alterar registros.');return}if(v3Overlay.hidden)lastWriteFocus=document.activeElement;record=record?{...record}:null;v3Overlay.dataset.layout=record&&(kind.startsWith('maintenance-')||['driver','expense'].includes(kind))?'drawer':'modal';v3Overlay.dataset.taskId=record?.id||'';v3Overlay.dataset.expenseId=kind==='expense'?record?.id||'':'';v3Overlay.dataset.driverId=kind==='driver'?record?.id||'':'';v3Editing={kind,record,companyId:company.id};const form=el('v3-edit-form');form.replaceChildren();put('v3-edit-feedback','');put('v3-edit-title',kind==='driver'?(record?'Editar motorista':'Cadastrar motorista'):kind==='expense'?(record?'Editar despesa':'Nova despesa'):kind==='vehicle'?(record?'Editar ativo':'Cadastrar ativo'):kind==='maintenance'?'Programar manutenção':kind==='maintenance-edit'?'Editar programação':kind==='maintenance-cost'?'Registrar custos da manutenção':kind==='maintenance-complete'?'Concluir manutenção':kind==='fuel'&&record?'Editar abastecimento':'Registrar abastecimento');
 if(kind==='driver'){buildDriverForm(form,record)}
 else if(kind==='expense'){buildExpenseForm(form,record)}
 else if(kind==='maintenance-edit'){const vehicle=document.createElement('p');vehicle.className='wide';vehicle.textContent=record.plate||vehicles.find(v=>v.id===record.vehicle_id)?.plate||'Veículo';form.append(vehicle,field('title','Serviço','text',record.title,true),field('due_date','Vencimento por data','date',record.due_date||''),field('due_meter','Vencimento por KM/horímetro','number',record.due_meter??''),field('notes','Observações','text',record.notes||''),field('reason','Motivo da alteração','text','',true));form.elements.title.maxLength=150;form.elements.reason.minLength=3;form.elements.reason.maxLength=500;form.elements.notes.maxLength=1000}
@@ -308,7 +314,61 @@ else if(kind==='vehicle'){form.append(field('plate','Placa / identificação','t
   if(value>0)warningInput.value=String(Math.min(2000,Math.max(100,Math.round(value*.2))));
  });
 }
-else{const opts=vehicles.map(v=>[v.id,v.plate+' — '+v.model]);if(!opts.length){put('v3-edit-feedback','Cadastre primeiro um veículo na tela Ativos / Veículos.');v3Overlay.hidden=false;return}form.append(pick('vehicle','Veículo',opts,record?.vehicle_id));if(kind==='maintenance'){form.append(field('title','Serviço de manutenção','text','',true),field('due_date','Próxima data','date'),field('due_meter','Próxima KM/H','number'),field('estimate','Custo previsto (R$)','number'),field('notes','Observações','text'))}else{form.append(field('date','Data','date',new Date().toISOString().slice(0,10),true),field('liters','Litros','number','',true),field('cost','Valor total (R$)','number','',true),field('meter','KM/H no abastecimento','number'),field('station','Posto','text'),field('notes','Observações','text'))}}
+else{
+ const opts=vehicles.map(v=>[v.id,v.plate+' — '+v.model]);
+ if(!opts.length){
+   put('v3-edit-feedback','Cadastre primeiro um veículo na tela Ativos / Veículos.');
+   v3Overlay.hidden=false;return;
+ }
+ form.append(pick('vehicle','Veículo',opts,record?.vehicle_id));
+ if(kind==='maintenance'){
+   form.append(field('title','Serviço de manutenção','text','',true),
+    field('due_date','Próxima data','date'),field('due_meter','Próxima KM/H','number'),
+    field('estimate','Custo previsto (R$)','number'),field('notes','Observações','text'));
+ }else{
+   form.append(
+    field('date','Data','date',String(record?.date||record?.fueled_on||localDay(new Date())).slice(0,10),true),
+    field('liters','Litros','number',record?.liters??'',true),
+    field('cost','Valor total (R$)','number',record?.cost??'',true),
+    field('meter','KM/H no abastecimento','number',record?.meter??''),
+    field('station','Posto','text',record?.station||''),
+    field('notes','Observações','text',record?.notes||'')
+   );
+   form.elements.liters.min='0.001';form.elements.liters.step='0.001';
+   form.elements.cost.min='0';form.elements.cost.step='0.01';
+   form.elements.station.maxLength=120;form.elements.notes.maxLength=1000;
+   if(kind==='fuel'&&record?.id){
+     const reason=field('change_reason','Motivo da alteração dos dados','text','');
+     reason.classList.add('wide');reason.querySelector('input').maxLength=500;
+     const info=document.createElement('p');info.className='wide xrm-oil-vehicle-note';
+     info.textContent='Para corrigir valores, informe o motivo da alteração (mínimo 3 caracteres). Para anexar somente um comprovante, mantenha os dados e selecione o arquivo abaixo.';
+     form.append(reason,info);
+     const history=document.createElement('details');history.className='wide xrm-oil-vehicle-note';
+     const heading=document.createElement('summary');heading.textContent='Histórico de edições do abastecimento';
+     const entries=document.createElement('div');entries.textContent='Abra para consultar alterações registradas.';
+     let requested=false;
+     history.append(heading,entries);form.append(history);
+     history.addEventListener('toggle',async()=>{
+       if(!history.open||requested)return;requested=true;entries.textContent='Consultando histórico...';
+       try{
+         const changes=await rpc('fuel_history',{cid:company.id,fid:record.id});
+         if(v3Editing?.record?.id!==record.id)return;
+         entries.replaceChildren();
+         for(const item of changes||[]){
+           const p=document.createElement('p');
+           p.textContent=new Date(item.date).toLocaleString('pt-BR')+' · '+item.reason+
+             ' · '+Number(item.before?.liters||0).toLocaleString('pt-BR')+' L → '+
+             Number(item.after?.liters||0).toLocaleString('pt-BR')+' L; R$ '+
+             Number(item.before?.cost||0).toLocaleString('pt-BR')+' → R$ '+
+             Number(item.after?.cost||0).toLocaleString('pt-BR');
+           entries.append(p);
+         }
+         if(!changes?.length)entries.textContent='Nenhuma edição anterior registrada.';
+       }catch(error){entries.textContent='Não foi possível consultar o histórico: '+error.message;requested=false;}
+     });
+   }
+ }
+}
 if(['driver','vehicle','maintenance','maintenance-cost','maintenance-complete','fuel','expense'].includes(kind)){const label=document.createElement('label');label.className='wide';label.textContent=kind==='driver'?'Anexar CNH (PDF ou imagem)':kind==='vehicle'?'Anexar CRLV / documento do veículo':kind==='fuel'?'Anexar comprovante do abastecimento':kind==='expense'?'Anexar nota fiscal / comprovante':kind==='maintenance'?'Anexar documento da manutenção':'Anexar nota fiscal da manutenção';const file=document.createElement('input');file.type='file';file.name='record_attachment';file.accept='.pdf,.jpg,.jpeg,.png,.webp';label.append(file);const hint=document.createElement('small');hint.textContent='Opcional · Máximo 10 MB · PDF, JPG, PNG ou WEBP. O arquivo será vinculado ao cadastro salvo.';label.append(hint);form.append(label)}
 const save=document.createElement('button');save.type='submit';save.textContent=kind==='maintenance-complete'?'Confirmar conclusão':'Salvar';form.append(save);v3Overlay.hidden=false;document.body.classList.add('fleet-dialog-open');form.querySelector('input,select')?.focus()}
 el('v3-edit-form').onsubmit=async e=>{e.preventDefault();if(!canWrite()||!v3Editing||['maintenance-detail','registry-detail'].includes(v3Editing.kind))return;const draft=v3Editing;if(draft.companyId!==company?.id){put('v3-edit-feedback','A empresa ativa mudou. Feche e abra o formulário novamente.');return}const {kind,record,companyId}=draft,form=new FormData(e.target),str=k=>String(form.get(k)||'').trim(),num=k=>str(k)===''?null:Number(str(k));const button=e.target.querySelector('button[type=submit]');draft.saving=true;button.disabled=true;put('v3-edit-feedback','Salvando...');try{for(const [key,value]of form.entries()){if(['estimate','actual','completed_meter','due_meter','cost','liters','meter','odometer','amount'].includes(key)&&String(value).trim()!==''&&(!Number.isFinite(Number(value))||Number(value)<0))throw Error('Informe valores numéricos válidos e não negativos.')}
@@ -336,7 +396,37 @@ if(kind==='vehicle'){
  });
 }
 if(kind==='maintenance'){if(!str('due_date')&&num('due_meter')===null)throw Error('Informe data ou KM/H de vencimento.');const taskId=draft.savedTaskId||await rpc('maintenance_save',{cid:companyId,vid:str('vehicle'),task_title:str('title'),deadline:str('due_date')||null,deadline_meter:num('due_meter'),detail:str('notes')});draft.savedTaskId=taskId;draft.savedRecordId=taskId;if(num('estimate')!==null)await rpc('maintenance_set_cost',{cid:companyId,tid:taskId,forecast:num('estimate'),spent:null,final_meter:null})}
-if(kind==='fuel'){if(!(num('liters')>0)||num('cost')===null)throw Error('Informe litros e valor válidos.');draft.savedRecordId=await rpc('fuel_save',{cid:companyId,vid:str('vehicle'),f_date:str('date'),qty:num('liters'),cost:num('cost'),meter:num('meter'),station_name:str('station'),detail:str('notes')})}
+if(kind==='fuel'){
+ if(!(num('liters')>0)||num('cost')===null)throw Error('Informe litros e valor válidos.');
+ if(record?.id){
+   const selectedAttachment=form.get('record_attachment');
+   const hasFile=selectedAttachment instanceof File&&selectedAttachment.size>0;
+   const changed=str('vehicle')!==record.vehicle_id
+     ||str('date')!==String(record.date||record.fueled_on).slice(0,10)
+     ||num('liters')!==Number(record.liters)
+     ||num('cost')!==Number(record.cost)
+     ||num('meter')!==(record.meter==null?null:Number(record.meter))
+     ||str('station')!==String(record.station||'').trim()
+     ||str('notes')!==String(record.notes||'').trim();
+   if(!changed&&!hasFile)throw Error('Nenhuma alteração identificada. Para anexar um comprovante, selecione um arquivo.');
+   if(changed){
+     if(str('change_reason').length<3)throw Error('Informe o motivo da alteração (mínimo 3 caracteres).');
+     await rpc('fuel_update',{
+       cid:companyId,fid:record.id,p_vehicle:str('vehicle'),p_date:str('date'),
+       p_liters:num('liters'),p_cost:num('cost'),p_meter:num('meter'),
+       p_station:str('station'),p_notes:str('notes'),
+       p_expected_revision:record.revision,p_reason:str('change_reason')
+     });
+   }
+   draft.savedRecordId=record.id;
+ }else{
+   draft.savedRecordId=await rpc('fuel_save',{
+     cid:companyId,vid:str('vehicle'),f_date:str('date'),
+     qty:num('liters'),cost:num('cost'),meter:num('meter'),
+     station_name:str('station'),detail:str('notes')
+   });
+ }
+}
 let attachmentWarning='';const attached=form.get('record_attachment');
 if(attached instanceof File&&attached.size>0){
  const entityKind=kind.startsWith('maintenance')?'maintenance':kind;
@@ -535,7 +625,63 @@ async function queryFleetHistory(){if(!company)return;renderFleetHistory();const
 if(el('history-filters')){el('history-filters').onsubmit=e=>{e.preventDefault();void queryFleetHistory()};el('history-filters').onreset=()=>{setTimeout(()=>void queryFleetHistory(),0)}}
 
 function localDay(date){return [date.getFullYear(),String(date.getMonth()+1).padStart(2,'0'),String(date.getDate()).padStart(2,'0')].join('-')}
-function renderFuelRecords(entries){let root=el('fleet-fuel-records');if(!root){root=document.createElement('div');root.id='fleet-fuel-records';root.className='fleet-table-wrap';el('fleet-fuel-ranking')?.after(root)}root.replaceChildren();const table=document.createElement('table');table.className='fleet-table';const header=document.createElement('thead'),headRow=document.createElement('tr');for(const label of ['Veículo','Data','Litros','Custo']){const cell=document.createElement('th');cell.textContent=label;headRow.append(cell)}header.append(headRow);const body=document.createElement('tbody');for(const row of entries){const tr=document.createElement('tr');for(const value of [vehicles.find(v=>v.id===row.vehicle_id)?.plate||'Veículo',row.fueled_on||row.date||'—',Number(row.liters||0).toLocaleString('pt-BR'),Number(row.cost??row.total_cost??0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})]){const cell=document.createElement('td');cell.textContent=value;tr.append(cell)}body.append(tr)}table.append(header,body);root.append(table)}
+async function openFuelEditor(row){
+ if(!canWrite()||!company?.id||!row?.id)return;
+ const cid=company.id;
+ try{
+   const data=await rpc('fuel_details',{cid,fid:row.id});
+   if(company?.id!==cid)return;
+   if(!data?.id||data.id!==row.id)throw Error('Cadastro divergente.');
+   openWrite('fuel',data);
+ }catch(error){msg('Não foi possível editar este abastecimento: '+error.message);}
+}
+function renderFuelRecords(entries){
+ let root=el('fleet-fuel-records');
+ if(!root){root=document.createElement('div');root.id='fleet-fuel-records';root.className='fleet-table-wrap';el('fleet-fuel-ranking')?.after(root);}
+ root.replaceChildren();
+ const table=document.createElement('table');table.className='fleet-table';
+ const header=document.createElement('thead'),headRow=document.createElement('tr');
+ for(const label of ['Veículo','Data','Litros','Valor','Posto','Comprovantes','Ações']){
+   const cell=document.createElement('th');cell.textContent=label;headRow.append(cell);
+ }
+ header.append(headRow);
+ const body=document.createElement('tbody');
+ for(const row of entries){
+   const tr=document.createElement('tr');
+   const plate=row.plate||vehicles.find(v=>v.id===row.vehicle_id)?.plate||'Veículo';
+   for(const value of [plate,row.fueled_on||row.date||'—',
+     Number(row.liters||0).toLocaleString('pt-BR'),
+     Number(row.cost??row.total_cost??0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}),
+     row.station||'—']){
+     const cell=document.createElement('td');cell.textContent=value;tr.append(cell);
+   }
+   const docs=document.createElement('td');
+   const receipt=document.createElement('button');receipt.type='button';
+   receipt.className='fleet-button';receipt.textContent='Ver / anexar';
+   receipt.onclick=async()=>{
+     if(!company?.id)return;
+     const cid=company.id;
+     await xrmLoadDocumentCatalog(cid);
+     if(company?.id!==cid)return;
+     documentCenter?.openRecord('fuel',row);
+   };
+   docs.append(receipt);tr.append(docs);
+   const action=document.createElement('td');
+   if(canWrite()){
+     const edit=document.createElement('button');edit.type='button';
+     edit.className='fleet-button';edit.textContent='Editar';
+     edit.onclick=()=>void openFuelEditor(row);
+     action.append(edit);
+   }else action.textContent='Consulta';
+   tr.append(action);body.append(tr);
+ }
+ table.append(header,body);root.append(table);
+ if(!entries.length){
+   const empty=document.createElement('p');empty.className='fleet-workspace-note';
+   empty.textContent='Nenhum abastecimento no período selecionado.';
+   root.append(empty);
+ }
+}
 
 function renderMaintenanceWorkspace(){
  const root=el('v3-maintenance-list'),summary=el('maintenance-summary');if(!root||!summary)return;
