@@ -35,5 +35,7 @@ Deno.serve(async (request:Request)=>{
   }
  }
  const enabled=configured&&(!pilotOnly||pilotAllowed);
- return new Response(JSON.stringify({enabled,provider:'mercadopago',mode:enabled?(pilotOnly?'pilot':'production'):'not_ready'}),{status:200,headers});
+ const reason=enabled?null:!configured?'provider_not_ready':pilotOnly&&!pilotAllowed?'pilot_only':'unavailable';
+ // Expose only high-level availability. Never expose secrets, merchant identifiers or tester identities.
+ return new Response(JSON.stringify({enabled,provider:'mercadopago',mode:enabled?(pilotOnly?'pilot':'production'):'not_ready',reason}),{status:200,headers});
 });
