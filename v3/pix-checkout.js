@@ -51,6 +51,8 @@ export function openPixCheckout({client,companyId,onPaid=()=>{}}){
   if(closed)return;
   if(data.status==='paid'){
    if(timer)clearInterval(timer);
+   $('[data-form]').hidden=true;
+   $('[data-qr]').hidden=true;
    state('Pagamento confirmado! A assinatura foi liberada.');
    $('[data-verify]').disabled=true;
    try{await onPaid();}catch{}

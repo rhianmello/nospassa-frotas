@@ -32,8 +32,8 @@ npm run test:browser
 Testes de navegador interceptam a rede e usam dados fictícios. Testes SQL usam rollback e exigem schema atual e titular de homologação; devem rodar num banco de teste, como postgres. Sequências podem avançar apesar do rollback. Não configurar CI com credenciais do banco de produção.
 
 ## Pendências explícitas
-- Identificar responsável e contato oficial para revisar Termos, Privacidade e Cancelamento. Rascunhos da auditoria ficam fora das rotas públicas.
-- Ativar proteção contra senhas vazadas no painel Auth, se disponível no plano. Essa configuração afeta todas as aplicações do projeto compartilhado.
-- Homologar pagamento, renovação e cancelamento com ambiente/usuário autorizado.
+- Políticas em /termos/, /privacidade/ e /cancelamento/, com Rhian Mello e o contato online fornecido. Identificação cadastral e endereço do fornecedor ainda precisam ser complementados; atendimento online não dispensa informações legais da oferta.
+- Proteção nativa contra senhas vazadas não persistiu no projeto Free; o painel informa disponibilidade no Pro ou superior. Não houve contratação de upgrade. Essa configuração afeta todas as aplicações do projeto compartilhado.
+- Pix existente conferido em consulta real autenticada, sem nova cobrança nem prorrogação do vencimento. Webhook, renovação futura e cancelamento/estorno não estão integralmente homologados. O webhook registra apenas motivos fixos de rejeição, sem segredos ou dados do pagador.
 
 Resultados de publicação Pages, testes de navegador e testes de contratos são independentes. Publicação concluída não comprova aprovação dos testes nem pagamento real.
