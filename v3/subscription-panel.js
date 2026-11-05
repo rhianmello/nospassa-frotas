@@ -1,4 +1,5 @@
 import {openPixCheckout} from './pix-checkout.js?v=20261105-confirmed-pix-1';
+import {createPaymentEmailNotice} from './payment-email-notice.js?v=20261105-email-1';
 import {renewalNotice} from './renewal-reminder.js?v=20261103-reminders-2';
 // XRMOVI | Central de assinatura — todas as gravações passam por RPCs autenticadas.
 // Nunca decide cotas pelo navegador: o banco aplica regras nas inserções.
@@ -158,6 +159,12 @@ export function setupSubscriptionPanel({client,getCompany,onCompanyCreated,onDat
  billingNotice.className='xrm-info';
  billingNotice.id='xrm-billing-readiness-message';
  checkoutButton.insertAdjacentElement('afterend',billingNotice);
+ const payerNoticeSlot=document.createElement('div');
+ payerNoticeSlot.id='xrm-bill-payer-email';
+ billingNotice.insertAdjacentElement('afterend',payerNoticeSlot);
+ void createPaymentEmailNotice(client).then(note=>payerNoticeSlot.replaceChildren(note))
+  .catch(()=>{payerNoticeSlot.textContent='Confira o e-mail do login XRMOVI ao pagar no Mercado Pago.';});
+
  const pixButton=document.createElement('button');
  pixButton.type='button';pixButton.id='xrm-bill-pix';pixButton.className='secondary';
  pixButton.textContent='Pagar por Pix · mensal';
@@ -182,10 +189,11 @@ export function setupSubscriptionPanel({client,getCompany,onCompanyCreated,onDat
 
  const checkoutState=(ready,message)=>{
   billingReady=Boolean(ready);
-  checkoutButton.disabled=!billingReady;
-  pixButton.disabled=!billingReady;
+  const allowCheckout=billingReady&&current?.status!=='active';
+  checkoutButton.disabled=!allowCheckout;
+  pixButton.disabled=!allowCheckout;
   checkoutButton.title=billingReady?'Abrir checkout seguro do Mercado Pago':'Cobrança ainda não habilitada';
-  checkoutButton.textContent=billingReady?'Assinar e pagar com Mercado Pago':'Pagamento aguardando configuração';
+  checkoutButton.textContent=current?.status==='active'?'Assinatura ativa':billingReady?'Assinar e pagar com Mercado Pago':'Pagamento aguardando configuração';
   billingNotice.textContent=message;
   retryButton.hidden=billingReady;
  };
@@ -248,7 +256,7 @@ export function setupSubscriptionPanel({client,getCompany,onCompanyCreated,onDat
  checkoutButton.addEventListener('click',async()=>{
   if(!billingReady)return;
   const base=getCompany();if(!base)return;
-  checkoutButton.disabled=true;feedback('xrm-bill-plan-feedback','Preparando o pagamento no Mercado Pago...');
+  checkoutButton.disabled=true;feedback('xrm-bill-plan-feedback','Verificando a assinatura existente e preparando o checkout. Não será criada uma cobrança duplicada...');
   try{
    const chosen=root.querySelector('#xrm-bill-plan-form select').value;
    const {data,error}=await client.functions.invoke('xrmovi-create-subscription',{
@@ -332,11 +340,34 @@ export function setupSubscriptionPanel({client,getCompany,onCompanyCreated,onDat
   const planSelect=root.querySelector('#xrm-bill-plan-form select');planSelect.value=info.plan_code;
   const requestPlan=root.querySelector('#xrm-plan-change-request');
   const isPending=['pending','trial'].includes(info.status);
+  if(info.status==='active'){
+   checkoutButton.disabled=true;pixButton.disabled=true;checkoutButton.textContent='Assinatura ativa';
+  }
   requestPlan.hidden=isPending;
   requestPlan.style.display=isPending?'none':'';
   showSelectedPlan();
   feedback('xrm-bill-feedback',['pending','trial'].includes(info.status)?'Cadastro concluído. Aguardando pagamento para liberar o sistema.':'Capacidade atualizada no banco de dados.');
  }
+ // When a buyer returns from Mercado Pago, verify their own pending subscription
+ // against provider-approved recurring invoices, never by trusting a browser redirect.
+ const checkedAfterReturn=new Set();
+ async function reconcileOnce(cid){
+  try{
+   feedback('xrm-bill-feedback','Conferindo pagamento no Mercado Pago...');
+   const {data,error}=await client.functions.invoke('xrmovi-reconcile-subscription',{body:{company_id:cid}});
+   if(error)throw error;
+   if(data?.status==='active'){
+    await refresh();
+    await onDataChanged?.();
+    feedback('xrm-bill-plan-feedback','Pagamento confirmado. Assinatura ativada com segurança.');
+   }else if(data?.status==='pending'){
+    feedback('xrm-bill-plan-feedback','Pagamento ainda não confirmado. Se a cobrança foi concluída, clique em Verificar pagamento. Para corrigir dados antes da aprovação, use Retomar pagamento pendente.');
+   }
+  }catch{
+   feedback('xrm-bill-plan-feedback','Não foi possível conferir automaticamente o pagamento. Use Verificar pagamento antes de tentar de novo.',true);
+  }
+ }
+
  async function refresh(){
   const base=getCompany();if(!base)return;
   const rid=++request;
@@ -346,6 +377,10 @@ export function setupSubscriptionPanel({client,getCompany,onCompanyCreated,onDat
    if(rid!==request)return;
    if(error)throw error;
    render(data);
+   if(['pending','trial'].includes(data?.status)&&!checkedAfterReturn.has(base.id)){
+    checkedAfterReturn.add(base.id);
+    void reconcileOnce(base.id);
+   }
   }catch(err){
    if(rid!==request)return;
    current=null;
