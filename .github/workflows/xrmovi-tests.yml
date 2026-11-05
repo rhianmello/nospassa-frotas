@@ -16,6 +16,7 @@ on:
       - 'v3/xrmovi-local-assistant.css'
       - 'v3/tests/assistant-layout.test.cjs'
       - 'v3/index.html'
+      - 'v3/payment-email-notice.js'
       - 'v3/onboarding.js'
       - 'v3/subscription-panel.js'
       - 'v3/pix-checkout.js'
@@ -44,6 +45,7 @@ on:
       - 'v3/xrmovi-local-assistant.css'
       - 'v3/tests/assistant-layout.test.cjs'
       - 'v3/index.html'
+      - 'v3/payment-email-notice.js'
       - 'v3/onboarding.js'
       - 'v3/subscription-panel.js'
       - 'v3/pix-checkout.js'
@@ -99,6 +101,7 @@ jobs:
         run: node --test supabase/tests/pix_webhook_signature.test.cjs
       - name: Validate monthly Pix web modules
         run: |
+          node --check v3/payment-email-notice.js
           node --check v3/onboarding.js
           node --check v3/subscription-panel.js
           node --check v3/pix-checkout.js
