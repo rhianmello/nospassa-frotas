@@ -32,7 +32,18 @@ Deno.serve(async(request:Request)=>{
  const dataId=url.searchParams.get("data.id")||url.searchParams.get("data_id")||"";
  if(!dataId)return send({error:"Missing notification ID"},400);
  try {
-  if(!await signed(request,dataId,secret))return send({error:"Invalid notification signature"},401);
+  if(!await signed(request,dataId,secret)){
+   const signature=signatureInfo(request.headers.get("x-signature")||"");
+   // Diagnostic only: never log webhook secrets, hashes, request IDs, payer data or payment IDs.
+   console.warn("XRMOVI Mercado Pago webhook rejected",{
+    reason:"signature_verification_failed",
+    signature_present:signature.hash.length===64,
+    request_id_present:Boolean(request.headers.get("x-request-id")),
+    timestamp_digits:signature.time.length,
+    notification_topic:String(url.searchParams.get("type")||"unknown").slice(0,48)
+   });
+   return send({error:"Invalid notification signature"},401);
+  }
   const body=await request.json();
   if(body?.data?.id!=null&&String(body.data.id).toLowerCase()!==dataId.toLowerCase())
    return send({error:"Resource mismatch"},400);
