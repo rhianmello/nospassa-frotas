@@ -34,7 +34,9 @@ test('server readiness requires valid provider config and does not bypass pilot'
 });
 test('admin makes pilot-only launch risk visible',()=>{
  assert.match(diagnostics, /billing_pilot_only/);
- assert.match(read('admin/index.html'), /HOMOLOGAÇÃO RESTRITA/);
+ assert.match(read('admin/index.html'), /XRMOVI em piloto/);
+ assert.match(read('admin/index.html'), /XRMOVI_BILLING_PILOT_ONLY/);
+ assert.match(read('admin/index.html'), /assinatura dos webhooks/);
 });
 
 test('payer gets exact checkout-email guidance before redirect',()=>{
