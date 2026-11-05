@@ -34,8 +34,12 @@ Deno.serve(async(req:Request)=>{
   const {data:userData,error:userError}=await client.auth.getUser(auth.slice(7));
   if(userError||!userData.user)return respond({error:"Sessão inválida."},401,origin);
   if(Deno.env.get("XRMOVI_BILLING_PILOT_ONLY")!=="false"){
+   const {data:launch,error:launchError}=await backend.from("xrmovi_billing_launch_control").select("public_enabled").eq("id",1).maybeSingle();
+   const publicLaunched=!launchError&&launch?.public_enabled===true;
+   if(!publicLaunched){
    const {data:pilot,error:pilotError}=await client.rpc("xrmovi_billing_pilot_allowed");
    if(pilotError||pilot!==true)return respond({error:"Pagamento Pix em homologação. Acesso restrito a contas autorizadas para o piloto."},403,origin);
+   }
   }
   const body=await req.json();
   const cid=String(body?.company_id||"");
