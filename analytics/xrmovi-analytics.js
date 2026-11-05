@@ -20,8 +20,9 @@ function captureCampaign(){
   var source=safeCampaignValue(q.get('utm_source'),80);
   var medium=safeCampaignValue(q.get('utm_medium'),80);
   var campaign=safeCampaignValue(q.get('utm_campaign'),120);
-  if(!source&&!medium&&!campaign)return;
-  localStorage.setItem(ATTR_KEY,JSON.stringify({source:source||'direto',medium:medium||'none',campaign:campaign||'sem campanha',time:Date.now()}));
+  var paidClick=q.has('gclid')||q.has('gbraid')||q.has('wbraid');
+  if(!source&&!medium&&!campaign&&!paidClick)return;
+  localStorage.setItem(ATTR_KEY,JSON.stringify({source:source||(paidClick?'google':'direto'),medium:medium||(paidClick?'cpc':'none'),campaign:campaign||(paidClick?'google_ads_sem_utm':'sem campanha'),time:Date.now()}));
  }catch(e){}
 }
 async function syncAttribution(client){
@@ -79,7 +80,17 @@ async function syncPurchaseIdentity(client){
  }catch(_){return false}
 }
 
-function page(){return location.origin+location.pathname;}
+function page(){
+ // Preserve only advertising tags needed for GA4 campaign attribution, not arbitrary
+ // query strings (which could contain tokens, email addresses or other PII).
+ const u=new URL(location.origin+location.pathname);
+ const source=new URLSearchParams(location.search);
+ for(const key of ['utm_source','utm_medium','utm_campaign','utm_id','utm_term','utm_content','gclid','gbraid','wbraid']){
+  const value=source.get(key);
+  if(value&&value.length<=200&&!/[@<>\r\n]/.test(value))u.searchParams.set(key,value);
+ }
+ return u.href;
+}
 function consent(value){
  if(typeof window.gtag==='function')window.gtag('consent','update',{
  analytics_storage:value?'granted':'denied',
