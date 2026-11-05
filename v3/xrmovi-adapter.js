@@ -356,11 +356,15 @@ else{
          entries.replaceChildren();
          for(const item of changes||[]){
            const p=document.createElement('p');
+           const fields=[['vehicle_id','Veículo'],['date','Data'],['liters','Litros'],
+             ['cost','Valor (R$)'],['meter','KM/H'],['station','Posto'],['notes','Observações']];
+           const differences=fields.flatMap(([key,label])=>{
+             const oldValue=item.before?.[key]??'',newValue=item.after?.[key]??'';
+             return String(oldValue)===String(newValue)?[]:
+               [label+': '+String(oldValue||'—').slice(0,150)+' → '+String(newValue||'—').slice(0,150)];
+           });
            p.textContent=new Date(item.date).toLocaleString('pt-BR')+' · '+item.reason+
-             ' · '+Number(item.before?.liters||0).toLocaleString('pt-BR')+' L → '+
-             Number(item.after?.liters||0).toLocaleString('pt-BR')+' L; R$ '+
-             Number(item.before?.cost||0).toLocaleString('pt-BR')+' → R$ '+
-             Number(item.after?.cost||0).toLocaleString('pt-BR');
+             (differences.length?' · '+differences.join(' | '):' · Edição registrada');
            entries.append(p);
          }
          if(!changes?.length)entries.textContent='Nenhuma edição anterior registrada.';
