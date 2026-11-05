@@ -1,5 +1,5 @@
 import {openPixCheckout} from './pix-checkout.js?v=20261105-confirmed-pix-1';
-import {createPaymentEmailNotice} from './payment-email-notice.js?v=20261105-email-1';
+import {createPaymentEmailNotice} from './payment-email-notice.js?v=20261105-plain-text-2';
 // XRMOVI | Cadastro guiado sem acesso operacional antes de pagamento.
 // Valores e limites são fornecidos por xrmovi_list_plans no banco.
 export async function showXrmoviOnboarding({login,client,onCreated,onLogout,existing=null}){
