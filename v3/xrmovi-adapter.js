@@ -204,7 +204,7 @@ function setupCompanySwitcher(){
  const switchCompany=async id=>{
   if(!id||company?.id===id)return;
   const selected=companies.find(c=>c.id===id);if(!selected)return;
-  xrmAssistClear();closeWrite(true);documentCenter?.close();company=selected;vehicles=[];maintenance=[];contracts=[];fuelRows=[];
+  xrmAssistClear();closeWrite(true);documentCenter?.close(true);company=selected;vehicles=[];maintenance=[];contracts=[];fuelRows=[];
   drivers=[];vehicleExpenses=[];paidExpenses=[];historyExpenses=[];
   desktop.value=id;if(mobile)mobile.value=id;
   await checkSubscriptionAccess();void subscriptionPanel?.refresh();
