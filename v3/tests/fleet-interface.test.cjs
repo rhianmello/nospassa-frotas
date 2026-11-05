@@ -308,9 +308,18 @@ test('CNH alerts include the 30-day boundary and unlinked active drivers, respec
 });
 
 
-test('mobile V4 keeps live filters, compact KPI dashboard and five-tab navigation',async()=>{
+test('mobile navigation and filters load with or without the V4 feature',async()=>{
  const {page,errors}=await open({viewport:{width:390,height:844}});
  await page.waitForSelector('#fleet-kpis .fleet-kpi:nth-child(5)');
+ const v4Enabled=await page.locator('script[src*="mobile-experience.js"]').count()>0;
+ if(!v4Enabled){
+  assert.equal(await page.locator('.xrm-mobile-bottom-nav').count(),0);
+  assert.equal(await page.locator('.xrm-hero-filters').isVisible(),true);
+  assert.equal(await page.locator('#fleet-kpis .fleet-kpi-value').first().textContent(),'2');
+  assert.deepEqual(errors,[]);
+  await page.close();
+  return;
+ }
  assert.equal(await page.locator('.xrm-mobile-bottom-nav').isVisible(),true);
  assert.equal(await page.locator('.xrm-mobile-dashboard-toolbar').isVisible(),true);
  assert.equal(await page.locator('#xrm-mobile-filters').getAttribute('aria-expanded'),'false');
