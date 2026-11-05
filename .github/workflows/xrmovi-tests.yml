@@ -103,6 +103,8 @@ jobs:
         run: node --test supabase/tests/xrmovi_card_webhook_auth.test.cjs
       - name: Test scheduled Mercado Pago invoice recovery without new charges
         run: node --test supabase/tests/xrmovi_billing_sweep.test.cjs
+      - name: Test owner/admin cancellation never cancels another tenant
+        run: node --test supabase/tests/xrmovi_cancel_subscription.test.cjs
       - name: Validate monthly Pix web modules
         run: |
           node --check v3/payment-email-notice.js
