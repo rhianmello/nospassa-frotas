@@ -212,7 +212,7 @@ function popupMessage(popup,message){
  p.textContent=message;popup.document.body.append(p);
 }
 export async function printFuelEvidenceReport({
- client,company,vehicles,fuelEntries,rows,range,logoDataUrl='',
+ client,company,vehicles,fuelEntries,rows,range,logoDataUrl='',getLogo=null,
  scopeIds=null,stillCurrent=()=>true,onProgress=()=>{}
 }){
  // Open synchronously within the click; browsers block windows opened after await.
@@ -241,8 +241,13 @@ export async function printFuelEvidenceReport({
   }
   if(!stillCurrent())throw Error('A empresa foi alterada durante a geração.');
   progress('Montando relatório para impressão...');
+  let printableLogo=logoDataUrl;
+  if(getLogo){
+   try{printableLogo=await getLogo()||'';}catch{printableLogo='';}
+  }
+  if(!stillCurrent())throw Error('A empresa foi alterada durante a geração.');
   const markup=buildFuelEvidenceHtml({
-   companyName:company.name,range,rows,groups,logoDataUrl,
+   companyName:company.name,range,rows,groups,logoDataUrl:printableLogo,
    emittedAt:new Date().toLocaleString('pt-BR')
   });
   popup.document.open();popup.document.write(markup);popup.document.close();
