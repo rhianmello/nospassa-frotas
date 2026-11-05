@@ -85,10 +85,10 @@ export async function showXrmoviOnboarding({login,client,onCreated,onLogout,exis
     const action=form.querySelector('.wizard-submit');
     action.insertAdjacentElement('beforebegin',verify);
     action.style.cssText='background:#173b4b;color:#cce6ef;border:1px solid #396375;';
-    verify.addEventListener('click',async()=>{
-     if(verify.disabled)return;
+    const checkExistingPayment=async()=>{
+     if(verify.disabled)return 'busy';
      verify.disabled=true;
-     status.textContent='Consultando o pagamento existente no Mercado Pago. Não será realizada outra cobrança...';
+     status.textContent='Consultando a assinatura existente no Mercado Pago. Nenhuma cobrança será feita...';
      try{
       const {data:result,error:checkError}=await client.functions.invoke('xrmovi-reconcile-subscription',{body:{company_id:existing.id}});
       if(checkError){
@@ -100,15 +100,31 @@ export async function showXrmoviOnboarding({login,client,onCreated,onLogout,exis
        throw new Error(message);
       }
       if(result?.status==='active'){
-       status.textContent='Pagamento confirmado! Liberando a assinatura...';
+       status.textContent='Pagamento aprovado e assinatura ativa. Abrindo o painel...';
        window.location.reload();
-       return;
+       return 'active';
       }
-      status.textContent=result?.message||'Pagamento ainda não identificado. Se seu cartão já foi cobrado, não clique em Retomar pagamento; procure o suporte.';
+      status.textContent=result?.message||'Ainda não foi identificada uma cobrança aprovada. Se você já pagou, não refaça a assinatura.';
+      return result?.status||'pending';
      }catch(error){
-      status.textContent='A verificação falhou: '+(error?.message||'Serviço indisponível')+'. Se já pagou, não contrate de novo. Nenhuma nova cobrança foi criada.';
+      status.textContent='Não foi possível consultar a confirmação: '+(error?.message||'Serviço indisponível')+'. Não pague novamente. Use este botão para verificar depois.';
+      return 'failed';
      }finally{verify.disabled=false}
-    });
+    };
+    verify.addEventListener('click',()=>void checkExistingPayment());
+    // Mercado Pago returns to /v3/#subscription. Check the existing invoice automatically,
+    // without opening another checkout; bounded retries cover short provider settlement delays.
+    if(window.location.hash==='#subscription'){
+     void(async()=>{
+      for(const pause of [900,3500,7000]){
+       await new Promise(resolve=>setTimeout(resolve,pause));
+       if(login.hidden||!document.contains(verify))return;
+       const result=await checkExistingPayment();
+       if(result==='active'||result==='failed')return;
+      }
+      status.textContent='Se o cartão já foi cobrado e ainda não liberou, clique em Já paguei · Verificar pagamento. Não contrate outra assinatura.';
+     })();
+    }
    }
   }catch(error){status.textContent='Não foi possível recuperar o cadastro anterior: '+error.message;}
  }
