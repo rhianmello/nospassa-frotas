@@ -306,3 +306,51 @@ test('CNH alerts include the 30-day boundary and unlinked active drivers, respec
  const {page,errors}=await open({role:'viewer'});await page.evaluate(()=>{const day=n=>{const d=new Date();d.setDate(d.getDate()+n);return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')};brandingTest.drivers=[{id:'d1',name:'Vencida',active:true,cnh_expires_on:'2025-01-01'},{id:'d2',name:'Limite 30 dias',active:true,cnh_expires_on:day(30)},{id:'d3',name:'Futura',active:true,cnh_expires_on:day(31)},{id:'d4',name:'Inativa',active:false,cnh_expires_on:'2025-01-01'},{id:'d5',name:'Sem validade',active:true,cnh_expires_on:null}];brandingTest.fixture.vehicles[0].driver_id='d2'});await page.locator('#refresh-button').click();await page.waitForFunction(()=>document.querySelectorAll('#alerts-content [data-driver-alert-id]').length===2);assert.match(await page.locator('#alerts-content').innerText(),/CNH VENCIDA: Vencida/);assert.match(await page.locator('#alerts-content').innerText(),/CNH A VENCER: Limite 30 dias/);assert.equal(await page.locator('#nav-alert-count').innerText(),'4');
  await page.selectOption('#xrm-contract-filter','c1');assert.equal(await page.locator('#alerts-content [data-driver-alert-id]').count(),1);assert.equal(await page.locator('#nav-alert-count').innerText(),'2');await page.locator('.fleet-main-nav [data-view="alerts"]').click();await page.locator('#alerts-content [data-driver-alert-id="d2"]').click();assert.equal(await page.getByRole('button',{name:'Editar motorista',exact:true}).count(),0);await page.locator('#v3-edit-close').click();await page.selectOption('#xrm-contract-filter','c2');assert.equal(await page.locator('#alerts-content [data-driver-alert-id]').count(),0);await page.selectOption('#xrm-contract-filter','');await page.locator('#refresh-button').click();await page.waitForFunction(()=>document.querySelectorAll('#alerts-content [data-driver-alert-id]').length===2);assert.equal(await page.locator('#nav-alert-count').innerText(),'4');assert.deepEqual(errors,[]);await page.close();
 });
+
+
+test('mobile V4 keeps live filters, compact KPI dashboard and five-tab navigation',async()=>{
+ const {page,errors}=await open({viewport:{width:390,height:844}});
+ await page.waitForSelector('#fleet-kpis .fleet-kpi:nth-child(5)');
+ assert.equal(await page.locator('.xrm-mobile-bottom-nav').isVisible(),true);
+ assert.equal(await page.locator('.xrm-mobile-dashboard-toolbar').isVisible(),true);
+ assert.equal(await page.locator('#xrm-mobile-filters').getAttribute('aria-expanded'),'false');
+ assert.equal(await page.locator('.xrm-hero-filters').isVisible(),false);
+ assert.equal(await page.locator('.fleet-mobile-navigation').isVisible(),false);
+ assert.equal(await page.locator('#refresh-button svg').isVisible(),true);
+ assert.equal(await page.locator('#v3-company-mobile').inputValue(),companyA);
+ assert.equal(await page.locator('#fleet-kpis .fleet-kpi').count(),5);
+ assert.equal(await page.locator('#fleet-kpis .fleet-kpi-label svg').count(),5);
+ const cols=await page.locator('#fleet-kpis').evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length);
+ assert.equal(cols,2);
+ await page.locator('#xrm-mobile-filters').click();
+ assert.equal(await page.locator('.xrm-hero-filters').isVisible(),true);
+ assert.equal(await page.locator('.xrm-hero-filters #xrm-contract-filter').count(),1);
+ await page.locator('#xrm-contract-filter').selectOption('c1');
+ assert.equal(await page.locator('#fleet-kpis .fleet-kpi-value').first().textContent(),'1');
+ await page.locator('#xrm-mobile-filters').click();
+ assert.equal(await page.locator('.xrm-hero-filters').isVisible(),false);
+ assert.equal(await page.locator('#fleet-kpis .fleet-kpi-value').first().textContent(),'1');
+ await page.locator('.xrm-mobile-bottom-nav [data-mobile-view="assets"]').click();
+ assert.equal(await page.locator('#view-assets').isVisible(),true);
+ assert.equal(await page.locator('.xrm-mobile-dashboard-toolbar').isVisible(),false);
+ await page.locator('#xrm-mobile-more').click();
+ assert.equal(await page.locator('.xrm-mobile-more-sheet').isVisible(),true);
+ await page.locator('.xrm-mobile-more-sheet [data-mobile-view="documents"]').click();
+ assert.equal(await page.locator('#view-documents').isVisible(),true);
+ assert.equal(await page.locator('.xrm-mobile-more-sheet').isVisible(),false);
+ const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
+ assert.ok(overflow<=3,'mobile viewport should not overflow horizontally');
+ assert.deepEqual(errors,[]);
+ await page.close();
+});
+
+test('mobile V4 does not alter desktop navigation and dashboard filter placement',async()=>{
+ const {page,errors}=await open({viewport:{width:1440,height:900}});
+ await page.waitForSelector('#fleet-kpis .fleet-kpi:nth-child(5)');
+ assert.equal(await page.locator('.xrm-mobile-bottom-nav').isVisible(),false);
+ assert.equal(await page.locator('.xrm-mobile-dashboard-toolbar').isVisible(),false);
+ assert.equal(await page.locator('.fleet-breadcrumb #xrm-contract-filter').count(),1);
+ assert.equal(await page.locator('.xrm-hero-filters').isVisible(),true);
+ assert.deepEqual(errors,[]);
+ await page.close();
+});
