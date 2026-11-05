@@ -1,4 +1,4 @@
-/* XRMOVI: Google Analytics 4. Somente páginas comerciais, mediante consentimento. */
+/* XRMOVI: Google Analytics 4. Consentimento explícito nas áreas pública e autenticada. */
 (function(){
 'use strict';
 var GA_ID='G-1Z1PSN1SJD',KEY='xrmovi_ga4_consent_v1';
@@ -39,6 +39,46 @@ async function syncAttribution(client){
  }catch(e){return false}
 }
 
+
+const CLIENT_PATTERN=/^[0-9]{1,14}\.[0-9]{1,14}$/;
+function idFromCookie(){
+ try{
+  const part=document.cookie.split(';').map(x=>x.trim()).find(x=>x.startsWith('_ga='));
+  if(!part)return null;
+  const match=decodeURIComponent(part.slice(4)).match(/^GA\d+\.\d+\.([0-9]{1,14}\.[0-9]{1,14})$/);
+  return match?match[1]:null;
+ }catch(_){return null;}
+}
+function ga4Get(key,ms){
+ return new Promise(resolve=>{
+  if(typeof window.gtag!=='function'){resolve(null);return;}
+  let done=false;const stop=setTimeout(()=>{if(!done){done=true;resolve(null)}},ms);
+  try{window.gtag('get',GA_ID,key,value=>{
+   if(!done){done=true;clearTimeout(stop);resolve(value);}
+  });}catch(_){clearTimeout(stop);if(!done){done=true;resolve(null)}}
+ });
+}
+async function syncPurchaseIdentity(client){
+ if(!client||typeof client.rpc!=='function'||(status!=='accepted'&&status!=='denied'))return false;
+ try{
+  const session=await client.auth.getSession();
+  if(!session?.data?.session)return false;
+  if(status==='denied'){
+   const {error}=await client.rpc('xrmovi_ga4_consent_update',{
+    p_consent:false,p_client_id:null,p_session_id:null});
+   return !error;
+  }
+  const measured=await ga4Get('client_id',1200);
+  const id=CLIENT_PATTERN.test(String(measured||''))?String(measured):idFromCookie();
+  if(!id)return false; // No consented GA cookie/id; never invent a visitor.
+  const sessionId=String(await ga4Get('session_id',500)||'');
+  const {data,error}=await client.rpc('xrmovi_ga4_consent_update',{
+   p_consent:true,p_client_id:id,p_session_id:/^[0-9]{6,20}$/.test(sessionId)?sessionId:null
+  });
+  return !error&&data===true;
+ }catch(_){return false}
+}
+
 function page(){return location.origin+location.pathname;}
 function consent(value){
  if(typeof window.gtag==='function')window.gtag('consent','update',{
@@ -74,6 +114,7 @@ function save(value){
  else {try{localStorage.removeItem(ATTR_KEY)}catch(e){}if(loaded){consent(false);clearAnalyticsCookies();}}
  box.hidden=true;
  if(notice)notice.textContent=value==='accepted'?'Medição analítica ativada.':'Medição analítica desativada.';
+ window.dispatchEvent(new CustomEvent('xrmovi:analytics-consent-changed',{detail:{consent:value}}));
 }
 function track(name,data){
  if(status!=='accepted'||!loaded||!allowed[name]||typeof window.gtag!=='function')return;
@@ -84,7 +125,7 @@ function track(name,data){
  if(name==='sign_up')args.method='email';
  window.gtag('event',name,args);
 }
-window.XrmoviAnalytics=Object.freeze({track:track,syncAttribution:syncAttribution,getConsent:function(){return status;}});
+window.XrmoviAnalytics=Object.freeze({track:track,syncAttribution:syncAttribution,syncPurchaseIdentity:syncPurchaseIdentity,getConsent:function(){return status;}});
 function element(tag,text,cls){
  var n=document.createElement(tag);if(text)n.textContent=text;if(cls)n.className=cls;return n;
 }
@@ -94,7 +135,7 @@ function banner(){
  document.head.appendChild(style);
  box=element('section');box.id='xrm-ga4-consent';box.hidden=true;box.setAttribute('role','dialog');box.setAttribute('aria-label','Preferências de privacidade');
  box.appendChild(element('h2','Podemos medir as visitas ao XRMOVI?'));
- box.appendChild(element('p','Com sua autorização, usamos Google Analytics para medir visitas e cliques nas páginas comerciais. Não enviamos e-mail, senha ou dados dos veículos. Você pode recusar e alterar a escolha depois.'));
+ box.appendChild(element('p','Com sua autorização, usamos Google Analytics para medir visitas, cliques e compras aprovadas, quando identificadas com seu consentimento. Não enviamos e-mail, senha ou dados dos veículos. Você pode recusar e alterar a escolha depois.'));
  var actions=element('div',null,'ga4-buttons'),yes=element('button','Aceitar análise'),no=element('button','Recusar','ga4-deny');
  yes.type=no.type='button';yes.addEventListener('click',function(){save('accepted');});no.addEventListener('click',function(){save('denied');});
  actions.appendChild(yes);actions.appendChild(no);box.appendChild(actions);document.body.appendChild(box);
