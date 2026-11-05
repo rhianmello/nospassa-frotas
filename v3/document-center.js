@@ -62,8 +62,8 @@ export function createDocumentCenter({
   const query=(selector)=>backdrop.querySelector(selector);
   const dialog=backdrop.querySelector('[role="dialog"]');
   let previousFocus=null,busy=false;
-  function close(){
-    if(busy)return;
+  function close(force=false){
+    if(busy&&!force)return;
     modalRecord=null;modalKind='';backdrop.hidden=true;
     if(previousFocus?.isConnected)previousFocus.focus({preventScroll:true});
   }
@@ -121,7 +121,7 @@ export function createDocumentCenter({
       if(modalRecord&&modalKind)renderModal();
       notify('Documento excluído. A ação foi registrada no histórico.');
     }catch(e){notice('Não foi possível excluir: '+e.message);notify('Falha na exclusão: '+e.message)}
-    finally{busy=false;}
+    finally{busy=false;query('[data-close]').disabled=false;}
   }
   function actionButton(title,callback,destructive=false){
     const b=document.createElement('button');b.type='button';b.className='fleet-button'+(destructive?' xrm-doc-danger':'');b.textContent=title;b.onclick=()=>void callback();return b;
@@ -244,7 +244,7 @@ export function createDocumentCenter({
     const cid=getCompany()?.id, record=modalRecord, kind=modalKind;
     if(!cid){close();return;}
     const title=kind==='driver'?'Documentos do motorista: '+record.name:'Documentos do veículo: '+record.plate;
-    query('[data-close]').disabled=busy;
+    query('[data-close]').disabled=false;
     query('[data-summary]').textContent='Arquivos privados. Visualização temporária, download e exclusão auditada.';
     byId('xrm-doc-dialog-title').textContent=title;
     const docs=docList().filter(doc=>validFor(doc,kind,record));
@@ -264,7 +264,7 @@ export function createDocumentCenter({
         renderCentral();renderModal();
         notify('Documento anexado ao cadastro.');
       }catch(error){notice('Falha ao anexar: '+error.message);}
-      finally{busy=false;uploadButton.disabled=false;}
+      finally{busy=false;uploadButton.disabled=false;query('[data-close]').disabled=false;}
     };
     let history=query('[data-record-history]');
     if(!history){
