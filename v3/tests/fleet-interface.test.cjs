@@ -120,6 +120,14 @@ async function open({ role = 'owner', existing = false, viewport = { width: 1440
   await page.goto(base + '/v3/index.html');
   await page.waitForFunction(() => document.getElementById('company-name').textContent.startsWith('Empresa de Teste'));
   await page.waitForFunction(() => document.getElementById('v3-company'));
+  if (viewport.width <= 760) {
+    // User has an explicit choice; decline optional analytics before interacting
+    // with mobile footer controls so its genuine consent panel cannot intercept.
+    await page.evaluate(() => {
+      const consent=document.querySelector('#xrm-ga4-consent');
+      if(consent&&!consent.hidden)consent.querySelector('.ga4-deny')?.click();
+    });
+  }
   return { page, errors };
 }
 
@@ -228,7 +236,7 @@ test('failed atomic completion saves neither costs nor completion and allows ret
 });
 
 test('mobile navigation opens maintenance and keeps its controls usable',async()=>{
- const {page,errors}=await open({viewport:{width:390,height:844}});await page.selectOption('#fleet-mobile-view','maintenance');assert.equal(await page.locator('#view-maintenance').isVisible(),true);assert.equal(await page.locator('#maintenance-new').isVisible(),true);assert.equal(await page.locator('#view-dashboard').isVisible(),false);
+ const {page,errors}=await open({viewport:{width:390,height:844}});await page.locator('.xrm-mobile-bottom-nav [data-mobile-view="maintenance"]').click();assert.equal(await page.locator('#view-maintenance').isVisible(),true);assert.equal(await page.locator('#maintenance-new').isVisible(),true);assert.equal(await page.locator('#view-dashboard').isVisible(),false);
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
  if(output){fs.mkdirSync(output,{recursive:true});await page.screenshot({path:path.join(output,'xrmovi-maintenance-mobile.png'),fullPage:false})}assert.deepEqual(errors,[]);await page.close();
 });
@@ -264,7 +272,7 @@ test('concurrent edits cannot overwrite new data and readers can consult the sam
 });
 
 test('mobile details stay on alerts, fit the viewport and close with Escape',async()=>{
- const {page,errors}=await open({viewport:{width:390,height:844}});await page.selectOption('#fleet-mobile-view','alerts');await page.locator('#alerts-content button').first().click();assert.equal(await page.locator('#v3-edit-overlay').getAttribute('data-layout'),'drawer');const box=await page.locator('.v3-edit-dialog').boundingBox();assert.ok(box.width<=390&&box.x>=0);assert.equal(await page.locator('#fleet-mobile-view').inputValue(),'alerts');
+ const {page,errors}=await open({viewport:{width:390,height:844}});await page.locator('#xrm-mobile-header-menu').click();await page.locator('.xrm-mobile-more-sheet [data-mobile-view="alerts"]').click();await page.locator('#alerts-content button').first().click();assert.equal(await page.locator('#v3-edit-overlay').getAttribute('data-layout'),'drawer');const box=await page.locator('.v3-edit-dialog').boundingBox();assert.ok(box.width<=390&&box.x>=0);assert.equal(await page.locator('#fleet-mobile-view').inputValue(),'alerts');
  if(output)await page.screenshot({path:path.join(output,'xrmovi-service-details-mobile.png'),fullPage:false});await page.keyboard.press('Escape');assert.equal(await page.locator('#v3-edit-overlay').isVisible(),false);assert.equal(await page.locator('#view-alerts').isVisible(),true);assert.deepEqual(errors,[]);await page.close();
 });
 
@@ -285,7 +293,7 @@ test('IPVA expenses become alerts while unpaid and enter financial totals only w
 });
 
 test('driver and expense queries, role restrictions and mobile module selection remain usable',async()=>{
- const {page,errors}=await open({viewport:{width:390,height:844}});await page.selectOption('#fleet-mobile-view','drivers');assert.equal(await page.locator('#view-drivers').isVisible(),true);await page.locator('#driver-search').fill('Inexistente');await page.locator('#driver-clear').click();assert.equal(await page.locator('#driver-search').inputValue(),'');await page.selectOption('#fleet-mobile-view','maintenance');await page.locator('[data-maintenance-mode="expenses"]').click();assert.equal(await page.locator('#expense-panel').isVisible(),true);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));if(output)await page.screenshot({path:path.join(output,'xrmovi-expenses-mobile.png'),fullPage:false});assert.deepEqual(errors,[]);await page.close();
+ const {page,errors}=await open({viewport:{width:390,height:844}});await page.locator('#xrm-mobile-header-menu').click();await page.locator('.xrm-mobile-more-sheet [data-mobile-view="drivers"]').click();assert.equal(await page.locator('#view-drivers').isVisible(),true);await page.locator('#driver-search').fill('Inexistente');await page.locator('#driver-clear').click();assert.equal(await page.locator('#driver-search').inputValue(),'');await page.locator('.xrm-mobile-bottom-nav [data-mobile-view="maintenance"]').click();await page.locator('[data-maintenance-mode="expenses"]').click();assert.equal(await page.locator('#expense-panel').isVisible(),true);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));if(output)await page.screenshot({path:path.join(output,'xrmovi-expenses-mobile.png'),fullPage:false});assert.deepEqual(errors,[]);await page.close();
  const viewer=await open({role:'viewer'});await viewer.page.locator('.fleet-main-nav [data-view="drivers"]').click();assert.equal(await viewer.page.locator('#driver-new').isVisible(),false);await viewer.page.locator('.fleet-main-nav [data-view="maintenance"]').click();await viewer.page.locator('[data-maintenance-mode="expenses"]').click();assert.equal(await viewer.page.locator('#expense-new').isVisible(),false);assert.equal(await viewer.page.evaluate(()=>brandingTest.writes.length),0);assert.deepEqual(viewer.errors,[]);await viewer.page.close();
 });
 
