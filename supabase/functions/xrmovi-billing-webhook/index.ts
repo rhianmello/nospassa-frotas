@@ -1,6 +1,6 @@
 // XRMOVI billing: validate signed Mercado Pago notification, re-fetch MP resources,
 // reconcile authorized recurring invoices and deliver exactly-once ledger settlement.
-// Keep XRMOVI_BILLING_ENABLED=false until a real sandbox-to-live checklist is completed.
+// Billing is live. Never process a payment unless signed webhook + verified provider proof agree.
 import {createClient} from "npm:@supabase/supabase-js@2.58.0";
 const send=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:{"content-type":"application/json; charset=utf-8","cache-control":"no-store"}});
 const getType=(s:unknown)=>typeof s==="string"?s:"";
@@ -9,16 +9,23 @@ function signatureInfo(header:string){
  return {time:parts.get("ts")||"",hash:parts.get("v1")||""};
 }
 async function signed(request:Request,id:string,secret:string){
- const {time,hash}=signatureInfo(request.headers.get("x-signature")||"");
+ const header=request.headers.get("x-signature")||"";
+ const {time,hash}=signatureInfo(header);
  const rid=request.headers.get("x-request-id")||"";
- if(!/^\d{10,13}$/.test(time)||!/^[a-f0-9]{64}$/i.test(hash)||!rid||!id||id.length>128)return false;
+ if(!header)return {ok:false,reason:"missing_signature"};
+ if(!rid)return {ok:false,reason:"missing_request_id"};
+ if(!id||id.length>128)return {ok:false,reason:"invalid_resource_id"};
+ if(!/^\d{10,13}$/.test(time)||!/^[a-f0-9]{64}$/i.test(hash))
+  return {ok:false,reason:"invalid_signature_format"};
  const value=Number(time);
  const ms=time.length===13?value:value*1000;
- if(!Number.isFinite(ms)||Math.abs(Date.now()-ms)>600_000)return false;
+ if(!Number.isFinite(ms)||Math.abs(Date.now()-ms)>600_000)
+  return {ok:false,reason:"timestamp_outside_window"};
  const manifest="id:"+id.toLowerCase()+";request-id:"+rid+";ts:"+time+";";
  const key=await crypto.subtle.importKey("raw",new TextEncoder().encode(secret),{name:"HMAC",hash:"SHA-256"},false,["verify"]);
  const bytes=Uint8Array.from(hash.match(/../g)!.map(x=>parseInt(x,16)));
- return crypto.subtle.verify("HMAC",key,bytes,new TextEncoder().encode(manifest));
+ const ok=await crypto.subtle.verify("HMAC",key,bytes,new TextEncoder().encode(manifest));
+ return {ok,reason:ok?"verified":"signature_mismatch"};
 }
 Deno.serve(async(request:Request)=>{
  if(request.method!=="POST")return send({error:"Method not allowed"},405);
@@ -32,16 +39,10 @@ Deno.serve(async(request:Request)=>{
  const dataId=url.searchParams.get("data.id")||url.searchParams.get("data_id")||"";
  if(!dataId)return send({error:"Missing notification ID"},400);
  try {
-  if(!await signed(request,dataId,secret)){
-   const signature=signatureInfo(request.headers.get("x-signature")||"");
-   // Diagnostic only: never log webhook secrets, hashes, request IDs, payer data or payment IDs.
-   console.warn("XRMOVI Mercado Pago webhook rejected",{
-    reason:"signature_verification_failed",
-    signature_present:signature.hash.length===64,
-    request_id_present:Boolean(request.headers.get("x-request-id")),
-    timestamp_digits:signature.time.length,
-    notification_topic:String(url.searchParams.get("type")||"unknown").slice(0,48)
-   });
+  const verification=await signed(request,dataId,secret);
+  if(!verification.ok){
+   // Log only bounded reason, never the secret, digest, request ID, resource ID or payer data.
+   console.warn("XRMOVI Mercado Pago webhook rejected",{reason:verification.reason});
    return send({error:"Invalid notification signature"},401);
   }
   const body=await request.json();
