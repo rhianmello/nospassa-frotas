@@ -172,37 +172,95 @@
     ).join('')+'<button type="button" id="xrm-mobile-more" aria-haspopup="dialog" aria-expanded="false">'+icon('menu')+'<span>Menu</span></button>';
     document.body.append(bottom);
 
-    const otherViews=[
-      ['drivers','users','Motoristas'],['alerts','bell','Alertas'],
-      ['documents','document','Documentos'],['history','history','Histórico'],
+    const mainViews=[
+      ['dashboard','home','Visão Geral'],['assets','car','Ativos / Veículos'],
+      ['maintenance','wrench','Manutenção / Despesas'],['drivers','users','Motoristas'],
+      ['documents','document','Documentos'],['alerts','bell','Alertas'],
+      ['history','history','Histórico'],['fuel','fuel','Abastecimentos'],
       ['financial','chart','Relatórios'],['subscription','credit','Minha assinatura']
+    ];
+    const quickActions=[
+      {label:'Cadastrar ativo',view:'assets',selector:'#assets-actions button',icon:'car'},
+      {label:'Cadastrar motorista',view:'drivers',selector:'#driver-new',icon:'users'},
+      {label:'Lançar abastecimento',view:'fuel',selector:'#fuel-actions button',icon:'fuel'},
+      {label:'Programar manutenção',view:'maintenance',selector:'#maintenance-new',icon:'wrench'},
+      {label:'Registrar despesa',view:'maintenance',selector:'#expense-new',icon:'credit'},
+      {label:'Atualizar KM',view:'assets',selector:'#xrm-mileage-nav',icon:'clock',always:true},
+      {label:'Emitir relatório',view:'financial',icon:'chart',always:true}
     ];
     const sheet=document.createElement('section');
     sheet.className='xrm-mobile-more-sheet';
     sheet.hidden=true;
     sheet.setAttribute('role','dialog');
     sheet.setAttribute('aria-modal','true');
-    sheet.setAttribute('aria-label','Menu de navegação do XRMOVI');
+    sheet.setAttribute('aria-label','Menu de módulos e ações do XRMOVI');
     sheet.innerHTML='<button type="button" class="xrm-mobile-more-backdrop" aria-label="Fechar menu"></button>'+
       '<div class="xrm-mobile-more-panel"><div class="xrm-mobile-more-title"><strong>Menu XRMOVI</strong><button type="button" id="xrm-mobile-close-menu" aria-label="Fechar menu">'+icon('close')+'</button></div>'+
-      '<div class="xrm-mobile-more-links">'+otherViews.map(([view,ico,label])=>
+      '<p class="xrm-mobile-menu-caption">O que você precisa fazer?</p>'+
+      '<div class="xrm-mobile-quick-actions" aria-label="Ações rápidas"></div>'+
+      '<p class="xrm-mobile-menu-section-label">Módulos do sistema</p>'+
+      '<div class="xrm-mobile-more-links">'+mainViews.map(([view,ico,label])=>
         '<button type="button" data-mobile-view="'+view+'">'+icon(ico)+'<span>'+label+'</span></button>'
       ).join('')+
-      '<a href="../cliente/">'+icon('help')+'<span>Mensagens e suporte</span></a>'+
+      '<a href="../cliente/">'+icon('help')+'<span>Mensagens / Suporte</span></a>'+
       '<button type="button" class="xrm-mobile-logout">'+icon('logout')+'<span>Sair da conta</span></button></div></div>';
     document.body.append(sheet);
     const moreButton=$('#xrm-mobile-more');
-
-    function setMenu(open) {
+    const headerMenu=document.createElement('button');
+    headerMenu.type='button';headerMenu.id='xrm-mobile-header-menu';
+    headerMenu.className='xrm-mobile-header-menu';
+    headerMenu.setAttribute('aria-label','Abrir menu de ações e módulos');
+    headerMenu.setAttribute('aria-haspopup','dialog');
+    headerMenu.setAttribute('aria-expanded','false');
+    headerMenu.innerHTML=icon('menu');
+    topbar.querySelector('.fleet-top-actions')?.append(headerMenu);
+    function eligibleAction(item){
+      if(item.always)return true;
+      const control=document.querySelector(item.selector);
+      return !!control&&!control.disabled&&!control.hidden&&getComputedStyle(control).display!=='none';
+    }
+    function drawQuickActions(){
+      const panel=$('.xrm-mobile-quick-actions',sheet);
+      if(!panel)return;
+      panel.replaceChildren();
+      for(const item of quickActions.filter(eligibleAction)){
+        const button=document.createElement('button');button.type='button';
+        button.className='xrm-mobile-quick-action';
+        button.dataset.mobileAction=item.label;
+        button.innerHTML=icon(item.icon)+'<span>'+item.label+'</span>';
+        button.addEventListener('click',()=>{
+          setMenu(false);
+          if(item.selector==='#xrm-mileage-nav'){
+            document.getElementById('xrm-mileage-nav')?.click();return;
+          }
+          go(item.view);
+          if(!item.selector)return;
+          requestAnimationFrame(()=>{
+            const target=document.querySelector(item.selector);
+            if(target&&!target.disabled&&!target.hidden&&getComputedStyle(target).display!=='none')target.click();
+          });
+        });
+        panel.append(button);
+      }
+      if(!panel.children.length){
+        const note=document.createElement('p');
+        note.textContent='As ações de cadastro dependem da permissão desta empresa.';
+        panel.append(note);
+      }
+    }
+    function setMenu(open){
       if(!phone.matches)open=false;
+      if(open)drawQuickActions();
       sheet.hidden=!open;
       document.body.classList.toggle('xrm-mobile-menu-open',open);
       moreButton.setAttribute('aria-expanded',String(open));
+      headerMenu.setAttribute('aria-expanded',String(open));
       if(open)$('#xrm-mobile-close-menu')?.focus();
     }
     moreButton.addEventListener('click',()=>setMenu(sheet.hidden));
+    headerMenu.addEventListener('click',()=>setMenu(sheet.hidden));
     $('.xrm-mobile-more-backdrop',sheet).addEventListener('click',()=>setMenu(false));
-    $('#xrm-mobile-close-menu')?.addEventListener('click',()=>{setMenu(false);moreButton.focus()});
+    $('#xrm-mobile-close-menu')?.addEventListener('click',()=>{setMenu(false);headerMenu.focus()});
     $('.xrm-mobile-logout',sheet).addEventListener('click',()=>{
       setMenu(false);
       ($('#xrm-fleet-logout-mobile') || $('#xrm-fleet-logout'))?.click();
@@ -243,11 +301,38 @@
         else if(!event.shiftKey && document.activeElement===last){event.preventDefault();first.focus()}
       }
     });
+    // Turn existing desktop data tables into fully readable mobile cards, without
+    // duplicating records or changing table editing / selection handlers.
+    function decorateTables(){
+      const tables=document.querySelectorAll(
+        '.fleet-content table.fleet-table, .fleet-content table.xrm-mileage-table'
+      );
+      for(const table of tables){
+        table.classList.add('xrm-mobile-card-table');
+        const labels=[...table.querySelectorAll('thead th')].map(th=>th.textContent.trim()||'Selecionar');
+        if(!labels.length)continue;
+        for(const tr of table.querySelectorAll('tbody tr')){
+          const cells=[...tr.children].filter(el=>el.tagName==='TD');
+          if(cells.length!==labels.length)continue;
+          cells.forEach((cell,i)=>{
+            if(cell.dataset.xrmLabel!==labels[i])cell.dataset.xrmLabel=labels[i];
+          });
+        }
+      }
+    }
+    let cardsScheduled=false;
+    new MutationObserver(()=>{
+      if(cardsScheduled)return;
+      cardsScheduled=true;
+      requestAnimationFrame(()=>{cardsScheduled=false;decorateTables()});
+    }).observe(document.querySelector('.fleet-content'),{subtree:true,childList:true});
+    decorateTables();
     const onBreakpoint=()=>{
       positionContract();
       if(!phone.matches){setMenu(false);setFilters(false)}
       syncRoute();
       updateKpis();
+      decorateTables();
     };
     if(phone.addEventListener)phone.addEventListener('change',onBreakpoint);
     else phone.addListener(onBreakpoint);
