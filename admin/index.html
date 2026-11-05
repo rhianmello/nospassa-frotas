@@ -3,6 +3,7 @@
 <meta name="robots" content="noindex, nofollow"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#071725"><title>XRMOVI | Gestão comercial e clientes</title>
 <link rel="stylesheet" href="./seo-panel.css?v=20261103-1">
+<link rel="stylesheet" href="./conversions-panel.css?v=20261105-1">
 <style>
 :root{color-scheme:dark;--bg:#061523;--panel:#0d2839;--panel2:#102f43;--line:#2d4f61;--mint:#4fe2b8;--muted:#9abacb;--white:#edfaff;--danger:#f58a9c;--gold:#eac47b}*{box-sizing:border-box}
 body{margin:0;background:radial-gradient(ellipse at 95% 0,#104351 0,transparent 42%),var(--bg);color:var(--white);font:14px/1.55 Inter,system-ui,-apple-system,Segoe UI,sans-serif}
@@ -54,7 +55,7 @@ footer{padding:20px;text-align:center;color:#849eae;font-size:11px}
   </details>
   <div id="feedback" class="status" role="status" aria-live="polite"></div>
   <nav class="tabs" aria-label="Áreas da administração">
-   <button data-tab="overview" aria-selected="true">Visão executiva</button><button data-tab="customers" aria-selected="false">Clientes</button><button data-tab="messages" aria-selected="false">Mensagens <span id="nav-unread"></span></button><button data-tab="payments" aria-selected="false">Pagamentos</button><button data-tab="requests" aria-selected="false">Solicitações</button><button data-tab="seo" aria-selected="false">SEO no Google</button>
+   <button data-tab="overview" aria-selected="true">Visão executiva</button><button data-tab="customers" aria-selected="false">Clientes</button><button data-tab="messages" aria-selected="false">Mensagens <span id="nav-unread"></span></button><button data-tab="payments" aria-selected="false">Pagamentos</button><button data-tab="requests" aria-selected="false">Solicitações</button><button data-tab="seo" aria-selected="false">SEO no Google</button><button data-tab="conversions" aria-selected="false">Vendas e conversões</button>
   </nav>
   <div id="view-overview" class="tab-view">
    <div class="two-col">
@@ -69,6 +70,7 @@ footer{padding:20px;text-align:center;color:#849eae;font-size:11px}
   <section id="view-payments" class="panel tab-view" hidden><div class="panel-head"><h2>Recebimentos confirmados</h2><small>Não inclui tentativas sem confirmação</small></div><div class="table-wrap"><table><thead><tr><th>Data</th><th>Cliente</th><th>Valor</th><th>Provedor</th></tr></thead><tbody id="payments-body"></tbody></table></div></section>
   <section id="view-requests" class="panel tab-view" hidden><div class="panel-head"><h2>Solicitações de plano</h2><small>Acompanhe os interessados</small></div><div class="table-wrap"><table><thead><tr><th>Data</th><th>Empresa</th><th>Plano solicitado</th><th>Estado</th></tr></thead><tbody id="requests-body"></tbody></table></div></section>
   <section id="view-seo" class="tab-view" hidden aria-label="SEO e desempenho no Google"><p class="empty">Abra esta aba para consultar as métricas e a situação de indexação.</p></section>
+  <section id="view-conversions" class="tab-view" hidden aria-label="Aquisição de clientes e vendas verificadas"><p class="empty">Abra esta aba para consultar os pagamentos confirmados e a origem das campanhas.</p></section>
  </div>
 </main><footer>XRMOVI · Administração comercial protegida · Bloqueios auditados no Supabase</footer>
 <script type="module">
@@ -207,11 +209,26 @@ async function loadSeo(){
   status('Falha na consulta do SEO: '+e.message,'error');
  }finally{seoIsLoading=false}
 }
+let conversionsIsLoading=false;
+async function loadConversions(){
+ if(conversionsIsLoading||!db)return;
+ conversionsIsLoading=true;
+ const root=el('view-conversions');
+ root.replaceChildren(node('p','Consultando pagamentos confirmados…','empty'));
+ try{
+  const [data,module]=await Promise.all([rpc('marketing_admin_dashboard'),import('./conversions-panel.js?v=20261105-1')]);
+  module.renderConversionsPanel(root,data);
+ }catch(e){
+  root.replaceChildren(node('p','Não foi possível carregar conversões: '+e.message,'empty'));
+  status('Falha na consulta das conversões: '+e.message,'error');
+ }finally{conversionsIsLoading=false}
+}
 function openTab(name){
  tab=name;document.querySelectorAll('[data-tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===name)));
  document.querySelectorAll('.tab-view').forEach(view=>view.hidden=view.id!=='view-'+name);
  if(name==='messages'&&threadId)void loadThread();
  if(name==='seo')void loadSeo();
+ if(name==='conversions')void loadConversions();
 }
 document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>openTab(b.dataset.tab));
 document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>openTab(b.dataset.goto));
