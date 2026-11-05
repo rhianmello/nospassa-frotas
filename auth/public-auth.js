@@ -35,6 +35,8 @@ form.addEventListener('submit',async event=>{
   const {data:isAdmin,error:adminError}=await client.rpc('xrmovi_platform_is_admin');
   if(!adminError&&isAdmin===true)destination=new URL('/admin/',location.origin).href;
   msg.textContent=isAdmin===true&&!adminError?'Acesso confirmado. Abrindo administração...':'Acesso confirmado. Abrindo painel...';
+  // Atribuição é opcional e nunca bloqueia o login nem libera assinatura.
+  try{await Promise.race([window.XrmoviAnalytics?.syncAttribution?.(client)||Promise.resolve(false),new Promise(resolve=>setTimeout(resolve,1800))]);}catch(_error){}
   location.replace(destination);
  }catch(error){msg.textContent=error.message||'Não foi possível autenticar.'}finally{submit.disabled=false}
 });

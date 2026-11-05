@@ -4,6 +4,41 @@
 var GA_ID='G-1Z1PSN1SJD',KEY='xrmovi_ga4_consent_v1';
 var allowed={xrmovi_view_plans:1,xrmovi_contact:1,xrmovi_signup_start:1,xrmovi_demo_open:1,sign_up:1};
 var status=null,loaded=false,box,notice;
+
+var ATTR_KEY='xrmovi_campaign_first_touch_v1',ATTR_AGE=30*24*60*60*1000;
+function safeCampaignValue(v,max){
+  if(typeof v!=='string')return '';
+  var s=v.trim().slice(0,max);
+  return /[@/?#\r\n<>]/.test(s)?'':s;
+}
+function captureCampaign(){
+ if(status!=='accepted')return;
+ try{
+  var old=JSON.parse(localStorage.getItem(ATTR_KEY)||'null');
+  if(old&&Date.now()-Number(old.time)<ATTR_AGE&&old.source)return;
+  var q=new URLSearchParams(location.search);
+  var source=safeCampaignValue(q.get('utm_source'),80);
+  var medium=safeCampaignValue(q.get('utm_medium'),80);
+  var campaign=safeCampaignValue(q.get('utm_campaign'),120);
+  if(!source&&!medium&&!campaign)return;
+  localStorage.setItem(ATTR_KEY,JSON.stringify({source:source||'direto',medium:medium||'none',campaign:campaign||'sem campanha',time:Date.now()}));
+ }catch(e){}
+}
+async function syncAttribution(client){
+ if(status!=='accepted'||!client||typeof client.rpc!=='function')return false;
+ try{
+  var saved=JSON.parse(localStorage.getItem(ATTR_KEY)||'null');
+  var active=saved&&Date.now()-Number(saved.time)<ATTR_AGE&&saved.source?saved:
+    {source:'direto',medium:'none',campaign:'sem campanha'};
+  var result=await client.rpc('xrmovi_marketing_attribution_record',{
+    p_source:active.source,p_medium:active.medium,p_campaign:active.campaign
+  });
+  if(result.error)return false;
+  localStorage.removeItem(ATTR_KEY);
+  return true;
+ }catch(e){return false}
+}
+
 function page(){return location.origin+location.pathname;}
 function consent(value){
  if(typeof window.gtag==='function')window.gtag('consent','update',{
@@ -35,8 +70,8 @@ function clearAnalyticsCookies(){
 function save(value){
  status=value;
  try{localStorage.setItem(KEY,value);}catch(e){}
- if(value==='accepted')startTag();
- else if(loaded){consent(false);clearAnalyticsCookies();}
+ if(value==='accepted'){captureCampaign();startTag();}
+ else {try{localStorage.removeItem(ATTR_KEY)}catch(e){}if(loaded){consent(false);clearAnalyticsCookies();}}
  box.hidden=true;
  if(notice)notice.textContent=value==='accepted'?'Medição analítica ativada.':'Medição analítica desativada.';
 }
@@ -49,7 +84,7 @@ function track(name,data){
  if(name==='sign_up')args.method='email';
  window.gtag('event',name,args);
 }
-window.XrmoviAnalytics=Object.freeze({track:track,getConsent:function(){return status;}});
+window.XrmoviAnalytics=Object.freeze({track:track,syncAttribution:syncAttribution,getConsent:function(){return status;}});
 function element(tag,text,cls){
  var n=document.createElement(tag);if(text)n.textContent=text;if(cls)n.className=cls;return n;
 }
@@ -84,7 +119,7 @@ function instrument(){
 function init(){
  banner();instrument();
  try{var saved=localStorage.getItem(KEY);status=saved==='accepted'||saved==='denied'?saved:null;}catch(err){status=null;}
- if(status==='accepted')startTag();
+ if(status==='accepted'){captureCampaign();startTag();}
  else if(!status)box.hidden=false;
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
