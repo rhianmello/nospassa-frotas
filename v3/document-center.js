@@ -44,8 +44,45 @@ export function createDocumentCenter({
   .xrm-doc-feedback{min-height:17px;color:#aadbd7;font-size:12px}
   .xrm-doc-history{margin-top:15px;padding:12px;border:1px solid #2b5769;border-radius:10px}
   .xrm-doc-history p{font-size:12px;margin:7px 0;color:#b9d8e3}
+  .xrm-doc-preview-backdrop{position:fixed;inset:0;z-index:1900;padding:12px;background:#020c17e8;display:grid;place-items:center}
+  .xrm-doc-preview-backdrop[hidden]{display:none!important}
+  .xrm-doc-preview-panel{display:flex;flex-direction:column;gap:10px;min-width:0;width:min(880px,100%);max-height:calc(100dvh - 24px);overflow:auto;background:#10283a;border:1px solid #4f7887;border-radius:16px;padding:14px;color:#effaff}
+  .xrm-doc-preview-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;min-width:0}
+  .xrm-doc-preview-heading strong{font-size:16px;line-height:1.4;overflow-wrap:anywhere;min-width:0}
+  .xrm-doc-preview-heading button{flex:none;border:1px solid #446779;border-radius:9px;background:#244b5d;color:#fff;font-size:23px;width:42px;height:42px}
+  .xrm-doc-preview-hint{margin:0;font-size:12px;line-height:1.45;color:#b7d7e4}
+  .xrm-doc-preview-stage{min-height:210px;height:min(60dvh,640px);width:100%;min-width:0;border:1px solid #2c5266;border-radius:11px;overflow:auto;background:#081723;display:grid;place-items:center}
+  .xrm-doc-preview-stage iframe{width:100%;height:100%;min-height:200px;border:0}
+  .xrm-doc-preview-stage img{max-width:100%;max-height:100%;object-fit:contain}
+  .xrm-doc-preview-stage [hidden]{display:none!important}
+  .xrm-doc-preview-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  .xrm-doc-preview-actions a{display:grid;place-items:center;min-height:46px;text-align:center;text-decoration:none;background:#16425a;color:#e6f8ff;border:1px solid #4c8797;border-radius:9px;font-weight:700;font-size:12px;padding:9px}
+  .xrm-doc-preview-actions a:last-child{background:#1c6d73;border-color:#57b5a8;color:#fff}
   @media(max-width:850px){.xrm-doc-filters{grid-template-columns:1fr 1fr}}
-  @media(max-width:530px){.xrm-doc-filters{grid-template-columns:1fr}.xrm-doc-actions{flex-direction:column;align-items:stretch}}
+  @media(max-width:530px){
+    .xrm-doc-filters{grid-template-columns:1fr}.xrm-doc-actions{flex-direction:column;align-items:stretch}
+    .xrm-doc-dialog-backdrop{padding:8px;align-items:center;justify-items:stretch}
+    .xrm-doc-dialog{box-sizing:border-box!important;width:100%!important;min-width:0!important;max-width:100%!important;max-height:calc(100dvh - 16px);padding:13px!important;overflow-x:hidden!important}
+    .xrm-doc-dialog-head{align-items:flex-start}
+    .xrm-doc-dialog-head h2{font-size:clamp(15px,4.2vw,19px);line-height:1.25;overflow-wrap:anywhere;min-width:0}
+    .xrm-doc-dialog-head button{flex:none;min-width:42px;min-height:42px}
+    .xrm-doc-row{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:0;margin:0 0 11px;padding:9px 11px;border:1px solid #35596d;border-radius:10px;background:#0b2032}
+    .xrm-doc-dialog .fleet-table,.xrm-doc-dialog .fleet-table tbody,.xrm-doc-dialog .fleet-table-wrap,#vehicle-documents .fleet-table,#vehicle-documents .fleet-table tbody,#vehicle-documents .fleet-table-wrap{display:block!important;max-width:100%!important;min-width:0!important;width:100%!important;overflow:visible!important}
+    .xrm-doc-dialog .fleet-table thead,#vehicle-documents .fleet-table thead{display:none!important}
+    .xrm-doc-row td{display:grid!important;grid-template-columns:minmax(80px,36%) minmax(0,1fr);gap:9px;align-items:start;min-width:0!important;max-width:100%!important;width:auto!important;white-space:normal!important;overflow-wrap:anywhere!important;padding:9px 2px!important;border:0!important;font-size:12px}
+    .xrm-doc-row td+td{border-top:1px solid #263e51!important}
+    .xrm-doc-row td::before{content:attr(data-xrm-label);font-size:10px;font-weight:800;letter-spacing:.025em;color:#a6c4d4;white-space:normal}
+    .xrm-doc-row td:last-child{display:block!important}
+    .xrm-doc-row td:last-child::before{display:block;margin-bottom:9px}
+    .xrm-doc-row .xrm-doc-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+    .xrm-doc-row .xrm-doc-actions .fleet-button{min-width:0;white-space:normal!important;min-height:42px;padding:9px 5px}
+    .xrm-doc-upload{display:grid;grid-template-columns:minmax(0,1fr);justify-items:stretch;gap:12px}
+    .xrm-doc-upload input{width:100%;min-width:0;font-size:12px}
+    .xrm-doc-preview-backdrop{padding:6px;align-items:center}
+    .xrm-doc-preview-panel{border-radius:13px;padding:10px;max-height:calc(100dvh - 12px)}
+    .xrm-doc-preview-stage{height:min(59dvh,580px);min-height:240px}
+    .xrm-doc-preview-actions a{font-size:11px;padding:7px 5px}
+  }
   `;
   document.head.append(style);
 
@@ -64,6 +101,7 @@ export function createDocumentCenter({
   let previousFocus=null,busy=false;
   function close(force=false){
     if(busy&&!force)return;
+    if(!preview.hidden)closePreview();
     modalRecord=null;modalKind='';backdrop.hidden=true;
     if(previousFocus?.isConnected)previousFocus.focus({preventScroll:true});
   }
@@ -88,18 +126,75 @@ export function createDocumentCenter({
     ?doc.kind==='fuel'&&doc.record_id===record.id
     :doc.vehicle_id===record.id||(doc.kind==='vehicle'&&doc.record_id===record.id);
 
+  // On iPhone/embedded browsers, a synthetic link.click() after awaiting the
+  // signed URL loses the user gesture and may be silently blocked. Preview inside
+  // the application; the real links remain user-tappable and short-lived.
+  const preview=document.createElement('section');
+  preview.className='xrm-doc-preview-backdrop';
+  preview.hidden=true;
+  preview.setAttribute('role','dialog');
+  preview.setAttribute('aria-modal','true');
+  preview.setAttribute('aria-label','Visualização do documento');
+  preview.innerHTML='<div class="xrm-doc-preview-panel">'+
+    '<div class="xrm-doc-preview-heading"><strong data-preview-name>Documento</strong><button type="button" data-preview-close aria-label="Fechar visualização">×</button></div>'+
+    '<p class="xrm-doc-preview-hint" data-preview-feedback>Preparando visualização privada...</p>'+
+    '<div class="xrm-doc-preview-stage"><img data-preview-image alt="Prévia do documento" hidden><iframe data-preview-pdf title="Visualização do PDF" referrerpolicy="no-referrer" hidden></iframe></div>'+
+    '<div class="xrm-doc-preview-actions"><a data-preview-open target="_blank" rel="noopener noreferrer">Abrir em nova aba</a><a data-preview-download download>Baixar arquivo</a></div></div>';
+  document.body.append(preview);
+  const previewQ=selector=>preview.querySelector(selector);
+  let previewFocus=null,previewRequest=0;
+  function closePreview(){
+    previewRequest++;
+    preview.hidden=true;
+    previewQ('[data-preview-pdf]').removeAttribute('src');
+    previewQ('[data-preview-image]').removeAttribute('src');
+    previewQ('[data-preview-open]').removeAttribute('href');
+    previewQ('[data-preview-download]').removeAttribute('href');
+    if(previewFocus?.isConnected)previewFocus.focus({preventScroll:true});
+    previewFocus=null;
+  }
+  previewQ('[data-preview-close]').addEventListener('click',closePreview);
+  preview.addEventListener('click',event=>{if(event.target===preview)closePreview()});
+  preview.addEventListener('keydown',event=>{
+    if(event.key==='Escape'){event.preventDefault();closePreview();}
+    if(event.key==='Tab'){
+      const controls=[...preview.querySelectorAll('button:not([disabled]),a[href]')];
+      const first=controls[0],last=controls[controls.length-1];
+      if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}
+      else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
+    }
+  });
   async function openFile(doc,download=false){
+    const companyAtStart=getCompany()?.id;
+    if(!companyAtStart||!doc.path)throw new Error('Documento não disponível para esta empresa.');
+    const request=++previewRequest;
+    previewFocus=document.activeElement;
+    const name=String(doc.name||doc.path.split('/').pop()||'documento');
     const bucket=doc.legacy?'xrmovi-vehicle-docs':'xrmovi-record-attachments';
     const store=client().storage.from(bucket);
-    const {data,error}=await store.createSignedUrl(doc.path,60,download?{download:doc.name||'documento'}:{});
-    if(error||!data?.signedUrl)throw new Error('Não foi possível gerar o link de acesso.');
+    const {data,error}=await store.createSignedUrl(doc.path,180);
+    if(error||!data?.signedUrl)throw new Error('Não foi possível gerar o link privado do documento. '+(error?.message||''));
+    if(companyAtStart!==getCompany()?.id||request!==previewRequest)return;
     const url=new URL(data.signedUrl);
     const base=new URL(client().supabaseUrl);
     if(url.protocol!=='https:'||url.origin!==base.origin)throw new Error('Endereço de arquivo não autorizado.');
-    const link=document.createElement('a');link.href=url.href;
-    link.target='_blank';link.rel='noopener noreferrer';
-    if(download)link.download=doc.name||'documento';
-    document.body.append(link);link.click();link.remove();
+    const downloadUrl=new URL(url.href);
+    downloadUrl.searchParams.set('download',name);
+    previewQ('[data-preview-name]').textContent=name;
+    const link=previewQ('[data-preview-open]'),save=previewQ('[data-preview-download]');
+    link.href=url.href;
+    save.href=downloadUrl.href;
+    save.download=name;
+    const isImage=/\\.(png|jpe?g|webp)$/i.test(name)||/\\.(png|jpe?g|webp)(?:\\?|$)/i.test(doc.path);
+    const image=previewQ('[data-preview-image]'),pdf=previewQ('[data-preview-pdf]');
+    image.hidden=!isImage;pdf.hidden=isImage;
+    if(isImage){pdf.removeAttribute('src');image.src=url.href;}
+    else{image.removeAttribute('src');pdf.src=url.href;}
+    previewQ('[data-preview-feedback]').textContent=download
+      ?'Arquivo disponível. Toque em "Baixar arquivo" abaixo para salvar no celular.'
+      :'Prévia do documento. Se o PDF não aparecer neste navegador, toque em "Abrir em nova aba" ou "Baixar arquivo".';
+    preview.hidden=false;
+    previewQ('[data-preview-close]').focus({preventScroll:true});
   }
   async function deleteFile(doc){
     if(!canWrite())return notify('Somente proprietário ou gestor pode excluir documentos.');
@@ -131,10 +226,10 @@ export function createDocumentCenter({
   function actions(doc){
     const wrap=document.createElement('div');wrap.className='xrm-doc-actions';
     wrap.append(actionButton('Visualizar',async()=>{
-      try{await openFile(doc)}catch(error){notify(error.message)}
+      try{await openFile(doc)}catch(error){notice(error.message);notify(error.message)}
     }));
     wrap.append(actionButton('Baixar',async()=>{
-      try{await openFile(doc,true)}catch(error){notify(error.message)}
+      try{await openFile(doc,true)}catch(error){notice(error.message);notify(error.message)}
     }));
     if(canWrite())wrap.append(actionButton('Excluir',()=>deleteFile(doc),true));
     return wrap;
@@ -152,10 +247,11 @@ export function createDocumentCenter({
     const body=document.createElement('tbody');
     for(const doc of docs){
       const row=document.createElement('tr');row.className='xrm-doc-row';
-      for(const value of [labelOf(doc),kinds[doc.kind]||'Documento',doc.name||'Documento',datestring(doc.created_at)]){
-        const td=document.createElement('td');td.textContent=value;row.append(td);
-      }
-      const expiry=document.createElement('td');
+      const fields=[labelOf(doc),kinds[doc.kind]||'Documento',doc.name||'Documento',datestring(doc.created_at)];
+      fields.forEach((value,index)=>{
+        const td=document.createElement('td');td.dataset.xrmLabel=['Vínculo','Tipo','Arquivo','Enviado'][index];td.textContent=value;row.append(td);
+      });
+      const expiry=document.createElement('td');expiry.dataset.xrmLabel='Vencimento';
       if(doc.kind==='driver'&&doc.expires_on){
         expiry.textContent=datestring(doc.expires_on+'T12:00:00');
         const today=new Date();today.setHours(0,0,0,0);
@@ -164,7 +260,7 @@ export function createDocumentCenter({
         else if(days<=30)expiry.className='xrm-doc-soon';
       }else expiry.textContent='Não informado';
       row.append(expiry);
-      const cell=document.createElement('td');cell.append(actions(doc));row.append(cell);
+      const cell=document.createElement('td');cell.dataset.xrmLabel='Ações';cell.append(actions(doc));row.append(cell);
       body.append(row);
     }
     table.append(head,body);wrap.append(table);container.append(wrap);
