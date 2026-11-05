@@ -53,6 +53,31 @@ Deno.serve(async(req:Request)=>{
  const secret=Deno.env.get("XRMOVI_GA4_API_SECRET")||"";
  const mid=Deno.env.get("XRMOVI_GA4_MEASUREMENT_ID")||"";
  if(!measurement.test(mid)||secret.length<12)return reply({status:"not_configured",processed:0},503);
+ const input=await req.json().catch(()=>({}));
+ if(input?.action==="validate"){
+  // GA4 debug endpoint validates schema without ingesting purchases into reports.
+  try{
+   const synthetic=purchasePayload({
+    id:"00000000-0000-4000-8000-000000000000",
+    transaction_id:"pix:123456789",
+    client_id:"123456789.987654321",
+    plan:"start",amount:19.9,paid_at:new Date().toISOString()
+   });
+   const endpoint=new URL("https://www.google-analytics.com/debug/mp/collect");
+   endpoint.searchParams.set("measurement_id",mid);
+   endpoint.searchParams.set("api_secret",secret);
+   const response=await fetch(endpoint,{method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({...synthetic,validation_behavior:"ENFORCE_RECOMMENDATIONS"}),
+    signal:AbortSignal.timeout(12000)});
+   const result=await response.json().catch(()=>({}));
+   const errors=Array.isArray(result?.validationMessages)?result.validationMessages:[];
+   return reply({status:response.ok?(errors.length?"validation_warnings":"validated"):"validation_unavailable",
+    error_count:errors.length,details:errors.slice(0,5).map((x:any)=>({
+     field:String(x.fieldPath||"").slice(0,65),code:String(x.validationCode||"").slice(0,65)
+    }))},response.ok?200:502);
+  }catch{return reply({status:"validation_unavailable"},502)}
+ }
  try{
   const {data,error}=await db.rpc("xrmovi_ga4_delivery_claim",{p_limit:10});
   if(error)throw Error("Could not claim verified events");
