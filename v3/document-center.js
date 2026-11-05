@@ -67,7 +67,7 @@ export function createDocumentCenter({
     modalRecord=null;modalKind='';backdrop.hidden=true;
     if(previousFocus?.isConnected)previousFocus.focus({preventScroll:true});
   }
-  query('[data-close]').onclick=close;
+  query('[data-close]').onclick=()=>close();
   backdrop.addEventListener('click',e=>{if(e.target===backdrop)close()});
   backdrop.addEventListener('keydown',e=>{
     if(e.key==='Escape'){e.preventDefault();close();}
