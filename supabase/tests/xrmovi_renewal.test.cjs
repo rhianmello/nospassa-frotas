@@ -12,7 +12,7 @@ const intentId='22222222-2222-4222-8222-222222222222';
 const providerId='approved-subscription';
 const datePast=new Date(Date.now()-86400000).toISOString();
 const dateFuture=new Date(Date.now()+20*86400000).toISOString();
-function scenario({recordStatus='active',paidThrough=datePast,invoiceStatus='approved',invoices=1,providerStatus='authorized',alreadyRecorded=false,pageSize=50}={}){
+function scenario({recordStatus='active',paidThrough=datePast,invoiceStatus='approved',invoices=1,providerStatus='authorized',alreadyRecorded=false,pageSize=50,rejectPaging=false,rejectAllInvoiceSearch=false}={}){
  const sent=[],settled=new Set(alreadyRecorded?['1000']:[]);
  let record={status:recordStatus,intent_status:'paid',intent_id:intentId,provider_subscription_id:providerId,expected_amount:19.90,paid_through:paidThrough};
  const env={SUPABASE_URL:'https://db.example.test',SUPABASE_ANON_KEY:'fake-anon',SUPABASE_SERVICE_ROLE_KEY:'fake-service',XRMOVI_MP_ACCESS_TOKEN:'APP_USR-fake'};
@@ -40,7 +40,11 @@ function scenario({recordStatus='active',paidThrough=datePast,invoiceStatus='app
    assert.equal(opts?.method||'GET','GET','Reconciliation must never charge or create a subscription');
    const u=String(url);
    if(u.includes('/preapproval/'))return Response.json({id:providerId,external_reference:intentId,collector_id:10284642,status:providerStatus,auto_recurring:{currency_id:'BRL',transaction_amount:19.90}});
-   if(u.includes('/authorized_payments/search')){const offset=Number(new URL(u).searchParams.get('offset')||0);return Response.json({results:invoiceItems.slice(offset,offset+pageSize),paging:{total:invoiceItems.length,limit:pageSize,offset}})};
+   if(u.includes('/authorized_payments/search')){
+    if(rejectAllInvoiceSearch||(rejectPaging&&new URL(u).searchParams.has('limit')))return Response.json({error:'bad_request'},{status:400});
+    const offset=Number(new URL(u).searchParams.get('offset')||0);
+    return Response.json({results:invoiceItems.slice(offset,offset+pageSize),paging:{total:invoiceItems.length,limit:pageSize,offset}});
+   }
    if(u.includes('/authorized_payments/')){const id=u.split('/').at(-1);return Response.json({...invoiceItems.find(i=>i.id===id)});}
    if(u.includes('/v1/payments/'))return Response.json({id:u.split('/').at(-1),status:invoiceStatus,currency_id:'BRL',live_mode:true,transaction_amount:19.90,date_approved:paymentDate});
    throw Error('unexpected endpoint '+u);
@@ -96,4 +100,22 @@ test('paginated provider result does not hide second renewal invoice',async()=>{
  const f=scenario({invoices:2,pageSize:1});const {body}=await f.run();
  assert.equal(body.status,'active');assert.equal(body.renewals_confirmed,2);
  assert.equal(f.sent.filter(x=>x.name==='xrmovi_checkout_settle').length,2);
+});
+
+test('search HTTP 400 from optional paging safely retries GET without paging',async()=>{
+ const f=scenario({recordStatus:'pending',paidThrough:null,invoices:1,rejectPaging:true});
+ const {status,body}=await f.run();
+ assert.equal(status,200);
+ assert.equal(body.status,'active');
+ assert.equal(body.renewals_confirmed,1);
+ assert.equal(f.sent.filter(x=>x.kind==='fetch'&&x.url.includes('/authorized_payments/search')).length,2);
+ assert.ok(f.sent.filter(x=>x.kind==='fetch').every(x=>x.method==='GET'));
+});
+test('persistent Mercado Pago HTTP 400 never unlocks access or starts new subscription',async()=>{
+ const f=scenario({recordStatus:'pending',paidThrough:null,invoices:1,rejectAllInvoiceSearch:true});
+ const {status,body}=await f.run();
+ assert.equal(status,502);
+ assert.match(body.error,/faturas.+HTTP 400/);
+ assert.equal(f.sent.filter(x=>x.kind==='rpc'&&x.name==='xrmovi_checkout_settle').length,0);
+ assert.ok(f.sent.filter(x=>x.kind==='fetch').every(x=>x.method==='GET'));
 });
