@@ -1,7 +1,7 @@
 import{createClient}from 'https://esm.sh/@supabase/supabase-js@2.58.0';
 import { setupSubscriptionPanel } from './subscription-panel.js?v=20261105-plain-text-3';
 import { renewalNotice } from './renewal-reminder.js?v=20261103-reminders-2';
-import { showXrmoviOnboarding } from './onboarding.js?v=20261105-verify-on-start-4';
+import { showXrmoviOnboarding } from './onboarding.js?v=20261105-public-auto-check-5';
 import { createCompanyBranding } from './company-branding.js?v=20261029-logo-1';
 import { setupMileage } from './mileage.js?v=20261029-km-audit-34';
 import { createDocumentCenter } from './document-center.js?v=20261105-center-3';
