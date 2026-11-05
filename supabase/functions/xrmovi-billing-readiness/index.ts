@@ -22,7 +22,15 @@ Deno.serve(async (request:Request)=>{
  const anon=Deno.env.get('SUPABASE_ANON_KEY')||'';
  const url=Deno.env.get('SUPABASE_URL')||'';
  const configured=Deno.env.get('XRMOVI_BILLING_ENABLED')==='true'&&token.startsWith('APP_USR-')&&secret.length>=20&&service.length>20&&anon.length>20&&url.startsWith('https://');
- const pilotOnly=Deno.env.get('XRMOVI_BILLING_PILOT_ONLY')!=='false';
+ let publicLaunched=false;
+ if(configured){
+  try{
+   const admin=createClient(url,service,{auth:{persistSession:false}});
+   const {data,error}=await admin.from('xrmovi_billing_launch_control').select('public_enabled').eq('id',1).maybeSingle();
+   publicLaunched=!error&&data?.public_enabled===true;
+  }catch{publicLaunched=false}
+ }
+ const pilotOnly=Deno.env.get('XRMOVI_BILLING_PILOT_ONLY')!=='false'&&!publicLaunched;
  let pilotAllowed=false;
  if(configured&&pilotOnly){
   const auth=request.headers.get('authorization')||'';
