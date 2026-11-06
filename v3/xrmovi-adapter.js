@@ -226,7 +226,7 @@ renderMaintenanceWorkspace();}
 
 
 function renderFuelMonth(){const select=el('fuel-ranking-category'),month=el('fuel-ranking-month');if(!select||!month)return;if(!month.value)month.value=new Date().toISOString().slice(0,7);const prev=select.value;select.replaceChildren();const any=document.createElement('option');any.value='';any.textContent='Todas as categorias';select.append(any);for(const category of [...new Set(vehicles.map(v=>v.category).filter(Boolean))].sort()){const o=document.createElement('option');o.value=category;o.textContent=category;select.append(o)}select.value=[...select.options].some(o=>o.value===prev)?prev:'';renderFuelBars()}
-function renderFuelBars(){const root=el('fleet-fuel-ranking');if(!root)return;root.replaceChildren();if(financialState){root.textContent=financialState==='loading'?'Consultando abastecimentos…':'Não foi possível consultar os abastecimentos do mês selecionado.';renderFuelRecords([]);return}const cat=el('fuel-ranking-category')?.value||'',group=new Map();const entries=fuelEntries.filter(f=>{const v=vehicles.find(v=>v.id===f.vehicle_id);return v&&(!filteredVehicleIds||filteredVehicleIds.has(v.id))&&(!cat||v.category===cat)});for(const record of entries){const v=vehicles.find(v=>v.id===record.vehicle_id),prev=group.get(v.id)||{name:v.plate+' · '+(v.model||v.category||'Veículo'),cost:0};prev.cost+=Number(record.cost??record.total_cost??0);group.set(v.id,prev)}const rows=[...group.values()].sort((a,b)=>b.cost-a.cost);const peak=Math.max(1,...rows.map(r=>r.cost));for(let i=0;i<rows.length;i++){const v=rows[i],row=document.createElement('div');row.className='fleet-fuel-bar';const name=document.createElement('span');name.className='fleet-fuel-name';name.textContent=(i+1)+'º  '+v.name;const track=document.createElement('span');track.className='fleet-fuel-track';const fill=document.createElement('span');fill.style.width=100*v.cost/peak+'%';track.append(fill);const cost=document.createElement('strong');cost.textContent=v.cost.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});row.append(name,track,cost);root.append(row)}if(!rows.length){const p=document.createElement('p');p.className='fleet-history-note';p.textContent='Sem abastecimentos no mês e categoria selecionados.';root.append(p)}renderFuelRecords(entries)}
+function renderFuelBars(){const root=el('fleet-fuel-ranking');if(!root)return;root.replaceChildren();if(financialState){root.textContent=financialState==='loading'?'Consultando abastecimentos…':'Não foi possível consultar os abastecimentos do mês selecionado.';renderFuelRecords([]);return}const cat=el('fuel-ranking-category')?.value||'',group=new Map();const entries=fuelEntries.filter(f=>{const v=vehicles.find(v=>v.id===f.vehicle_id);return v&&(!filteredVehicleIds||filteredVehicleIds.has(v.id))&&(!cat||v.category===cat)});for(const record of entries){const v=vehicles.find(v=>v.id===record.vehicle_id),prev=group.get(v.id)||{name:v.plate+' · '+(v.model||v.category||'Veículo'),cost:0};prev.cost+=Number(record.cost??record.total_cost??0);group.set(v.id,prev)}const rows=[...group.values()].sort((a,b)=>b.cost-a.cost);const peak=Math.max(1,...rows.map(r=>r.cost));for(let i=0;i<rows.length;i++){const v=rows[i],row=document.createElement('div');row.className='fleet-fuel-bar';const name=document.createElement('span');name.className='fleet-fuel-name';name.textContent=(i+1)+'º  '+v.name;const track=document.createElement('span');track.className='fleet-fuel-track';const fill=document.createElement('span');fill.style.width=100*v.cost/peak+'%';track.append(fill);const cost=document.createElement('strong');cost.textContent=v.cost.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});row.append(name,track,cost);root.append(row)}if(!rows.length){const p=document.createElement('p');p.className='fleet-history-note';p.textContent='Sem abastecimentos no mês e categoria selecionados.';root.append(p)}renderFuelRecords(entries);renderFuelQuality(entries)}
 async function updateFuelMonth(){if(!company)return;const month=el('fuel-ranking-month')?.value;if(!/^\d{4}-\d{2}$/.test(month||''))return;const [year,m]=month.split('-').map(Number),from=month+'-01',to=new Date(year,m,0).toISOString().slice(0,10),id=company.id,request=++financeRequest;try{financialState='loading';fuelEntries=[];maintenanceExpenses=[];paidExpenses=[];applyVehicleFilters();const data=await rpc('cost_report',{cid:id,from_date:from,to_date:to,vid:null});if(company?.id!==id||el('fuel-ranking-month')?.value!==month||request!==financeRequest)return;financialState='';fuelEntries=data?.fuel||[];maintenanceExpenses=data?.maintenance||[];paidExpenses=data?.expenses||[];applyVehicleFilters()}catch(err){if(company?.id!==id||request!==financeRequest)return;financialState='error';fuelEntries=[];maintenanceExpenses=[];paidExpenses=[];applyVehicleFilters();msg('Falha ao consultar abastecimentos: '+err.message)}}
 if(el('fuel-ranking-month'))el('fuel-ranking-month').onchange=updateFuelMonth;
 if(el('fuel-ranking-category'))el('fuel-ranking-category').onchange=()=>{renderFuelBars();renderFilterSummary()};
@@ -618,7 +618,7 @@ const actions=document.createElement('div');actions.className='xrm-doc-actions';
 const documents=document.createElement('button');documents.type='button';documents.className='fleet-button';
 documents.textContent='Documentos';documents.onclick=()=>documentCenter?.openRecord('vehicle',v);
 actions.append(documents);
-if(canWrite()){const edit=document.createElement('button');edit.type='button';edit.className='fleet-button';edit.textContent='Editar';edit.onclick=()=>openWrite('vehicle',v);actions.append(edit);}
+if(canWrite()){const edit=document.createElement('button');edit.type='button';edit.className='fleet-button';edit.textContent=litersMissing(row)?'Corrigir litros':'Editar';edit.onclick=()=>openWrite('vehicle',v);actions.append(edit);}
 action.append(actions);tr.append(action);root.append(tr)}}
  put('table-count',filtered.length);put('table-page-info',filtered.length+' de '+vehicles.length+' ativos');const caption=el('filter-result');if(caption)caption.textContent=filtered.length+' de '+vehicles.length+' veículos exibidos';renderContractFinance(filtered);renderFuelBars();renderFleetHistory();renderVehicleDocuments(filtered);put('nav-alert-count',overdue+upcoming);put('alerts-total',overdue+upcoming);renderRegistries();appendExpenseAlerts();appendDriverAlerts();refreshOverdueKpi();renderFilterSummary();renderFleetInsights();mileage?.render();xrmAssistRefresh();
 }
@@ -651,7 +651,7 @@ function renderVehicleDocuments(_selected){
 }
 function renderFleetHistory(){
  const root=el('history-content'),form=el('history-filters');if(!root||!form)return;if(!form.elements.from.value&&!form.elements.to.value){form.elements.from.value=localDay(new Date(new Date().getFullYear(),new Date().getMonth(),1));form.elements.to.value=localDay(new Date())}renderFilterSummary();const from=form.elements.from.value,to=form.elements.to.value,kind=form.elements.kind.value;
- const rows=[...historyExpenses.map(e=>({vehicle_id:e.vehicle_id,kind:'expense',date:String(e.date||e.paid_on||'').slice(0,10),title:(expenseCategories[e.category]||'Despesa')+' · '+e.description+' · '+registryMoney(e.amount)})),...maintenance.map(m=>({vehicle_id:m.vehicle_id,kind:'maintenance',date:String(m.completed_at||m.created_at||m.due_date||'').slice(0,10),title:m.title+' · '+(m.status==='done'?'Concluída':'Programada')})),...historyFuelRows.map(f=>({vehicle_id:f.vehicle_id,kind:'fuel',date:String(f.fueled_on||f.fuel_date||f.date||f.created_at||'').slice(0,10),title:'Abastecimento · '+Number(f.cost??f.total_cost??0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}))].filter(r=>(!filteredVehicleIds||filteredVehicleIds.has(r.vehicle_id))&&(!kind||r.kind===kind)&&(!from||r.date>=from)&&(!to||r.date<=to)).sort((a,b)=>b.date.localeCompare(a.date));
+ const rows=[...historyExpenses.map(e=>({vehicle_id:e.vehicle_id,kind:'expense',date:String(e.date||e.paid_on||'').slice(0,10),title:(expenseCategories[e.category]||'Despesa')+' · '+e.description+' · '+registryMoney(e.amount)})),...maintenance.map(m=>({vehicle_id:m.vehicle_id,kind:'maintenance',date:String(m.completed_at||m.created_at||m.due_date||'').slice(0,10),title:m.title+' · '+(m.status==='done'?'Concluída':'Programada')})),...historyFuelRows.map(f=>({vehicle_id:f.vehicle_id,kind:'fuel',date:String(f.fueled_on||f.fuel_date||f.date||f.created_at||'').slice(0,10),title:'Abastecimento · '+Number(f.cost??f.total_cost??0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})+(litersMissing(f)?' · ⚠ Falta a quantidade de litros (não informado por decisão do usuário'+(f.liters_declined_email?' '+f.liters_declined_email:'')+')':'')}))].filter(r=>(!filteredVehicleIds||filteredVehicleIds.has(r.vehicle_id))&&(!kind||r.kind===kind)&&(!from||r.date>=from)&&(!to||r.date<=to)).sort((a,b)=>b.date.localeCompare(a.date));
  root.replaceChildren();for(const row of rows){const line=document.createElement('p');line.textContent=(row.date||'Sem data')+' · '+(vehicles.find(v=>v.id===row.vehicle_id)?.plate||'Veículo')+' · '+row.title;root.append(line)}put('history-count',rows.length);if(!rows.length)root.textContent='Nenhum registro no período e nos filtros selecionados.';
 }
 let historyRequest=0;
@@ -669,6 +669,26 @@ async function openFuelEditor(row){
    openWrite('fuel',data);
  }catch(error){msg('Não foi possível editar este abastecimento: '+error.message);}
 }
+function renderFuelQuality(entries){
+ const analysis=analyzeFuelQuality(entries);
+ let fuelNote=el('xrm-fuel-quality-note');
+ if(!fuelNote){fuelNote=document.createElement('div');fuelNote.id='xrm-fuel-quality-note';fuelNote.className='xrm-fuel-quality-note';fuelNote.setAttribute('role','status');el('fleet-fuel-records')?.before(fuelNote);}
+ let dashboardNote=el('xrm-dashboard-fuel-quality-note');
+ if(!dashboardNote){dashboardNote=document.createElement('div');dashboardNote.id='xrm-dashboard-fuel-quality-note';dashboardNote.className='xrm-fuel-quality-note';document.querySelector('.fleet-insight-stats')?.after(dashboardNote);}
+ const plates=analysis.perVehicle.filter(x=>x.hasOmission).map(x=>vehicles.find(v=>v.id===x.vehicleId)?.plate||'Veículo').slice(0,5);
+ const problem=analysis.missing>0;
+ const warning=problem?'Atenção: '+analysis.missing+' abastecimento(s) sem quantidade de litros em '+analysis.vehiclesAffected+' veículo(s)'+(plates.length?' ('+plates.join(', ')+')':'')+'. Consumo km/L pode estar incompleto. Corrija os registros no histórico de abastecimentos.':
+ analysis.total?'Litros preenchidos neste período. A média km/L é apenas indicativa: sem controle de tanque cheio, abastecimentos parciais podem distorcer o resultado.':
+ 'Sem abastecimentos no período. O consumo km/L não pode ser calculado.';
+ for(const element of [fuelNote,dashboardNote])if(element){element.textContent=warning;element.dataset.ok=String(!problem);}
+ const summaries=analysis.perVehicle.filter(x=>x.total>0).slice(0,12).map(x=>{
+  const name=vehicles.find(v=>v.id===x.vehicleId)?.plate||'Veículo';
+  return name+': '+(x.hasOmission?'litros pendentes':x.referenceKmL!=null?x.referenceKmL.toLocaleString('pt-BR',{maximumFractionDigits:2})+' km/L (estimativa)':'sem leituras suficientes');
+ });
+ let detail=el('xrm-fuel-quality-by-vehicle');
+ if(!detail){detail=document.createElement('p');detail.id='xrm-fuel-quality-by-vehicle';detail.className='fleet-history-note';fuelNote?.after(detail);}
+ if(detail)detail.textContent=summaries.length?'Referência de consumo por veículo: '+summaries.join(' · '):'';
+}
 function renderFuelRecords(entries){
  let root=el('fleet-fuel-records');
  if(!root){root=document.createElement('div');root.id='fleet-fuel-records';root.className='fleet-table-wrap';el('fleet-fuel-ranking')?.after(root);}
@@ -684,12 +704,20 @@ function renderFuelRecords(entries){
    const tr=document.createElement('tr');
    const plate=row.plate||vehicles.find(v=>v.id===row.vehicle_id)?.plate||'Veículo';
    for(const value of [plate,row.fueled_on||row.date||'—',
-     Number(row.liters||0).toLocaleString('pt-BR'),
+     litersMissing(row)?'Não informado':Number(row.liters).toLocaleString('pt-BR'),
      Number(row.cost??row.total_cost??0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}),
      row.station||'—']){
      const cell=document.createElement('td');cell.textContent=value;tr.append(cell);
    }
-   const docs=document.createElement('td');
+   if(litersMissing(row)){
+      const badge=document.createElement('small');badge.className='xrm-liters-missing';
+      badge.textContent='⚠ Falta a quantidade de litros';
+      badge.title='O usuário optou por não informar os litros. Registro auditado e corrigível.';
+      tr.children[2]?.append(badge);
+      const date=String(row.liters_declined_at||'');
+      if(date){const meta=document.createElement('small');meta.style.display='block';meta.textContent='Omissão: '+new Date(date).toLocaleString('pt-BR')+' · '+(row.liters_declined_email||'usuário registrado');tr.children[2]?.append(meta);}
+    }
+    const docs=document.createElement('td');
    const receipt=document.createElement('button');receipt.type='button';
    receipt.className='fleet-button';receipt.textContent='Ver / anexar';
    receipt.onclick=async()=>{
@@ -1031,7 +1059,7 @@ function xrmFinancialExportRows(){
  const ids=new Set(vehicles.filter(v=>!filteredVehicleIds||filteredVehicleIds.has(v.id)).map(v=>v.id));
  const plate=id=>vehicles.find(v=>v.id===id)?.plate||'Veículo';
  return [
-  ...fuelEntries.filter(x=>ids.has(x.vehicle_id)).map(x=>[x.fueled_on||x.date||'',plate(x.vehicle_id),'Combustível','Abastecimento'+(x.station?' - '+x.station:''),Number(x.cost??x.total_cost??0)]),
+  ...fuelEntries.filter(x=>ids.has(x.vehicle_id)).map(x=>[x.fueled_on||x.date||'',plate(x.vehicle_id),'Combustível','Abastecimento'+(x.station?' - '+x.station:'')+(litersMissing(x)?' · LITROS NÃO INFORMADOS (declaração do usuário em '+(x.liters_declined_at?new Date(x.liters_declined_at).toLocaleString('pt-BR'):'data não informada')+(x.liters_declined_email?' por '+x.liters_declined_email:'')+')':''),Number(x.cost??x.total_cost??0)]),
   ...maintenanceExpenses.filter(x=>ids.has(x.vehicle_id)).map(x=>[x.completed_at||x.date||'',plate(x.vehicle_id),'Manutenção realizada',x.title||'Manutenção',Number(x.actual_cost||0)]),
   ...paidExpenses.filter(x=>ids.has(x.vehicle_id)).map(x=>[x.paid_on||x.date||'',plate(x.vehicle_id),'Despesa paga',(expenseCategories[x.category]||'Despesa')+' - '+(x.description||''),Number(x.amount||0)])
  ].sort((a,b)=>String(a[0]).localeCompare(String(b[0])));
