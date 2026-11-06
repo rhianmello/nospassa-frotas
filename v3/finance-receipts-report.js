@@ -175,8 +175,7 @@ export function buildFuelEvidenceHtml({companyName='',range='',rows=[],groups=[]
   }).join('');
   pages+='<section class="vehicle page-break"><h2>Veículo: '+e(vehicle.plate)+'</h2>'+
    '<div class="sub">Modelo: '+e(vehicle.model||'—')+' · '+vehicle.entries.length+
-   ' abastecimento(s) · '+e(vehicle.liters.toLocaleString('pt-BR'))+
-   ' litros · Total: '+e(money(vehicle.total))+'</div>'+
+   ' abastecimento(s) · '+(vehicle.entries.some(x=>x.litersDeclined)?e(vehicle.liters.toLocaleString('pt-BR'))+' L informados · '+vehicle.entries.filter(x=>x.litersDeclined).length+' sem informação de litros':e(vehicle.liters.toLocaleString('pt-BR'))+' litros')+' · Total: '+e(money(vehicle.total))+'</div>'+
    '<table><thead><tr><th>Data</th><th>Posto</th><th>Litros</th><th>Valor</th><th>Comprovantes</th></tr></thead>'+
    '<tbody>'+local+'</tbody></table></section>';
   for(const fuel of vehicle.entries)for(const doc of fuel.documents){
