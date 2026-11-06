@@ -689,7 +689,7 @@ function renderConsumptionDashboard(){
   (rows.length?'Ainda não há pares de abastecimentos com KM e litros suficientes para calcular o consumo.':'Nenhum abastecimento localizado no histórico dos veículos filtrados.');
  for(const item of rows.slice(0,12)){
   const vehicle=vehicles.find(v=>v.id===item.vehicleId);
-  const tile=document.createElement('button');tile.type='button';tile.className='xrm-consumption-card';
+  const tile=document.createElement('button');tile.type='button';tile.className='xrm-consumption-card';tile.dataset.state=item.hasOmission?'incomplete':item.referenceKmL!=null?'estimated':'insufficient';
   const label=document.createElement('span');label.textContent=(vehicle?.plate||'Veículo')+' · '+(vehicle?.model||vehicle?.category||'');
   const value=document.createElement('strong');value.textContent=item.referenceKmL!=null?
     item.referenceKmL.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+' km/L':'— km/L';
@@ -697,7 +697,8 @@ function renderConsumptionDashboard(){
     item.missing+' abastecimento(s) sem litros · média indisponível':
     item.referenceKmL!=null?item.usedIntervals+' intervalo(s) válido(s) · estimativa':
     'Necessário registrar ao menos 2 abastecimentos com KM crescente e litros informados';
-  tile.append(label,value,status);tile.onclick=()=>page('fuel');root.append(tile);
+  const chip=document.createElement('span');chip.className='xrm-consumption-chip';chip.textContent=item.hasOmission?'Litros pendentes':item.referenceKmL!=null?'Média estimada':'Dados insuficientes';
+  tile.append(chip,label,value,status);tile.onclick=()=>page('fuel');root.append(tile);
  }
  if(rows.length>12){const note=document.createElement('p');note.textContent='Exibindo 12 de '+rows.length+' veículos com abastecimentos no histórico.';root.append(note);}
 }
