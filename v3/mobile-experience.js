@@ -173,7 +173,7 @@
     document.body.append(bottom);
 
     const mainViews=[
-      ['dashboard','home','Visão Geral'],['assets','car','Ativos / Veículos'],
+      ['dashboard','home','Visão Geral'],['assets','car','Ativos / Veículos'],['mileage','clock','KM e Troca de Óleo'],
       ['maintenance','wrench','Manutenção / Despesas'],['drivers','users','Motoristas'],
       ['documents','document','Documentos'],['alerts','bell','Alertas'],
       ['history','history','Histórico'],['fuel','fuel','Abastecimentos'],
@@ -186,7 +186,7 @@
       {label:'Programar manutenção',view:'maintenance',selector:'#maintenance-new',icon:'wrench'},
       {label:'Registrar despesa',view:'maintenance',selector:'#expense-new',icon:'credit'},
       {label:'Registrar multa',view:'fines',selector:'#xrm-fines-add',icon:'document'},
-      {label:'Atualizar KM',view:'assets',selector:'#xrm-mileage-nav',icon:'clock',always:true},
+      {label:'Atualizar KM',view:'mileage',selector:'#xrm-mileage-nav',icon:'clock',always:true},
       {label:'Emitir relatório',view:'financial',icon:'chart',always:true}
     ];
     const sheet=document.createElement('section');
