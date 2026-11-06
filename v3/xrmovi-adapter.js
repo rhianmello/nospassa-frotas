@@ -6,6 +6,7 @@ import { createCompanyBranding } from './company-branding.js?v=20261029-logo-1';
 import { setupMileage } from './mileage.js?v=20261029-km-audit-34';
 import { createDocumentCenter } from './document-center.js?v=20261105-mobile-preview-v41-3';
 import { printFuelEvidenceReport } from './finance-receipts-report.js?v=20261105-receipts-1';
+import { analyzeFuelQuality, litersMissing } from './fuel-quality.js?v=20261105-liter-audit-1';
 let branding;
 let mileage=null;
 let subscriptionPanel=null;
@@ -234,7 +235,9 @@ let v3Editing=null;
 const v3Overlay=document.createElement('div');v3Overlay.id='v3-edit-overlay';v3Overlay.hidden=true;v3Overlay.innerHTML='<div class="v3-edit-dialog" role="dialog" aria-modal="true" aria-labelledby="v3-edit-title"><div class="v3-edit-heading"><h2 id="v3-edit-title">Registro</h2><button id="v3-edit-close" type="button" aria-label="Fechar">×</button></div><form id="v3-edit-form"></form><p id="v3-edit-feedback" role="status"></p></div>';
 document.body.append(v3Overlay);
 const v3Style=document.createElement('style');v3Style.textContent='#v3-edit-overlay{position:fixed;inset:0;z-index:1000;background:#07111fe8;display:grid;place-items:center;padding:20px}#v3-edit-overlay[hidden]{display:none!important}.v3-edit-dialog{width:min(610px,96vw);max-height:91vh;overflow:auto;background:#10273c;border:1px solid #40617c;border-radius:16px;padding:23px;color:#edf7ff;font:13px system-ui;box-shadow:0 20px 70px #0008}.v3-edit-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}.v3-edit-heading h2{font-size:21px}.v3-edit-heading button{background:#1c4058;color:#fff;border:1px solid #426980;border-radius:8px;font-size:24px;padding:0 10px}.v3-edit-dialog form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.v3-edit-dialog label{display:grid;gap:5px;font-size:11px;color:#afc8da}.v3-edit-dialog input,.v3-edit-dialog select{width:100%;min-width:0;padding:10px;border-radius:8px;background:#091b2e;color:#fff;border:1px solid #43647a}.v3-edit-dialog .wide{grid-column:1/-1}.v3-edit-dialog form button{border:0;border-radius:9px;background:#34cdb5;color:#052128;font-weight:800;padding:12px;grid-column:1/-1}.v3-write-actions{display:flex;flex-wrap:wrap;gap:9px;margin:14px 0}.v3-write-actions button{background:#143951;color:#daf1fc;border:1px solid #36617b;border-radius:8px;padding:10px 13px;font:600 12px system-ui}.v3-write-actions button:disabled{opacity:.45;cursor:not-allowed}@media(max-width:530px){.v3-edit-dialog form{grid-template-columns:1fr}.v3-edit-dialog label{grid-column:1}}';
-document.head.append(v3Style);
+const fuelStyle=document.createElement('style');
+fuelStyle.textContent='.v3-edit-dialog .xrm-fuel-acknowledgement{display:flex;flex-direction:row;align-items:flex-start;gap:11px;padding:13px;border:1px solid #b8754e;border-radius:10px;background:#3c2a24;color:#ffdecb;font-size:12px;line-height:1.5}.v3-edit-dialog .xrm-fuel-acknowledgement[hidden]{display:none!important}.v3-edit-dialog .xrm-fuel-acknowledgement input{flex:none;width:19px;height:19px;margin-top:2px;accent-color:#34cdb5}.v3-edit-dialog .xrm-fuel-data-helper{margin:0;color:#b7d7e6;font-size:11px;line-height:1.5}.xrm-fuel-quality-note{border:1px solid #a57f46;background:rgba(101,70,27,.16);border-radius:10px;padding:12px 14px;margin:10px 0;color:#ffdf9c;font:12px/1.6 system-ui}.xrm-fuel-quality-note[data-ok="true"]{border-color:#357764;background:#12352b;color:#b9f6de}.xrm-liters-missing{display:block;color:#ffd28b;font-weight:700;font-size:11px;margin-top:5px}';
+document.head.append(v3Style,fuelStyle);
 const v3DriverStyle=document.createElement('style');
 v3DriverStyle.textContent=`
 .v3-edit-dialog .v3-driver-search{position:relative;align-content:start}
@@ -327,13 +330,37 @@ else{
  }else{
    form.append(
     field('date','Data','date',String(record?.date||record?.fueled_on||localDay(new Date())).slice(0,10),true),
-    field('liters','Litros','number',record?.liters??'',true),
+    field('liters','Quantidade de litros *','number',record?.liters??'',true),
     field('cost','Valor total (R$)','number',record?.cost??'',true),
     field('meter','KM/H no abastecimento','number',record?.meter??''),
     field('station','Posto','text',record?.station||''),
     field('notes','Observações','text',record?.notes||'')
    );
    form.elements.liters.min='0.001';form.elements.liters.step='0.001';
+    const choice=document.createElement('label');choice.className='wide';choice.textContent='Como deseja registrar os litros? *';
+    const mode=document.createElement('select');mode.name='liters_mode';mode.required=true;
+    for(const [value,label] of [['informed','Informar a quantidade de litros'],['declined','Não vou informar — assumo responsabilidade']]){
+      const option=document.createElement('option');option.value=value;option.textContent=label;mode.append(option);
+    }
+    mode.value=record?.liters==null&&record?.liters_declined?'declined':'informed';
+    choice.append(mode);
+    const acknowledgement=document.createElement('label');acknowledgement.className='wide xrm-fuel-acknowledgement';
+    const check=document.createElement('input');check.type='checkbox';check.name='liters_ack';check.value='accepted';
+    check.checked=Boolean(record?.liters_declined);
+    const acknowledgeText=document.createElement('span');
+    acknowledgeText.textContent='Confirmo que optei por NÃO informar os litros e assumo responsabilidade pela ausência desse dado. Minha decisão, usuário e data ficarão registrados e o indicador de consumo será sinalizado como incompleto.';
+    acknowledgement.append(check,acknowledgeText);
+    const helper=document.createElement('p');helper.className='wide xrm-fuel-data-helper';
+    helper.textContent='Os litros são obrigatórios. A opção de não informar exige confirmação expressa e ficará visível no histórico e nos relatórios. É possível corrigir depois.';
+    form.elements.liters.closest('label').after(choice,acknowledgement,helper);
+    const syncFuelMode=()=>{
+      const declined=mode.value==='declined';
+      acknowledgement.hidden=!declined;check.required=declined;
+      form.elements.liters.required=!declined;form.elements.liters.disabled=declined;
+      if(declined)form.elements.liters.value='';
+      if(!declined)check.checked=false;
+    };
+    mode.addEventListener('change',syncFuelMode);syncFuelMode();
    form.elements.cost.min='0';form.elements.cost.step='0.01';
    form.elements.station.maxLength=120;form.elements.notes.maxLength=1000;
    if(kind==='fuel'&&record?.id){
@@ -355,7 +382,7 @@ else{
          entries.replaceChildren();
          for(const item of changes||[]){
            const p=document.createElement('p');
-           const fields=[['vehicle_id','Veículo'],['date','Data'],['liters','Litros'],
+           const fields=[['vehicle_id','Veículo'],['date','Data'],['liters','Litros'],['liters_declined','Omissão declarada'],
              ['cost','Valor (R$)'],['meter','KM/H'],['station','Posto'],['notes','Observações']];
            const differences=fields.flatMap(([key,label])=>{
              const oldValue=item.before?.[key]??'',newValue=item.after?.[key]??'';
@@ -400,13 +427,17 @@ if(kind==='vehicle'){
 }
 if(kind==='maintenance'){if(!str('due_date')&&num('due_meter')===null)throw Error('Informe data ou KM/H de vencimento.');const taskId=draft.savedTaskId||await rpc('maintenance_save',{cid:companyId,vid:str('vehicle'),task_title:str('title'),deadline:str('due_date')||null,deadline_meter:num('due_meter'),detail:str('notes')});draft.savedTaskId=taskId;draft.savedRecordId=taskId;if(num('estimate')!==null)await rpc('maintenance_set_cost',{cid:companyId,tid:taskId,forecast:num('estimate'),spent:null,final_meter:null})}
 if(kind==='fuel'){
- if(!(num('liters')>0)||num('cost')===null)throw Error('Informe litros e valor válidos.');
+ const omitted=str('liters_mode')==='declined';
+  if(omitted){if(str('liters_ack')!=='accepted')throw Error('Confirme expressamente a decisão de não informar os litros.');}
+  else if(!(num('liters')>0))throw Error('A quantidade de litros é obrigatória e deve ser maior que zero.');
+  if(num('cost')===null)throw Error('Informe um valor de abastecimento válido.');
  if(record?.id){
    const selectedAttachment=form.get('record_attachment');
    const hasFile=selectedAttachment instanceof File&&selectedAttachment.size>0;
    const changed=str('vehicle')!==record.vehicle_id
      ||str('date')!==String(record.date||record.fueled_on).slice(0,10)
-     ||num('liters')!==Number(record.liters)
+     ||num('liters')!==(record.liters==null?null:Number(record.liters))
+      ||omitted!==Boolean(record.liters_declined)
      ||num('cost')!==Number(record.cost)
      ||num('meter')!==(record.meter==null?null:Number(record.meter))
      ||str('station')!==String(record.station||'').trim()
@@ -414,8 +445,8 @@ if(kind==='fuel'){
    if(!changed&&!hasFile)throw Error('Nenhuma alteração identificada. Para anexar um comprovante, selecione um arquivo.');
    if(changed){
      if(str('change_reason').length<3)throw Error('Informe o motivo da alteração (mínimo 3 caracteres).');
-     await rpc('fuel_update',{
-       cid:companyId,fid:record.id,p_vehicle:str('vehicle'),p_date:str('date'),
+     await rpc('fuel_update_v2',{
+        p_decline:omitted,       cid:companyId,fid:record.id,p_vehicle:str('vehicle'),p_date:str('date'),
        p_liters:num('liters'),p_cost:num('cost'),p_meter:num('meter'),
        p_station:str('station'),p_notes:str('notes'),
        p_expected_revision:record.revision,p_reason:str('change_reason')
@@ -423,8 +454,8 @@ if(kind==='fuel'){
    }
    draft.savedRecordId=record.id;
  }else{
-   draft.savedRecordId=await rpc('fuel_save',{
-     cid:companyId,vid:str('vehicle'),f_date:str('date'),
+   draft.savedRecordId=await rpc('fuel_save_v2',{
+      p_decline:omitted,     cid:companyId,vid:str('vehicle'),f_date:str('date'),
      qty:num('liters'),cost:num('cost'),meter:num('meter'),
      station_name:str('station'),detail:str('notes')
    });
