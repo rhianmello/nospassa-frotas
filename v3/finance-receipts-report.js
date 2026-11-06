@@ -27,7 +27,9 @@ export function buildFuelEvidenceGroups({companyId,vehicles=[],fuelEntries=[],ca
   });
   byVehicle.get(f.vehicle_id).entries.push({
    id:f.id,vehicle_id:f.vehicle_id,date:String(f.fueled_on||f.date||'').slice(0,10),
-   station:String(f.station||''),liters:Number(f.liters||0),
+   station:String(f.station||''),liters:f.liters==null?null:Number(f.liters),
+    litersDeclined:f.liters==null||f.liters_declined===true,
+    declinedAt:String(f.liters_declined_at||''),declinedBy:String(f.liters_declined_email||''),
    cost:Number(f.cost??f.total_cost??0),documents:[]
   });
  }
@@ -50,7 +52,7 @@ export function buildFuelEvidenceGroups({companyId,vehicles=[],fuelEntries=[],ca
   group.entries.sort((a,b)=>a.date.localeCompare(b.date)||a.id.localeCompare(b.id));
   for(const fuel of group.entries)fuel.documents.sort((a,b)=>a.created_at.localeCompare(b.created_at));
   group.total=group.entries.reduce((sum,f)=>sum+f.cost,0);
-  group.liters=group.entries.reduce((sum,f)=>sum+f.liters,0);
+  group.liters=group.entries.reduce((sum,f)=>sum+(f.liters??0),0);
  }
  return groups;
 }
@@ -165,7 +167,9 @@ export function buildFuelEvidenceHtml({companyName='',range='',rows=[],groups=[]
   const local=vehicle.entries.map(f=>{
    const count=f.documents.reduce((n,d)=>n+d.pages.length,0);
    return '<tr><td>'+e(displayDate(f.date))+'</td><td>'+e(f.station||'—')+
-    '</td><td class="value">'+e(f.liters.toLocaleString('pt-BR'))+
+    '</td><td class="value">'+(f.litersDeclined?
+    '<strong>Não informado</strong><small> · Declaração registrada '+e(f.declinedAt?new Date(f.declinedAt).toLocaleString('pt-BR'):'(data indisponível)')+
+    (f.declinedBy?' · '+e(f.declinedBy):'')+'</small>':e(f.liters.toLocaleString('pt-BR')))+
     '</td><td class="value">'+e(money(f.cost))+
     '</td><td>'+e(count?count+' página(s)':'Sem comprovante')+'</td></tr>';
   }).join('');
@@ -184,7 +188,7 @@ export function buildFuelEvidenceHtml({companyName='',range='',rows=[],groups=[]
      '<div class="eyebrow">XRMOVI · COMPROVANTE DE ABASTECIMENTO</div>'+
      '<h2>'+e(vehicle.plate)+' · '+e(displayDate(fuel.date))+'</h2>'+
      '<div class="receipt-metrics"><span>Posto: '+e(fuel.station||'—')+
-     '</span><span>Litros: '+e(fuel.liters.toLocaleString('pt-BR'))+
+     '</span><span>Litros: '+(fuel.litersDeclined?'Não informado (omissão registrada)':e(fuel.liters.toLocaleString('pt-BR')))+
      '</span><span>Valor: '+e(money(fuel.cost))+'</span></div>'+
      '<div class="filename">Arquivo: '+e(doc.name)+' · Página '+(index+1)+' de '+
      doc.pages.length+' · ID do abastecimento: '+e(fuel.id)+'</div>'+
@@ -202,7 +206,7 @@ export function buildFuelEvidenceHtml({companyName='',range='',rows=[],groups=[]
   '</div></div></header><div class="totals">'+cards+'</div>'+
   '<table><thead><tr><th>Data</th><th>Veículo</th><th>Tipo</th><th>Descrição</th><th>Valor</th></tr></thead>'+
   '<tbody>'+financialTable+'</tbody></table>'+
-  '<div class="foot">'+rows.length+' lançamento(s) · '+groups.length+
+  '<div class="foot">'+rows.length+' lançamento(s) · '+groups.reduce((n,g)=>n+g.entries.filter(f=>f.litersDeclined).length,0)+' abastecimento(s) com litros omitidos (consumo potencialmente incompleto) · '+groups.length+
   ' veículo(s) abastecido(s) · '+proofPages+' página(s) com comprovantes · Valores em reais</div>'+
   '</section>'+pages+'</body></html>';
  return html;
