@@ -45,6 +45,17 @@ test('the evidence report labels missing liters and explicitly records actor and
  assert.ok(html.includes('abastecimento(s) com litros omitidos'));
  assert.doesNotMatch(html,/0 litros · Total/);
 });
+test('vehicle dashboard does not reference the fuel row variable',()=>{
+ const adapter=read('v3/xrmovi-adapter.js');
+ const start=adapter.indexOf('function applyVehicleFilters(){');
+ const end=adapter.indexOf("for(const id of ['fleet-search'",start);
+ assert.ok(start>0&&end>start,'dashboard filter section must be present');
+ const dashboard=adapter.slice(start,end);
+ assert.ok(!dashboard.includes('litersMissing(row)'), 'vehicle rows must never access undefined fuel row');
+ assert.ok(dashboard.includes("edit.textContent='Editar';edit.onclick=()=>openWrite('vehicle',v)"));
+ const fuelTable=adapter.slice(adapter.indexOf('function renderFuelRecords('),adapter.indexOf('function renderMaintenanceWorkspace('));
+ assert.ok(fuelTable.includes("edit.textContent=litersMissing(row)?'Corrigir litros':'Editar'"));
+});
 test('the V3 forms send explicit choice to protected RPCs, reports label omissions',()=>{
  const adapter=read('v3/xrmovi-adapter.js');
  for(const text of ['fuel_save_v2','fuel_update_v2','p_decline:omitted','liters_ack',
