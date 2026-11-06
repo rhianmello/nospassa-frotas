@@ -177,7 +177,7 @@
       ['maintenance','wrench','Manutenção / Despesas'],['drivers','users','Motoristas'],
       ['documents','document','Documentos'],['alerts','bell','Alertas'],
       ['history','history','Histórico'],['fuel','fuel','Abastecimentos'],
-      ['financial','chart','Relatórios'],['subscription','credit','Minha assinatura']
+      ['fines','document','Multas e Infrações'],['financial','chart','Relatórios'],['subscription','credit','Minha assinatura']
     ];
     const quickActions=[
       {label:'Cadastrar ativo',view:'assets',selector:'#assets-actions button',icon:'car'},
@@ -185,6 +185,7 @@
       {label:'Lançar abastecimento',view:'fuel',selector:'#fuel-actions button',icon:'fuel'},
       {label:'Programar manutenção',view:'maintenance',selector:'#maintenance-new',icon:'wrench'},
       {label:'Registrar despesa',view:'maintenance',selector:'#expense-new',icon:'credit'},
+      {label:'Registrar multa',view:'fines',selector:'#xrm-fines-add',icon:'document'},
       {label:'Atualizar KM',view:'assets',selector:'#xrm-mileage-nav',icon:'clock',always:true},
       {label:'Emitir relatório',view:'financial',icon:'chart',always:true}
     ];
