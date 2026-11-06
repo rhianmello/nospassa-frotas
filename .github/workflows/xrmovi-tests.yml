@@ -26,6 +26,10 @@ on:
       - 'v3/xrmovi-local-assistant.css'
       - 'v3/tests/assistant-layout.test.cjs'
       - 'v3/index.html'
+      - 'v3/mileage.js'
+      - 'v3/vehicle-export.js'
+      - 'v3/vehicle-export.css'
+      - 'v3/tests/vehicle-export.test.cjs'
       - 'v3/payment-email-notice.js'
       - 'v3/onboarding.js'
       - 'v3/subscription-panel.js'
@@ -65,6 +69,10 @@ on:
       - 'v3/xrmovi-local-assistant.css'
       - 'v3/tests/assistant-layout.test.cjs'
       - 'v3/index.html'
+      - 'v3/mileage.js'
+      - 'v3/vehicle-export.js'
+      - 'v3/vehicle-export.css'
+      - 'v3/tests/vehicle-export.test.cjs'
       - 'v3/payment-email-notice.js'
       - 'v3/onboarding.js'
       - 'v3/subscription-panel.js'
@@ -97,6 +105,11 @@ jobs:
           node --check analytics/xrmovi-bridge.js
       - name: Validate adapter JavaScript syntax
         run: node --check v3/xrmovi-adapter.js
+      - name: Check vehicle Excel report and separate KM navigation
+        run: |
+          node --check v3/vehicle-export.js
+          node --check v3/mileage.js
+          node --test v3/tests/vehicle-export.test.cjs
       - name: Verify missing fuel liters declaration, reports and consumption estimates
         run: |
           node --check v3/fuel-quality.js
