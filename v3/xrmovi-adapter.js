@@ -546,21 +546,24 @@ function renderFleetInsights(){
    const vid=row.value.vehicle_id;
    group.set(vid,(group.get(vid)||0)+amount(row.value,row.fields));
   }
-  const ranking=scopedVehicles.map(v=>({plate:v.plate||'Ativo',value:group.get(v.id)||0})).filter(v=>v.value>0).sort((a,b)=>b.value-a.value).slice(0,3);
+  const ranking=scopedVehicles.map(v=>({id:v.id,plate:v.plate||'Ativo',model:v.model||v.category||'',value:group.get(v.id)||0})).filter(v=>v.value>0).sort((a,b)=>b.value-a.value).slice(0,3);
   if(!ranking.length){
    const empty=document.createElement('p');empty.className='fleet-insight-empty';empty.textContent='Nenhum custo registrado para os veículos e período selecionados.';root.append(empty);
   }else{
    const max=Math.max(1,...ranking.map(v=>v.value));
    for(const [i,item] of ranking.entries()){
     const row=document.createElement('div');row.className='fleet-insight-rank';
-    const name=document.createElement('span');name.className='fleet-insight-rank-name';name.textContent=(i+1)+'º '+item.plate;
+    const name=document.createElement('span');name.className='fleet-insight-rank-name';name.textContent=(i+1)+'º '+(item.model?item.model+' · ':'')+item.plate;
+    row.dataset.vehicleId=item.id;
     const track=document.createElement('span');track.className='fleet-insight-rank-track';
     const fill=document.createElement('span');fill.style.width=(item.value/max*100).toFixed(1)+'%';track.append(fill);
     const value=document.createElement('strong');value.textContent=money(item.value);
-    row.append(name,track,value);root.append(row);
+    const efficiency=document.createElement('strong');efficiency.className='fleet-insight-rank-efficiency';efficiency.textContent='— km/L';efficiency.title='Consultando média estimada de consumo';
+    row.append(name,track,value,efficiency);root.append(row);
    }
   }
  }
+ renderConsumptionDashboard();
  driversRoot.replaceChildren();
  const hasFilters=['fleet-search','xrm-filter-category','xrm-filter-status','xrm-filter-expiry','xrm-contract-filter'].some(id=>Boolean(el(id)?.value));
  const scopedIds=hasFilters?new Set(scopedVehicles.map(v=>v.driver_id).filter(Boolean)):null;
@@ -674,29 +677,27 @@ async function openFuelEditor(row){
 }
 
 function renderConsumptionDashboard(){
- const root=el('xrm-consumption-vehicles');if(!root)return;
- root.replaceChildren();
- const info=text=>{const p=document.createElement('p');p.className='fleet-insight-empty';p.textContent=text;root.append(p);};
- if(consumptionState==='loading'){info('Consultando consumo...');return;}
- if(consumptionState==='error'){info('Não foi possível consultar o consumo. Atualize para tentar novamente.');return;}
- const allowed=filteredVehicleIds||new Set(vehicles.map(v=>v.id));
- const quality=analyzeFuelQuality(fuelConsumptionEntries.filter(r=>allowed.has(r.vehicle_id)));
- const records=quality.perVehicle.filter(x=>x.total>0).sort((a,b)=>(b.referenceKmL!=null)-(a.referenceKmL!=null)||b.total-a.total);
- if(!records.length){info('Sem abastecimentos nos últimos 6 meses.');return;}
- for(const item of records.slice(0,10)){
-  const vehicle=vehicles.find(v=>v.id===item.vehicleId);
-  const row=document.createElement('button');row.type='button';row.className='fleet-insight-consumption-row';
-  row.onclick=()=>page('fuel');
-  const name=document.createElement('span');name.className='fleet-insight-consumption-name';
-  name.textContent=(vehicle?.plate||'Veículo')+' · '+(vehicle?.model||vehicle?.category||'');
-  const value=document.createElement('strong');value.className='fleet-insight-consumption-value';
-  value.textContent=item.referenceKmL==null?'— km/L':item.referenceKmL.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+' km/L';
-  if(item.hasOmission){value.classList.add('incomplete');row.title='Existem registros sem litros informados';}
-  else if(item.referenceKmL==null){value.classList.add('incomplete');row.title='São necessários dois abastecimentos com KM e litros válidos';}
-  else row.title='Média indicativa; abastecimentos parciais podem distorcer o resultado';
-  row.append(name,value);root.append(row);
+ const root=el('fleet-insight-cost-ranking');if(!root)return;
+ const rows=[...root.querySelectorAll('.fleet-insight-rank[data-vehicle-id]')];
+ if(!rows.length)return;
+ const selected=filteredVehicleIds||new Set(vehicles.map(v=>v.id));
+ const quality=consumptionState===''?
+   analyzeFuelQuality(fuelConsumptionEntries.filter(item=>selected.has(item.vehicle_id))):null;
+ const byVehicle=new Map((quality?.perVehicle||[]).map(item=>[String(item.vehicleId),item]));
+ for(const row of rows){
+  const value=row.querySelector('.fleet-insight-rank-efficiency');if(!value)continue;
+  value.classList.remove('is-unavailable');
+  if(consumptionState==='loading'){value.textContent='… km/L';value.title='Consultando consumo';continue;}
+  if(consumptionState==='error'){value.textContent='— km/L';value.classList.add('is-unavailable');value.title='Não foi possível consultar o consumo';continue;}
+  const result=byVehicle.get(row.dataset.vehicleId);
+  if(result?.referenceKmL!=null){
+   value.textContent=result.referenceKmL.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+' km/L';
+   value.title='Média estimada nos últimos 6 meses; abastecimentos parciais podem distorcer o cálculo';
+  }else{
+   value.textContent='— km/L';value.classList.add('is-unavailable');
+   value.title=result?.hasOmission?'Há abastecimentos sem quantidade de litros':'É necessário registrar pelo menos dois abastecimentos com quilometragem e litros válidos';
+  }
  }
- if(records.length>10)info('Exibindo 10 de '+records.length+' veículos.');
 }
 async function refreshConsumptionHistory(){
  if(!company?.id)return;
