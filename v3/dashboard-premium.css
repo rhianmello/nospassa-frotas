@@ -60,3 +60,34 @@
 @media(max-width:900px){#view-dashboard .fleet-insights-grid{grid-template-columns:1fr!important}}
 @media(max-width:520px){#view-dashboard .xrm-consumption-panel .fleet-insight-header,#view-dashboard .fleet-insight-card .fleet-insight-header{padding:13px!important;gap:8px}#view-dashboard .xrm-consumption-grid{padding:10px 12px 13px}#view-dashboard .xrm-consumption-summary{margin:10px 12px 0!important}#view-dashboard .fleet-insight-stats{padding:10px 12px!important;gap:7px!important}#view-dashboard .fleet-insight-stat{min-height:76px!important;padding:10px!important}#view-dashboard .fleet-insight-stat strong{font-size:19px!important}#view-dashboard .fleet-insight-driver-list{padding:10px 12px!important}#view-dashboard .fleet-insight-driver{grid-template-columns:36px minmax(0,1fr)!important;padding:11px!important}#view-dashboard .fleet-insight-avatar{width:35px!important;height:35px!important}#view-dashboard .fleet-insight-expiry{grid-column:2;justify-self:start}#view-dashboard .fleet-insight-rank{grid-template-columns:minmax(65px,90px) minmax(0,1fr) auto!important;gap:6px!important;padding:7px!important}}
 @media(prefers-reduced-motion:reduce){#view-dashboard .xrm-consumption-card,#view-dashboard .fleet-link-button{transition:none!important}}
+
+/* v2: exact surface language shared with the five executive KPI cards.
+   Override the prior extra-blue gradients to restore one coherent dashboard. */
+#view-dashboard .xrm-consumption-panel,
+#view-dashboard .fleet-insights-grid>.fleet-insight-card{
+  background:linear-gradient(150deg,#0d2033,#0a1726)!important;
+  border:1px solid rgba(82,143,181,.25)!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.025),0 10px 26px rgba(0,0,0,.11)!important;
+  border-radius:12px!important;
+}
+#view-dashboard .xrm-consumption-panel:before,
+#view-dashboard .fleet-insights-grid>.fleet-insight-card:before{
+  left:0;right:0;height:2px;
+  background:linear-gradient(90deg,rgba(56,189,248,.72),rgba(45,212,191,.3),transparent);
+  opacity:.8;
+}
+#view-dashboard .xrm-consumption-card,
+#view-dashboard .fleet-insight-stat,
+#view-dashboard .fleet-insight-driver{
+  background:linear-gradient(150deg,#0d2033,#0a1726)!important;
+  border:1px solid rgba(79,137,172,.27)!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.025),0 6px 14px rgba(0,0,0,.08)!important;
+}
+#view-dashboard .fleet-insight-rank{background:rgba(8,27,43,.65)!important}
+#view-dashboard .xrm-consumption-summary{
+  background:rgba(10,39,54,.72)!important;
+  border-color:rgba(56,189,248,.22)!important;
+}
+#view-dashboard #xrm-dashboard-fuel-quality-note[data-ok="true"]{
+  background:rgba(14,52,43,.7)!important;
+}
