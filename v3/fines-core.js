@@ -66,6 +66,19 @@ export function fineSummary(records,todayIso){
   overdue:fineDeadlineEvents(list,todayIso).filter(x=>x.overdue).length
  };
 }
+export function fineRanking(records,kind='vehicle'){
+ const aggregated=new Map();
+ for(const fine of records||[]){
+  if(fine.status==='canceled')continue;
+  const id=kind==='driver'?fine.driver_id||'unidentified':fine.vehicle_id;
+  const label=kind==='driver'?(fine.driver_name||'Condutor não identificado'):(fine.plate||'Veículo');
+  if(!id)continue;
+  const previous=aggregated.get(id)||{id,label,count:0,amount:0};
+  previous.count+=1;previous.amount+=Number(fine.amount||0);
+  aggregated.set(id,previous);
+ }
+ return [...aggregated.values()].sort((a,b)=>b.count-a.count||b.amount-a.amount||a.label.localeCompare(b.label)).slice(0,5);
+}
 export function fineCsv(records){
  const keys=['Placa','Condutor','Auto','Órgão','Código','Descrição','Data infração','Data notificação','Local','Valor (R$)','Vencimento','Indicação condutor','Defesa/recurso','Pontos informados','Responsável pelo pagamento','Situação','Pago em','Observações'];
  const rows=(records||[]).map(f=>[
