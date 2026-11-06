@@ -674,33 +674,29 @@ async function openFuelEditor(row){
 }
 
 function renderConsumptionDashboard(){
- const root=el('xrm-consumption-vehicles'),summary=el('xrm-consumption-summary');
- if(!root||!summary)return;
+ const root=el('xrm-consumption-vehicles');if(!root)return;
  root.replaceChildren();
+ const info=text=>{const p=document.createElement('p');p.className='fleet-insight-empty';p.textContent=text;root.append(p);};
+ if(consumptionState==='loading'){info('Consultando consumo...');return;}
+ if(consumptionState==='error'){info('Não foi possível consultar o consumo. Atualize para tentar novamente.');return;}
  const allowed=filteredVehicleIds||new Set(vehicles.map(v=>v.id));
- const data=fuelConsumptionEntries.filter(row=>allowed.has(row.vehicle_id));
- const quality=analyzeFuelQuality(data);
- if(consumptionState==='loading'){summary.textContent='Consultando histórico de abastecimentos...';return;}
- if(consumptionState==='error'){summary.textContent='Não foi possível consultar o histórico de consumo. Atualize o painel para tentar novamente.';return;}
- const rows=quality.perVehicle.filter(row=>row.total>0).sort((a,b)=>(b.referenceKmL!=null)-(a.referenceKmL!=null)||b.total-a.total);
- const estimated=rows.filter(row=>row.referenceKmL!=null);
- summary.textContent=estimated.length?
-  estimated.length+' veículo(s) com estimativa nos últimos 6 meses. Valores indicativos: abastecimentos parciais e ausência de tanque cheio podem distorcer o consumo.':
-  (rows.length?'Ainda não há pares de abastecimentos com KM e litros suficientes para calcular o consumo.':'Nenhum abastecimento localizado no histórico dos veículos filtrados.');
- for(const item of rows.slice(0,12)){
+ const quality=analyzeFuelQuality(fuelConsumptionEntries.filter(r=>allowed.has(r.vehicle_id)));
+ const records=quality.perVehicle.filter(x=>x.total>0).sort((a,b)=>(b.referenceKmL!=null)-(a.referenceKmL!=null)||b.total-a.total);
+ if(!records.length){info('Sem abastecimentos nos últimos 6 meses.');return;}
+ for(const item of records.slice(0,10)){
   const vehicle=vehicles.find(v=>v.id===item.vehicleId);
-  const tile=document.createElement('button');tile.type='button';tile.className='xrm-consumption-card';tile.dataset.state=item.hasOmission?'incomplete':item.referenceKmL!=null?'estimated':'insufficient';
-  const label=document.createElement('span');label.textContent=(vehicle?.plate||'Veículo')+' · '+(vehicle?.model||vehicle?.category||'');
-  const value=document.createElement('strong');value.textContent=item.referenceKmL!=null?
-    item.referenceKmL.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+' km/L':'— km/L';
-  const status=document.createElement('small');status.textContent=item.hasOmission?
-    item.missing+' abastecimento(s) sem litros · média indisponível':
-    item.referenceKmL!=null?item.usedIntervals+' intervalo(s) válido(s) · estimativa':
-    'Necessário registrar ao menos 2 abastecimentos com KM crescente e litros informados';
-  const chip=document.createElement('span');chip.className='xrm-consumption-chip';chip.textContent=item.hasOmission?'Litros pendentes':item.referenceKmL!=null?'Média estimada':'Dados insuficientes';
-  tile.append(chip,label,value,status);tile.onclick=()=>page('fuel');root.append(tile);
+  const row=document.createElement('button');row.type='button';row.className='fleet-insight-consumption-row';
+  row.onclick=()=>page('fuel');
+  const name=document.createElement('span');name.className='fleet-insight-consumption-name';
+  name.textContent=(vehicle?.plate||'Veículo')+' · '+(vehicle?.model||vehicle?.category||'');
+  const value=document.createElement('strong');value.className='fleet-insight-consumption-value';
+  value.textContent=item.referenceKmL==null?'— km/L':item.referenceKmL.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+' km/L';
+  if(item.hasOmission){value.classList.add('incomplete');row.title='Existem registros sem litros informados';}
+  else if(item.referenceKmL==null){value.classList.add('incomplete');row.title='São necessários dois abastecimentos com KM e litros válidos';}
+  else row.title='Média indicativa; abastecimentos parciais podem distorcer o resultado';
+  row.append(name,value);root.append(row);
  }
- if(rows.length>12){const note=document.createElement('p');note.textContent='Exibindo 12 de '+rows.length+' veículos com abastecimentos no histórico.';root.append(note);}
+ if(records.length>10)info('Exibindo 10 de '+records.length+' veículos.');
 }
 async function refreshConsumptionHistory(){
  if(!company?.id)return;
