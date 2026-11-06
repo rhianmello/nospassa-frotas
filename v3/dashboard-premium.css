@@ -176,3 +176,90 @@
  #view-dashboard .fleet-overview-grid>.fleet-panel,
  #view-dashboard .fleet-overview-grid>.fleet-status-panel{height:auto!important;max-height:none!important;overflow:visible!important}
 }
+
+/* Overview v6: side-by-side doughnut and complete three-row legend. */
+@media(min-width:761px){
+ #view-dashboard .fleet-status-panel .fleet-donut-layout.fleet-donut-compact{
+  display:grid!important;
+  grid-template-columns:minmax(82px,104px) minmax(0,1fr)!important;
+  grid-template-rows:1fr!important;
+  align-items:center!important;
+  justify-content:stretch!important;
+  gap:9px!important;
+  padding:10px 11px!important;
+  height:calc(100% - 45px)!important;
+  max-height:none!important;
+  overflow:visible!important;
+ }
+ #view-dashboard .fleet-status-panel .fleet-donut-compact>.fleet-chart-shell{
+  grid-column:1!important;
+  grid-row:1!important;
+  flex:none!important;
+  width:100%!important;
+  height:110px!important;
+  min-height:0!important;
+  max-height:110px!important;
+  min-width:0!important;
+  overflow:visible!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+ }
+ #view-dashboard .fleet-status-panel #v3-situation-donut{
+  width:96px!important;
+  height:96px!important;
+  max-width:100%!important;
+  max-height:96px!important;
+  margin:0 auto!important;
+ }
+ #view-dashboard .fleet-status-panel #situation-legend.fleet-chart-legend{
+  grid-column:2!important;
+  grid-row:1!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  grid-template-rows:repeat(3,minmax(29px,auto))!important;
+  align-content:center!important;
+  align-self:center!important;
+  justify-self:stretch!important;
+  gap:7px!important;
+  width:100%!important;
+  height:auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:visible!important;
+ }
+ #view-dashboard .fleet-status-panel #situation-legend .xrm-status-legend-item{
+  display:grid!important;
+  grid-template-columns:8px minmax(0,1fr) auto!important;
+  gap:7px!important;
+  align-items:center!important;
+  min-height:29px!important;
+  height:auto!important;
+  padding:6px 7px!important;
+  font-size:10px!important;
+  line-height:1.2!important;
+  white-space:normal!important;
+ }
+}
+@media(min-width:761px) and (max-width:1100px){
+ #view-dashboard .fleet-status-panel .fleet-donut-layout.fleet-donut-compact{grid-template-columns:86px minmax(0,1fr)!important;gap:6px!important;padding:8px!important}
+ #view-dashboard .fleet-status-panel #v3-situation-donut{width:82px!important;height:82px!important}
+ #view-dashboard .fleet-status-panel #situation-legend .xrm-status-legend-item{font-size:9px!important;padding:6px 5px!important}
+}
+@media(max-width:760px){
+ #view-dashboard .fleet-status-panel .fleet-donut-layout.fleet-donut-compact{
+  display:grid!important;grid-template-columns:minmax(90px,125px) minmax(0,1fr)!important;align-items:center!important;
+  gap:10px!important;padding:12px!important;overflow:visible!important;height:auto!important;
+ }
+ #view-dashboard .fleet-status-panel .fleet-donut-compact>.fleet-chart-shell{grid-column:1!important;min-height:110px!important}
+ #view-dashboard .fleet-status-panel #v3-situation-donut{width:105px!important;height:105px!important;max-width:100%!important}
+ #view-dashboard .fleet-status-panel #situation-legend.fleet-chart-legend{grid-column:2!important;display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:6px!important;height:auto!important;max-height:none!important;overflow:visible!important}
+ #view-dashboard .fleet-status-panel #situation-legend .xrm-status-legend-item{min-height:30px!important;height:auto!important;padding:6px!important;font-size:10px!important}
+}
+@media(max-width:390px){
+ #view-dashboard .fleet-status-panel .fleet-donut-layout.fleet-donut-compact{grid-template-columns:85px minmax(0,1fr)!important;gap:6px!important;padding:8px!important}
+ #view-dashboard .fleet-status-panel #v3-situation-donut{width:80px!important;height:80px!important}
+ #view-dashboard .fleet-status-panel #situation-legend .xrm-status-legend-item{font-size:9px!important;padding:5px!important}
+}
