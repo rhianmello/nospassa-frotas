@@ -105,3 +105,19 @@
 #view-dashboard .fleet-insights-grid>.fleet-insight-card{background:linear-gradient(150deg,#0d2033,#0a1726)!important;background-image:linear-gradient(150deg,#0d2033,#0a1726)!important;border-color:rgba(82,143,181,.25)!important}
 #view-dashboard .fleet-insight-stat,#view-dashboard .fleet-insight-driver{background:linear-gradient(150deg,#0d2033,#0a1726)!important;background-image:linear-gradient(150deg,#0d2033,#0a1726)!important}
 @media(max-width:520px){#view-dashboard .fleet-insight-consumption{padding:0 12px 13px!important}#view-dashboard .xrm-consumption-heading{margin-inline:12px!important}}
+
+/* One-line financial cost and vehicle fuel-efficiency ranking. */
+#view-dashboard .fleet-insight-ranking{gap:7px!important}
+#view-dashboard .fleet-insight-rank{
+ grid-template-columns:minmax(118px,1.1fr) minmax(45px,2fr) minmax(72px,auto) minmax(78px,auto)!important;
+ gap:9px!important;align-items:center;min-height:39px!important;
+}
+#view-dashboard .fleet-insight-rank-name{min-width:0;font-size:10px!important}
+#view-dashboard .fleet-insight-rank-efficiency{min-width:75px;justify-self:end;text-align:right;font-size:11px!important;font-weight:800;color:#69efd6;white-space:nowrap;font-variant-numeric:tabular-nums}
+#view-dashboard .fleet-insight-rank-efficiency.is-unavailable{color:#9bb1c3}
+@media(max-width:630px){
+ #view-dashboard .fleet-insight-rank{grid-template-columns:minmax(95px,1.25fr) minmax(26px,1fr) minmax(61px,auto) minmax(63px,auto)!important;gap:5px!important;padding:7px 6px!important}
+ #view-dashboard .fleet-insight-rank-name{font-size:9px!important}
+ #view-dashboard .fleet-insight-rank strong{font-size:10px!important}
+ #view-dashboard .fleet-insight-rank-efficiency{min-width:0;font-size:10px!important}
+}
