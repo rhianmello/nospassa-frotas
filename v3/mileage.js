@@ -39,7 +39,7 @@ export function setupMileage({client,getCompany,getVehicles,getFilteredIds,onRel
   const text=add('div');text.append(add('strong','','Quilometragem e óleo'),add('small','','Alertas vinculados ao hodômetro informado'));
   head.append(text);
   if(owned())head.append(btn('Histórico de leituras',()=>void showAuditHistory(),'subtle'));
-  head.append(btn('Gerenciar KM →',()=>{document.querySelector('[data-view="assets"]')?.click();id('xrm-mileage-console')?.scrollIntoView({behavior:'smooth',block:'start'})}));
+  head.append(btn('Gerenciar KM →',()=>{document.querySelector('[data-view="mileage"]')?.click();id('xrm-mileage-console')?.scrollIntoView({behavior:'smooth',block:'start'})}));
   dboard.append(head);
   const chips=add('div','xrm-mileage-dash-chips');
   for(const [label,count,tone] of [['Troca de óleo',oil.length,'oil'],['KM semanal pendente',reminders.length,'weekly'],['Leituras para conferir',pending.length,'pending']]){
@@ -53,7 +53,7 @@ export function setupMileage({client,getCompany,getVehicles,getFilteredIds,onRel
   dboard.append(summary);
   alerts.replaceChildren();
   if(oil.length||reminders.length||pending.length){
-   const header=add('header');header.append(add('h2','','Quilometragem e trocas de óleo'),btn('Abrir controle',()=>{document.querySelector('[data-view="assets"]')?.click();id('xrm-mileage-console')?.scrollIntoView({behavior:'smooth'})}));
+   const header=add('header');header.append(add('h2','','Quilometragem e trocas de óleo'),btn('Abrir controle',()=>{document.querySelector('[data-view="mileage"]')?.click();id('xrm-mileage-console')?.scrollIntoView({behavior:'smooth'})}));
    alerts.append(header);
    for(const v of oil)alerts.append(add('p',toStatusClass(v),v.plate+' — '+toStatus(v)+' · '+km(v.meter)+' / '+km(v.next_due_km)+' km'));
    if(reminders.length)alerts.append(add('p','',reminders.length+' veículo(s) aguardam atualização semanal de KM ('+days[state.weekday]+').'));
