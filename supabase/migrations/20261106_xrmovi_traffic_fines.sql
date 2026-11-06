@@ -91,7 +91,7 @@ begin
   'responsibility',f.responsibility,'status',f.status,'paid_on',f.paid_on,
   'notes',f.notes,'expense_id',f.expense_id,'revision',f.revision,
   'created_at',f.created_at,'updated_at',f.updated_at)
- order by f.infraction_date desc,f.created_at desc),'[]'::jsonb)
+ order by f.infraction_date desc,f.created_at desc)
  from xrmovi.traffic_fines f
  join xrmovi.vehicles v on v.id=f.vehicle_id and v.company_id=f.company_id
  left join xrmovi.drivers d on d.id=f.driver_id and d.company_id=f.company_id
