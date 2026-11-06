@@ -40,7 +40,7 @@ async function open({ role = 'owner', existing = false, viewport = { width: 1440
       ]
     };
     const today=new Date().toLocaleDateString('en-CA'),old='2020-01-01';
-    state.drivers=[];state.expenses=[];state.failVehicle=false;state.writes=[];state.failCost=false;state.failComplete=false;state.changes=[];state.costRequests=[];state.costError=false;state.costMultiplier=1;state.fixture={vehicles:[{id:'v1',plate:'AAA1111',category:'Leve',contract_id:'c1',status:'Ativo',odometer_value:100},{id:'v2',plate:'BBB2222',category:'Caminhão',contract_id:'c2',status:'Manutenção',odometer_value:100}],maintenance:[{id:'m1',vehicle_id:'v1',plate:'AAA1111',title:'Revisão A',due_date:old,status:'open',created_at:today},{id:'m2',vehicle_id:'v2',plate:'BBB2222',title:'Revisão B',due_date:old,status:'open',created_at:today}],fuel:[{vehicle_id:'v1',fueled_on:today,liters:10,total_cost:100},{vehicle_id:'v2',fueled_on:today,liters:20,total_cost:200}]};
+    state.drivers=[];state.expenses=[];state.fines=[];state.failVehicle=false;state.writes=[];state.failCost=false;state.failComplete=false;state.changes=[];state.costRequests=[];state.costError=false;state.costMultiplier=1;state.fixture={vehicles:[{id:'v1',plate:'AAA1111',category:'Leve',contract_id:'c1',status:'Ativo',odometer_value:100},{id:'v2',plate:'BBB2222',category:'Caminhão',contract_id:'c2',status:'Manutenção',odometer_value:100}],maintenance:[{id:'m1',vehicle_id:'v1',plate:'AAA1111',title:'Revisão A',due_date:old,status:'open',created_at:today},{id:'m2',vehicle_id:'v2',plate:'BBB2222',title:'Revisão B',due_date:old,status:'open',created_at:today}],fuel:[{vehicle_id:'v1',fueled_on:today,liters:10,total_cost:100},{vehicle_id:'v2',fueled_on:today,liters:20,total_cost:200}]};
     state.client = {
       auth: { getUser: async () => ({ data: { user: { id: 'test-user' } } }) },
       functions: { invoke: async () => ({ data: { enabled: false }, error: null }) },
@@ -48,6 +48,24 @@ async function open({ role = 'owner', existing = false, viewport = { width: 1440
         if(name==='xrmovi_access_status')return {data:{allowed:true,billing_required:false,status:'active'}};
         if(name==='xrmovi_drivers_list')return {data:state.drivers};
         if(name==='xrmovi_expenses_list')return {data:state.expenses.map(e=>({...e,plate:state.fixture.vehicles.find(v=>v.id===e.vehicle_id)?.plate}))};
+        if(name==='xrmovi_traffic_fines_list')return {data:state.fines.map(f=>({...f,plate:state.fixture.vehicles.find(v=>v.id===f.vehicle_id)?.plate||'Veículo'}))};
+        if(name==='xrmovi_traffic_fine_history')return {data:state.writes.filter(x=>x.name==='xrmovi_traffic_fine_save'&&x.args.p_id===args.fid).map(x=>({date:new Date().toISOString(),actor:'Responsável teste',reason:x.args.p_reason||'Cadastro',before:null,after:{status:x.args.p_status,amount:x.args.p_amount}}))};
+        if(name==='xrmovi_traffic_fine_save'){
+          state.writes.push({name,args});const old=state.fines.find(x=>x.id===args.p_id);
+          if(old&&old.revision!==args.p_expected_revision)return {error:{message:'Registro atualizado por outra pessoa'}};
+          const record={...old,id:old?.id||'fine-'+(state.fines.length+1),company_id:args.cid,
+            vehicle_id:args.p_vehicle,driver_id:args.p_driver,notice_number:args.p_number,authority:args.p_authority,
+            infraction_code:args.p_code,description:args.p_description,infraction_date:args.p_infraction_date,
+            notice_date:args.p_notice_date,location:args.p_location,amount:args.p_amount,due_date:args.p_due,
+            driver_nomination_deadline:args.p_nomination_due,defense_deadline:args.p_defense_due,points:args.p_points,
+            responsibility:args.p_responsibility,status:args.p_status,paid_on:args.p_paid,notes:args.p_notes,revision:(old?.revision||0)+1};
+          if(record.status==='paid'&&!record.expense_id){record.expense_id='expense-fine-'+record.id;
+            state.expenses.push({id:record.expense_id,vehicle_id:record.vehicle_id,category:'multa',
+              description:'Multa '+record.notice_number,amount:record.amount,expense_date:record.infraction_date,
+              paid_on:record.paid_on,due_date:record.due_date,revision:1});}
+          if(old)Object.assign(old,record);else state.fines.push(record);
+          return {data:record.id};
+        }
         if(name==='xrmovi_driver_save'){state.writes.push({name,args});const old=state.drivers.find(d=>d.id===args.p_id);const driver={id:old?.id||'d'+(state.drivers.length+1),name:args.p_name,phone:args.p_phone,cnh_number:args.p_cnh,cnh_category:args.p_category,cnh_expires_on:args.p_expires,active:args.p_active,notes:args.p_notes,revision:old?(old.revision??0)+1:0};if(old)Object.assign(old,driver);else state.drivers.push(driver);return {data:driver.id};}
         if(name==='xrmovi_vehicle_save_with_driver'){state.writes.push({name,args});if(state.failVehicle)return {error:{message:'Falha ao salvar veículo'}};const old=state.fixture.vehicles.find(v=>v.id===args.p_id),driver=state.drivers.find(d=>d.id===args.p_driver);const vehicle={...(old||{}),id:old?.id||'v'+(state.fixture.vehicles.length+1),plate:args.p_plate,brand:args.p_brand,model:args.p_model,category:args.p_category,driver_id:args.p_driver,driver_name:driver?.name||null,odometer_value:args.p_odometer,status:old?.status||'Ativo'};if(old)Object.assign(old,vehicle);else state.fixture.vehicles.push(vehicle);return {data:vehicle.id};}
         if(name==='xrmovi_expense_save'){state.writes.push({name,args});const old=state.expenses.find(e=>e.id===args.p_id);const expense={id:old?.id||'e'+(state.expenses.length+1),vehicle_id:args.p_vehicle,category:args.p_category,description:args.p_description,expense_date:args.p_date,due_date:args.p_due,amount:args.p_amount,paid_on:args.p_paid,notes:args.p_notes,revision:old?(old.revision??0)+1:0};if(old)Object.assign(old,expense);else state.expenses.push(expense);return {data:expense.id};}
@@ -154,3 +172,39 @@ async function waitIdle(page) {
 
 test('diagnostic desktop: authenticated mock reaches saved vehicles',async()=>{const {page,errors}=await open({viewport:{width:1366,height:850}});await page.waitForSelector('#fleet-kpis .fleet-kpi',{timeout:7500});console.log('DESKTOP_LOADED',await page.locator('#fleet-kpis .fleet-kpi-value').allTextContents());assert.deepEqual(errors,[]);await page.close()});
 test('diagnostic mobile: authenticated mock reaches saved vehicles',async()=>{const {page,errors}=await open({viewport:{width:390,height:844}});await page.waitForSelector('#fleet-kpis .fleet-kpi',{timeout:7500});console.log('MOBILE_LOADED',await page.locator('#fleet-kpis .fleet-kpi-value').allTextContents());assert.deepEqual(errors,[]);await page.close()});
+
+test('fines desktop: vehicle shortcut, auditable registration and paid-only expense mirror',async()=>{
+ const {page,errors}=await open({viewport:{width:1366,height:850}});
+ await page.waitForSelector('#fleet-table-body tr',{state:'attached'});
+ await page.locator('.fleet-main-nav [data-view="assets"]').click();
+ await page.locator('#fleet-table-body tr').first().getByRole('button',{name:'Multas'}).click();
+ assert.equal(new URL(page.url()).hash,'#fines');
+ assert.equal(await page.locator('#xrm-fines-vehicle').inputValue(),'v1');
+ await page.locator('#xrm-fines-add').click();
+ await page.locator('#xrm-fines-form [name="notice"]').fill('AUTO-12345');
+ await page.locator('#xrm-fines-form [name="authority"]').fill('DER RJ');
+ await page.locator('#xrm-fines-form [name="description"]').fill('Infração para teste sem cobrança real');
+ await page.locator('#xrm-fines-form [name="amount"]').fill('195.23');
+ await page.locator('#xrm-fines-form button[type="submit"]').click();
+ await page.waitForFunction(()=>document.querySelector('#xrm-fines-list')?.textContent.includes('AUTO-12345'));
+ assert.equal(await page.locator('#xrm-fines-open').textContent(),'1');
+ assert.equal(await page.evaluate(()=>brandingTest.expenses.length),0);
+ await page.locator('.xrm-fines-table').getByRole('button',{name:'Editar'}).click();
+ await page.selectOption('#xrm-fines-form [name="status"]','paid');
+ await page.locator('#xrm-fines-form [name="reason"]').fill('Pagamento confirmado com comprovante');
+ page.on('dialog',dlg=>dlg.accept());
+ await page.locator('#xrm-fines-form button[type="submit"]').click();
+ await page.waitForFunction(()=>document.querySelector('#xrm-fines-open')?.textContent==='0');
+ const result=await page.evaluate(()=>({fines:brandingTest.fines.length,expenses:brandingTest.expenses.length}));
+ assert.deepEqual(result,{fines:1,expenses:1});
+ assert.deepEqual(errors,[]);await page.close();
+});
+test('fines mobile: dedicated screen appears in navigation and fits the viewport',async()=>{
+ const {page,errors}=await open({viewport:{width:390,height:844}});
+ await page.waitForSelector('#fleet-kpis .fleet-kpi',{state:'attached'});
+ await page.selectOption('#fleet-mobile-view','fines');
+ assert.equal(await page.locator('#view-fines').isVisible(),true);
+ assert.equal(await page.locator('#xrm-fines-add').isVisible(),true);
+ assert.deepEqual(errors,[]);
+ await page.close();
+});
