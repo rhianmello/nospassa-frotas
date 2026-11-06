@@ -5,7 +5,7 @@ export function createDocumentCenter({
   canWrite, upload, refresh, notify
 }) {
   const byId=id=>document.getElementById(id);
-  const kinds={vehicle:'Veículo / CRLV',driver:'Motorista / CNH',maintenance:'Manutenção',fuel:'Abastecimento',expense:'Despesa'};
+  const kinds={vehicle:'Veículo / CRLV',driver:'Motorista / CNH',maintenance:'Manutenção',fuel:'Abastecimento',expense:'Despesa',fine:'Multa / infração'};
   const labelOf=doc=>{
     if(doc.kind==='driver')return doc.driver_name||
       getDrivers().find(row=>row.id===doc.record_id)?.name||'Motorista';
@@ -122,8 +122,8 @@ export function createDocumentCenter({
   const notice=text=>{query('[data-feedback]').textContent=text||'';};
   const validFor=(doc,kind,record)=>kind==='driver'
     ?doc.kind==='driver'&&doc.record_id===record.id
-    :kind==='fuel'
-    ?doc.kind==='fuel'&&doc.record_id===record.id
+    :['fuel','fine'].includes(kind)
+    ?doc.kind===kind&&doc.record_id===record.id
     :doc.vehicle_id===record.id||(doc.kind==='vehicle'&&doc.record_id===record.id);
 
   // On iPhone/embedded browsers, a synthetic link.click() after awaiting the
@@ -345,6 +345,7 @@ export function createDocumentCenter({
     const title=kind==='driver'?'Documentos do motorista: '+record.name
       :kind==='fuel'?'Comprovantes do abastecimento: '+(record.plate||getVehicles().find(v=>v.id===record.vehicle_id)?.plate||'Veículo')+
         ' · '+(record.date||record.fueled_on||'')
+      :kind==='fine'?'Documentos da multa: '+(record.notice_number||'')+' · '+(record.plate||'Veículo')
       :'Documentos do veículo: '+record.plate;
     query('[data-close]').disabled=false;
     query('[data-summary]').textContent='Arquivos privados. Visualização temporária, download e exclusão auditada.';
@@ -380,7 +381,7 @@ export function createDocumentCenter({
     }
   }
   function openRecord(kind,record){
-    if(!getCompany()||!record||!['driver','vehicle','fuel'].includes(kind))return;
+    if(!getCompany()||!record||!['driver','vehicle','fuel','fine'].includes(kind))return;
     if(kind==='driver'&&!canWrite())return;
     previousFocus=document.activeElement;
     modalKind=kind;modalRecord={...record};
