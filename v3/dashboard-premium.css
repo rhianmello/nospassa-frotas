@@ -263,3 +263,29 @@
  #view-dashboard .fleet-status-panel #v3-situation-donut{width:80px!important;height:80px!important}
  #view-dashboard .fleet-status-panel #situation-legend .xrm-status-legend-item{font-size:9px!important;padding:5px!important}
 }
+
+/* XRMOVI unified dashboard surfaces: the same paint for upper and lower panel shells.
+   This selector is the only authoritative dashboard panel background override. */
+#view-dashboard .fleet-overview-grid > .fleet-panel,
+#view-dashboard .fleet-insights-grid > .fleet-panel.fleet-insight-card{
+  background-color:#0c1b2c!important;
+  background-image:linear-gradient(145deg,rgba(56,189,248,.035),transparent 55%)!important;
+  background-clip:padding-box!important;
+  border-color:rgba(139,167,201,.16)!important;
+  border-radius:11px!important;
+  box-shadow:0 10px 26px rgba(0,0,0,.11),inset 0 1px rgba(255,255,255,.025)!important;
+}
+#view-dashboard .fleet-insights-grid > .fleet-panel.fleet-insight-card::before{
+  content:none!important;
+  display:none!important;
+}
+#view-dashboard .fleet-insights-grid .fleet-insight-stat,
+#view-dashboard .fleet-insights-grid .fleet-insight-driver{
+  background-color:rgba(10,31,49,.72)!important;
+  background-image:none!important;
+  border-color:rgba(95,151,177,.2)!important;
+}
+#view-dashboard .fleet-insights-grid .fleet-insight-rank{
+  background-color:rgba(10,31,49,.72)!important;
+  background-image:none!important;
+}
