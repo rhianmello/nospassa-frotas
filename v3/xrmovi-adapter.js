@@ -685,7 +685,7 @@ function renderConsumptionDashboard(){
  const rows=quality.perVehicle.filter(row=>row.total>0).sort((a,b)=>(b.referenceKmL!=null)-(a.referenceKmL!=null)||b.total-a.total);
  const estimated=rows.filter(row=>row.referenceKmL!=null);
  summary.textContent=estimated.length?
-  estimated.length+' veículo(s) com estimativa em até 12 meses. Valores indicativos: abastecimentos parciais e ausência de tanque cheio podem distorcer o consumo.':
+  estimated.length+' veículo(s) com estimativa nos últimos 6 meses. Valores indicativos: abastecimentos parciais e ausência de tanque cheio podem distorcer o consumo.':
   (rows.length?'Ainda não há pares de abastecimentos com KM e litros suficientes para calcular o consumo.':'Nenhum abastecimento localizado no histórico dos veículos filtrados.');
  for(const item of rows.slice(0,12)){
   const vehicle=vehicles.find(v=>v.id===item.vehicleId);
@@ -707,7 +707,7 @@ async function refreshConsumptionHistory(){
  const month=el('fuel-ranking-month')?.value||localDay(new Date()).slice(0,7);
  if(!/^\d{4}-\d{2}$/.test(month))return;
  const [year,number]=month.split('-').map(Number);
- const from=localDay(new Date(year,number-13,1));
+ const from=localDay(new Date(year,number-6,1));
  const to=localDay(new Date(year,number,0));
  consumptionState='loading';renderConsumptionDashboard();
  try{
