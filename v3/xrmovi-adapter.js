@@ -618,7 +618,7 @@ const actions=document.createElement('div');actions.className='xrm-doc-actions';
 const documents=document.createElement('button');documents.type='button';documents.className='fleet-button';
 documents.textContent='Documentos';documents.onclick=()=>documentCenter?.openRecord('vehicle',v);
 actions.append(documents);
-if(canWrite()){const edit=document.createElement('button');edit.type='button';edit.className='fleet-button';edit.textContent=litersMissing(row)?'Corrigir litros':'Editar';edit.onclick=()=>openWrite('vehicle',v);actions.append(edit);}
+if(canWrite()){const edit=document.createElement('button');edit.type='button';edit.className='fleet-button';edit.textContent='Editar';edit.onclick=()=>openWrite('vehicle',v);actions.append(edit);}
 action.append(actions);tr.append(action);root.append(tr)}}
  put('table-count',filtered.length);put('table-page-info',filtered.length+' de '+vehicles.length+' ativos');const caption=el('filter-result');if(caption)caption.textContent=filtered.length+' de '+vehicles.length+' veículos exibidos';renderContractFinance(filtered);renderFuelBars();renderFleetHistory();renderVehicleDocuments(filtered);put('nav-alert-count',overdue+upcoming);put('alerts-total',overdue+upcoming);renderRegistries();appendExpenseAlerts();appendDriverAlerts();refreshOverdueKpi();renderFilterSummary();renderFleetInsights();mileage?.render();xrmAssistRefresh();
 }
@@ -731,7 +731,7 @@ function renderFuelRecords(entries){
    const action=document.createElement('td');
    if(canWrite()){
      const edit=document.createElement('button');edit.type='button';
-     edit.className='fleet-button';edit.textContent='Editar';
+     edit.className='fleet-button';edit.textContent=litersMissing(row)?'Corrigir litros':'Editar';
      edit.onclick=()=>void openFuelEditor(row);
      action.append(edit);
    }else action.textContent='Consulta';
