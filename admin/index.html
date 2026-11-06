@@ -27,6 +27,7 @@ footer{padding:20px;text-align:center;color:#849eae;font-size:11px}
 .notice.billing-notice{background:#112d3c;border-color:#326176;color:#c8e3eb}
 .xrm-billing-setup{margin:8px 0 16px;padding:12px 16px;background:#0a2833;border:1px solid #386b72;border-radius:12px;color:#cce6eb;font-size:12px}
 .xrm-billing-setup summary{color:#83ecd1;font-weight:800;cursor:pointer}
+ .xrm-billing-setup[hidden]{display:none!important}
 .xrm-billing-setup p{color:#b4d1dc}.xrm-billing-setup ol{padding-left:22px;display:grid;gap:9px}
 .xrm-billing-setup a{color:#83ecd1;text-decoration:underline;text-underline-offset:3px}
 .xrm-billing-setup code{background:#061927;padding:2px 5px;border-radius:4px;overflow-wrap:anywhere}
@@ -47,7 +48,7 @@ footer{padding:20px;text-align:center;color:#849eae;font-size:11px}
   </div>
   <div class="notice billing-notice" role="status" aria-live="polite"><strong>Pagamentos do XRMOVI:</strong> <span id="xrm-billing-health">Conferindo liberação de compras…</span></div>
   <details id="xrm-billing-setup" class="xrm-billing-setup">
-   <summary>Por que só usuários autorizados podem pagar? Como liberar para todos?</summary>
+   <summary>Verificações para liberar pagamentos públicos</summary>
    <p>Essa limitação é uma proteção do próprio XRMOVI para testes, não uma lista de clientes autorizados pelo Mercado Pago. Após a liberação, qualquer cliente cadastrado poderá contratar por Pix ou cartão.</p>
    <ol>
     <li>Em <a href="https://www.mercadopago.com.br/developers/panel/app" target="_blank" rel="noopener noreferrer">Mercado Pago → Integrações → Webhooks</a>, confira a assinatura secreta da mesma aplicação que recebe os pagamentos. Notificações com HTTP 401 não foram validadas e precisam de correção antes da venda pública.</li>
@@ -304,7 +305,14 @@ async function checkBillingStatus(){
    ?'Credenciais encontradas. Faça um teste de entrega com uma mensagem de homologação antes de considerar o envio confirmado.'
    :'Provedor de envio ainda não configurado. Abra as instruções abaixo para ativar as notificações.';
   el('xrm-mail-setup').open=data?.support_email_configured!==true;
-   el('xrm-billing-setup').open=data?.billing_pilot_only===true&&data?.billing_switch_enabled===true;
+   const setup=el('xrm-billing-setup');
+   const publicPaymentsReady=data?.configuration_ready===true
+     &&data?.billing_switch_enabled===true
+     &&data?.billing_pilot_only===false;
+   // Public sales are already enabled: hide obsolete pilot-only guidance.
+   setup.hidden=publicPaymentsReady;
+   setup.open=!publicPaymentsReady
+     &&data?.billing_pilot_only===true&&data?.billing_switch_enabled===true;
   if(data?.configuration_ready===true){
    label.textContent=data.billing_switch_enabled===true
     ?(data.billing_pilot_only===true
