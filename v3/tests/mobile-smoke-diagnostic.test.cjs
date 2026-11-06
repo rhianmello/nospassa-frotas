@@ -202,7 +202,9 @@ test('fines desktop: vehicle shortcut, auditable registration and paid-only expe
 test('fines mobile: dedicated screen appears in navigation and fits the viewport',async()=>{
  const {page,errors}=await open({viewport:{width:390,height:844}});
  await page.waitForSelector('#fleet-kpis .fleet-kpi',{state:'attached'});
- await page.selectOption('#fleet-mobile-view','fines');
+ await page.evaluate(()=>{const panel=document.querySelector('#xrm-ga4-consent');if(panel&&!panel.hidden)panel.querySelector('.ga4-deny')?.click();});
+ await page.locator('#xrm-mobile-more').click();
+ await page.locator('.xrm-mobile-more-sheet [data-mobile-view="fines"]').click();
  assert.equal(await page.locator('#view-fines').isVisible(),true);
  assert.equal(await page.locator('#xrm-fines-add').isVisible(),true);
  assert.deepEqual(errors,[]);
