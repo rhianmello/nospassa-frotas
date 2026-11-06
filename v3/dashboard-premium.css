@@ -91,3 +91,17 @@
 #view-dashboard #xrm-dashboard-fuel-quality-note[data-ok="true"]{
   background:rgba(14,52,43,.7)!important;
 }
+
+/* v3: consumo compacto no resumo financeiro; superfícies iguais aos cards executivos. */
+#view-dashboard .fleet-insight-consumption{display:grid;gap:6px;padding:0 17px 18px!important}
+#view-dashboard .xrm-consumption-heading{display:flex;flex-wrap:wrap;align-items:baseline;gap:5px 9px;margin:10px 17px 8px!important}
+#view-dashboard .xrm-consumption-heading small{font-size:9px;font-weight:500;text-transform:none;letter-spacing:0;color:#8faec0}
+#view-dashboard .fleet-insight-consumption-row{appearance:none;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:9px;width:100%;min-height:35px;padding:7px 10px;border:1px solid rgba(95,151,177,.2);border-radius:9px;background:rgba(10,31,49,.72);color:#cfe2f0;cursor:pointer;text-align:left}
+#view-dashboard .fleet-insight-consumption-row:hover{border-color:rgba(56,189,248,.42);background:rgba(31,65,87,.65)}
+#view-dashboard .fleet-insight-consumption-row:focus-visible{outline:2px solid #38bdf8;outline-offset:2px}
+#view-dashboard .fleet-insight-consumption-name{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+#view-dashboard .fleet-insight-consumption-value{font-size:12px;font-weight:800;white-space:nowrap;color:#7ce6d1;font-variant-numeric:tabular-nums}
+#view-dashboard .fleet-insight-consumption-value.incomplete{color:#b7c8d6}
+#view-dashboard .fleet-insights-grid>.fleet-insight-card{background:linear-gradient(150deg,#0d2033,#0a1726)!important;background-image:linear-gradient(150deg,#0d2033,#0a1726)!important;border-color:rgba(82,143,181,.25)!important}
+#view-dashboard .fleet-insight-stat,#view-dashboard .fleet-insight-driver{background:linear-gradient(150deg,#0d2033,#0a1726)!important;background-image:linear-gradient(150deg,#0d2033,#0a1726)!important}
+@media(max-width:520px){#view-dashboard .fleet-insight-consumption{padding:0 12px 13px!important}#view-dashboard .xrm-consumption-heading{margin-inline:12px!important}}
