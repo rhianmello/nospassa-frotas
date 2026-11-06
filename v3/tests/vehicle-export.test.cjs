@@ -59,7 +59,7 @@ test('company list maps contract name and driver and does not alter vehicles',as
  assert.equal(v.contract_name,undefined);
 });
 test('mileage is a distinct navigation page in desktop and mobile; dashboard routes to it',()=>{
- const html=read('v3/index.html'),adapter=read('v3/xrmovi-adapter.js'),mileage=read('v3/mileage.js');
+ const html=read('v3/index.html'),adapter=read('v3/xrmovi-adapter.js'),mileage=read('v3/mileage.js'),mobile=read('v3/mobile-experience.js');
  assert.match(html,/<button class="fleet-subnav" id="xrm-mileage-nav"[^>]*data-view="mileage"/);
  assert.match(html,/<option value="mileage">KM e Troca de Óleo<\/option>/);
  assert.match(html,/<section id="view-mileage" class="fleet-view hidden"/);
@@ -68,6 +68,8 @@ test('mileage is a distinct navigation page in desktop and mobile; dashboard rou
  assert.ok(adapter.includes("mileage:'KM e Troca de Óleo'"));
  assert.ok(mileage.includes('data-view="mileage"'));
  assert.ok(!mileage.includes('data-view="assets"'));
+ assert.ok(mobile.includes("['mileage','clock','KM e Troca de Óleo']"));
+ assert.ok(mobile.includes("{label:'Atualizar KM',view:'mileage'"));
  assert.ok(html.includes('id="xrm-export-vehicles"'));
  assert.ok(adapter.includes('setupVehicleExport('));
 });
