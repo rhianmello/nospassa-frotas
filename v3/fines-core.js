@@ -18,7 +18,12 @@ export function plusDays(iso,days){
 export const money=value=>Number(value||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 export const displayDate=value=>isoDate(value)?new Date(value+'T12:00:00Z').toLocaleDateString('pt-BR',{timeZone:'UTC'}):'—';
 export const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-export const csvField=value=>'"'+String(value??'').replaceAll('"','""')+'"';
+export const csvField=value=>{
+ const valueText=String(value??'');
+ // Excel interprets leading formula characters even in quoted CSV cells.
+ const safe=/^[\s]*[=+\-@\t\r]/.test(valueText)?"'"+valueText:valueText;
+ return '"'+safe.replaceAll('"','""')+'"';
+};
 export function filterTrafficFines(records,filter={}){
  const q=String(filter.query||'').trim().toLocaleLowerCase('pt-BR');
  const from=isoDate(filter.from),to=isoDate(filter.to);
