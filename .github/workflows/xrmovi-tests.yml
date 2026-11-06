@@ -9,6 +9,13 @@ on:
       - 'v3/xrmovi-adapter.js'
       - 'v3/fuel-quality.js'
       - 'v3/finance-receipts-report.js'
+      - 'v3/fines-core.js'
+      - 'v3/fines-module.js'
+      - 'v3/fines.css'
+      - 'v3/document-center.js'
+      - 'v3/tests/fines-module.test.cjs'
+      - 'supabase/migrations/*xrmovi_fines*.sql'
+      - 'supabase/migrations/*xrmovi_traffic_fines*.sql'
       - 'v3/tests/fuel-liter-omission.test.cjs'
       - 'v3/xrmovi-local-assistant.js'
       - 'v3/xrmovi-assistant-brain.js'
@@ -41,6 +48,13 @@ on:
       - 'v3/xrmovi-adapter.js'
       - 'v3/fuel-quality.js'
       - 'v3/finance-receipts-report.js'
+      - 'v3/fines-core.js'
+      - 'v3/fines-module.js'
+      - 'v3/fines.css'
+      - 'v3/document-center.js'
+      - 'v3/tests/fines-module.test.cjs'
+      - 'supabase/migrations/*xrmovi_fines*.sql'
+      - 'supabase/migrations/*xrmovi_traffic_fines*.sql'
       - 'v3/tests/fuel-liter-omission.test.cjs'
       - 'v3/xrmovi-local-assistant.js'
       - 'v3/xrmovi-assistant-brain.js'
@@ -88,6 +102,12 @@ jobs:
           node --check v3/fuel-quality.js
           node --check v3/finance-receipts-report.js
           node --test v3/tests/fuel-liter-omission.test.cjs
+      - name: Validate and test traffic fine module, audits and Excel/PDF reports
+        run: |
+          node --check v3/fines-core.js
+          node --check v3/fines-module.js
+          node --check v3/document-center.js
+          node --test v3/tests/fines-module.test.cjs
       - name: Validate local voice assistant JavaScript syntax
         run: node --check v3/xrmovi-local-assistant.js
       - name: Validate course knowledge base syntax
