@@ -7,6 +7,9 @@ on:
       - 'tests/ga4-confirmed-payments.test.mjs'
       - 'supabase/tests/*.test.cjs'
       - 'v3/xrmovi-adapter.js'
+      - 'v3/fuel-quality.js'
+      - 'v3/finance-receipts-report.js'
+      - 'v3/tests/fuel-liter-omission.test.cjs'
       - 'v3/xrmovi-local-assistant.js'
       - 'v3/xrmovi-assistant-brain.js'
       - 'v3/xrmovi-local-model.js'
@@ -36,6 +39,9 @@ on:
       - 'tests/ga4-confirmed-payments.test.mjs'
       - 'supabase/tests/*.test.cjs'
       - 'v3/xrmovi-adapter.js'
+      - 'v3/fuel-quality.js'
+      - 'v3/finance-receipts-report.js'
+      - 'v3/tests/fuel-liter-omission.test.cjs'
       - 'v3/xrmovi-local-assistant.js'
       - 'v3/xrmovi-assistant-brain.js'
       - 'v3/xrmovi-local-model.js'
@@ -77,6 +83,11 @@ jobs:
           node --check analytics/xrmovi-bridge.js
       - name: Validate adapter JavaScript syntax
         run: node --check v3/xrmovi-adapter.js
+      - name: Verify missing fuel liters declaration, reports and consumption estimates
+        run: |
+          node --check v3/fuel-quality.js
+          node --check v3/finance-receipts-report.js
+          node --test v3/tests/fuel-liter-omission.test.cjs
       - name: Validate local voice assistant JavaScript syntax
         run: node --check v3/xrmovi-local-assistant.js
       - name: Validate course knowledge base syntax
