@@ -24,7 +24,7 @@ begin
  when 'expense' then exists(select 1 from xrmovi.vehicle_expenses r where r.company_id=cid and r.id=rid) when 'fine' then exists(select 1 from xrmovi.traffic_fines r where r.company_id=cid and r.id=rid)
  else false end;
 exception when others then return false;
-end $function$
+end $function$;
 
 
 CREATE OR REPLACE FUNCTION public.xrmovi_attachment_register(cid uuid, kind text, rid uuid, p_path text, p_name text, p_type text, p_size bigint)
@@ -43,7 +43,7 @@ begin
  insert into xrmovi.record_attachments(company_id,entity_kind,record_id,vehicle_id,original_name,object_path,content_type,size_bytes,uploaded_by)
  values(cid,kind,rid,vid,p_name,p_path,p_type,p_size,(select auth.uid())) returning id into output_id;
  return output_id;
-end $function$
+end $function$;
 
 
 CREATE OR REPLACE FUNCTION public.xrmovi_document_delete_prepare(cid uuid, p_source text, p_attachment_id uuid)
@@ -91,4 +91,4 @@ begin
   'path',path_value,'name',file_name,'kind',kind_value,'record_id',rid
  );
 end;
-$function$
+$function$;
