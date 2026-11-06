@@ -42,7 +42,7 @@ test('the evidence report labels missing liters and explicitly records actor and
  const html=buildFuelEvidenceHtml({companyName:'Teste',range:'Novembro',rows:[],groups});
  assert.match(html,/Não informado/);
  assert.match(html,/colaborador@example.com/);
- assert.match(html,/abastecimento\\(s\\) com litros omitidos/);
+ assert.ok(html.includes('abastecimento(s) com litros omitidos'));
  assert.doesNotMatch(html,/0 litros · Total/);
 });
 test('the V3 forms send explicit choice to protected RPCs, reports label omissions',()=>{
@@ -51,8 +51,8 @@ test('the V3 forms send explicit choice to protected RPCs, reports label omissio
   'Falta a quantidade de litros','renderFuelQuality(entries)',
   'LITROS NÃO INFORMADOS'])assert.ok(adapter.includes(text),text);
  const migration=read('supabase/migrations/20261105_xrmovi_fuel_liters_explicit_omission_audit.sql');
- assert.match(migration,/auth.uid\\(\\)/);
- assert.match(migration,/fuel_liter_omissions/);
- assert.match(migration,/qty is null/);
- assert.match(migration,/before_data,after_data/);
+ assert.ok(migration.includes('auth.uid()'));
+ assert.ok(migration.includes('fuel_liter_omissions'));
+ assert.ok(migration.includes('qty is null'));
+ assert.ok(migration.includes('before_data,after_data'));
 });
