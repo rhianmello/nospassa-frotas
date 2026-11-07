@@ -33,7 +33,10 @@ form.addEventListener('submit',async event=>{
   // Route the platform owner to the protected administration area.
   let destination=dashboard;
   const {data:isAdmin,error:adminError}=await client.rpc('xrmovi_platform_is_admin');
-  if(!adminError&&isAdmin===true)destination=new URL('/admin/',location.origin).href;
+  if(!adminError&&isAdmin===true){
+    window.XrmoviAnalytics?.setInternal?.(true);
+    destination=new URL('/admin/',location.origin).href;
+  }
   msg.textContent=isAdmin===true&&!adminError?'Acesso confirmado. Abrindo administração...':'Acesso confirmado. Abrindo painel...';
   // Atribuição é opcional e nunca bloqueia o login nem libera assinatura.
   try{await Promise.race([Promise.allSettled([window.XrmoviAnalytics?.syncAttribution?.(client)||Promise.resolve(false),window.XrmoviAnalytics?.syncPurchaseIdentity?.(client)||Promise.resolve(false)]),new Promise(resolve=>setTimeout(resolve,2800))]);}catch(_error){}

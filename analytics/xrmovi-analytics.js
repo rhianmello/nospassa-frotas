@@ -6,13 +6,31 @@ var allowed={xrmovi_view_plans:1,xrmovi_contact:1,xrmovi_signup_start:1,xrmovi_d
 var status=null,loaded=false,box,notice;
 
 var ATTR_KEY='xrmovi_campaign_first_touch_v1',ATTR_AGE=30*24*60*60*1000;
+var INTERNAL_KEY='xrmovi_ga4_internal_admin_v1',INTERNAL_TTL=14*24*60*60*1000;
+// Internal classification is a local reporting preference, never an authorization credential.
+// The flag is written only after the authenticated platform_admin RPC succeeds.
+function isInternal(){
+ try{
+  var flag=JSON.parse(localStorage.getItem(INTERNAL_KEY)||'null');
+  if(flag&&flag.role==='platform_admin'&&Number(flag.until)>Date.now())return true;
+  if(flag)localStorage.removeItem(INTERNAL_KEY);
+ }catch(e){}
+ return false;
+}
+function setInternal(value){
+ try{
+  if(value)localStorage.setItem(INTERNAL_KEY,JSON.stringify({role:'platform_admin',until:Date.now()+INTERNAL_TTL}));
+  else localStorage.removeItem(INTERNAL_KEY);
+ }catch(e){}
+ if(value&&loaded){consent(false);clearAnalyticsCookies();}
+}
 function safeCampaignValue(v,max){
   if(typeof v!=='string')return '';
   var s=v.trim().slice(0,max);
   return /[@/?#\r\n<>]/.test(s)?'':s;
 }
 function captureCampaign(){
- if(status!=='accepted')return;
+ if(status!=='accepted'||isInternal())return;
  try{
   var old=JSON.parse(localStorage.getItem(ATTR_KEY)||'null');
   if(old&&Date.now()-Number(old.time)<ATTR_AGE&&old.source)return;
@@ -26,7 +44,7 @@ function captureCampaign(){
  }catch(e){}
 }
 async function syncAttribution(client){
- if(status!=='accepted'||!client||typeof client.rpc!=='function')return false;
+ if(status!=='accepted'||isInternal()||!client||typeof client.rpc!=='function')return false;
  try{
   var saved=JSON.parse(localStorage.getItem(ATTR_KEY)||'null');
   var active=saved&&Date.now()-Number(saved.time)<ATTR_AGE&&saved.source?saved:
@@ -60,7 +78,7 @@ function ga4Get(key,ms){
  });
 }
 async function syncPurchaseIdentity(client){
- if(!client||typeof client.rpc!=='function'||(status!=='accepted'&&status!=='denied'))return false;
+ if(isInternal()||!client||typeof client.rpc!=='function'||(status!=='accepted'&&status!=='denied'))return false;
  try{
   const session=await client.auth.getSession();
   if(!session?.data?.session)return false;
@@ -97,7 +115,7 @@ function consent(value){
  ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied'});
 }
 function startTag(){
- if(loaded)return;
+ if(loaded||isInternal())return;
  loaded=true;
  window.dataLayer=window.dataLayer||[];
  window.gtag=function(){window.dataLayer.push(arguments);};
@@ -124,11 +142,11 @@ function save(value){
  if(value==='accepted'){captureCampaign();startTag();}
  else {try{localStorage.removeItem(ATTR_KEY)}catch(e){}if(loaded){consent(false);clearAnalyticsCookies();}}
  box.hidden=true;
- if(notice)notice.textContent=value==='accepted'?'Medição analítica ativada.':'Medição analítica desativada.';
+ if(notice)notice.textContent=isInternal()?'Acessos administrativos excluídos da medição.':value==='accepted'?'Medição analítica ativada.':'Medição analítica desativada.';
  window.dispatchEvent(new CustomEvent('xrmovi:analytics-consent-changed',{detail:{consent:value}}));
 }
 function track(name,data){
- if(status!=='accepted'||!loaded||!allowed[name]||typeof window.gtag!=='function')return;
+ if(status!=='accepted'||isInternal()||!loaded||!allowed[name]||typeof window.gtag!=='function')return;
  data=data||{};
  var args={page_location:page()};
  if(typeof data.plan==='string'&&['start','pro','business','advanced','enterprise'].indexOf(data.plan)>=0)args.plan=data.plan;
@@ -136,7 +154,7 @@ function track(name,data){
  if(name==='sign_up')args.method='email';
  window.gtag('event',name,args);
 }
-window.XrmoviAnalytics=Object.freeze({track:track,syncAttribution:syncAttribution,syncPurchaseIdentity:syncPurchaseIdentity,getConsent:function(){return status;}});
+window.XrmoviAnalytics=Object.freeze({track:track,syncAttribution:syncAttribution,syncPurchaseIdentity:syncPurchaseIdentity,getConsent:function(){return status;},isInternal:isInternal,setInternal:setInternal});
 function element(tag,text,cls){
  var n=document.createElement(tag);if(text)n.textContent=text;if(cls)n.className=cls;return n;
 }
@@ -172,7 +190,7 @@ function init(){
  banner();instrument();
  try{var saved=localStorage.getItem(KEY);status=saved==='accepted'||saved==='denied'?saved:null;}catch(err){status=null;}
  if(status==='accepted'){captureCampaign();startTag();}
- else if(!status)box.hidden=false;
+ else if(!status&&!isInternal())box.hidden=false;
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();

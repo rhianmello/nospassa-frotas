@@ -294,7 +294,7 @@ el('message-form').onsubmit=async event=>{
  finally{button.disabled=false}
 };
 el('refresh').onclick=()=>void refresh();
-el('signout').onclick=async()=>{if(db)await db.auth.signOut();location.replace('../?login=1')};
+el('signout').onclick=async()=>{if(db)await db.auth.signOut();try{localStorage.removeItem('xrmovi_ga4_internal_admin_v1')}catch(_error){}location.replace('../?login=1')};
 async function checkBillingStatus(){
  const label=el('xrm-billing-health');
  try{
@@ -338,6 +338,8 @@ async function start(){
   const {data,error}=await db.auth.getUser();if(error||!data?.user){location.replace('../?login=1');return}
   el('user-label').textContent='Conectado como '+data.user.email;
   const check=await rpc('platform_is_admin');if(check!==true)throw Error('Usuário não autorizado como administrador da plataforma.');
+  // Only a server-verified platform administrator can mark this browser as internal.
+  try{localStorage.setItem('xrmovi_ga4_internal_admin_v1',JSON.stringify({role:'platform_admin',until:Date.now()+14*24*60*60*1000}))}catch(_error){}
   await refresh();void checkBillingStatus();
  }catch(e){show('unauthorized');el('denied-text').textContent=e.message}
 }
