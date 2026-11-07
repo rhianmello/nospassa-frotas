@@ -5,6 +5,8 @@ on:
       - 'supabase/functions/xrmovi-*/**'
       - 'analytics/**'
       - 'tests/ga4-confirmed-payments.test.mjs'
+      - 'tests/analytics-internal.test.mjs'
+      - 'tests/seo-core.test.mjs'
       - 'supabase/tests/*.test.cjs'
       - 'v3/xrmovi-adapter.js'
       - 'v3/fuel-quality.js'
@@ -49,6 +51,8 @@ on:
       - 'supabase/functions/xrmovi-*/**'
       - 'analytics/**'
       - 'tests/ga4-confirmed-payments.test.mjs'
+      - 'tests/analytics-internal.test.mjs'
+      - 'tests/seo-core.test.mjs'
       - 'supabase/tests/*.test.cjs'
       - 'v3/xrmovi-adapter.js'
       - 'v3/fuel-quality.js'
@@ -101,6 +105,8 @@ jobs:
           node-version: '22'
       - name: Validate confirmed-purchase GA4 consent and queue guards
         run: node --test tests/ga4-confirmed-payments.test.mjs
+      - name: Validate internal visitor exclusion and SEO
+        run: node --test tests/analytics-internal.test.mjs tests/seo-core.test.mjs
       - name: Validate analytics script syntax
         run: |
           node --check analytics/xrmovi-analytics.js
