@@ -138,7 +138,7 @@ function clearAnalyticsCookies(){
 }
 function save(value){
  status=value;
- try{localStorage.setItem(KEY,value);}catch(e){}
+ try{localStorage.setItem(KEY,value);if(value==='accepted')localStorage.setItem('xrmovi_monitor_count_consent_v1','yes');else localStorage.removeItem('xrmovi_monitor_count_consent_v1');}catch(e){}
  if(value==='accepted'){captureCampaign();startTag();}
  else {try{localStorage.removeItem(ATTR_KEY)}catch(e){}if(loaded){consent(false);clearAnalyticsCookies();}}
  box.hidden=true;
@@ -164,7 +164,7 @@ function banner(){
  document.head.appendChild(style);
  box=element('section');box.id='xrm-ga4-consent';box.hidden=true;box.setAttribute('role','dialog');box.setAttribute('aria-label','Preferências de privacidade');
  box.appendChild(element('h2','Podemos medir as visitas ao XRMOVI?'));
- box.appendChild(element('p','Com sua autorização, usamos Google Analytics para medir visitas, cliques e compras aprovadas, quando identificadas com seu consentimento. Não enviamos e-mail, senha ou dados dos veículos. Você pode recusar e alterar a escolha depois.'));
+ box.appendChild(element('p','Com sua autorização, usamos Google Analytics e uma contagem interna com identificador aleatório diário para medir visitas, pessoas online, cliques e compras aprovadas. Não registramos IP, e-mail, senha ou dados dos veículos nessa contagem. Você pode recusar ou alterar sua escolha depois.'));
  var actions=element('div',null,'ga4-buttons'),yes=element('button','Aceitar análise'),no=element('button','Recusar','ga4-deny');
  yes.type=no.type='button';yes.addEventListener('click',function(){save('accepted');});no.addEventListener('click',function(){save('denied');});
  actions.appendChild(yes);actions.appendChild(no);box.appendChild(actions);document.body.appendChild(box);
