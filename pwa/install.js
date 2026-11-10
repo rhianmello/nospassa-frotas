@@ -17,7 +17,8 @@ const isiOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||navigator.platform==='
 const android=/Android/i.test(navigator.userAgent);
 const standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
 if(standalone)return;
-const trigger=document.createElement('button');trigger.id='xrm-install-trigger';trigger.type='button';trigger.textContent='⬇ Instalar XRMOVI';document.body.append(trigger);
+const triggers=Array.from(document.querySelectorAll('[data-xrm-install]'));
+if(!triggers.length)return;
 const overlay=document.createElement('div');overlay.id='xrm-install-overlay';
 overlay.innerHTML='<div id="xrm-install-dialog" role="dialog" aria-modal="true" aria-labelledby="xrm-install-title"><h2 id="xrm-install-title">Instalar XRMOVI</h2><p id="xrm-install-instructions"></p><div class="actions"><button id="xrm-install-primary" type="button">Instalar aplicativo</button><button id="xrm-install-close" type="button">Fechar</button></div></div>';
 document.body.append(overlay);
@@ -38,10 +39,10 @@ function open(){
  }
 }
 function close(){overlay.classList.remove('open')}
-trigger.onclick=open;overlay.querySelector('#xrm-install-close').onclick=close;
+triggers.forEach(trigger=>{trigger.addEventListener('click',e=>{e.preventDefault();open()})});overlay.querySelector('#xrm-install-close').onclick=close;
 overlay.addEventListener('click',e=>{if(e.target===overlay)close()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e});
-window.addEventListener('appinstalled',()=>{trigger.remove();close()});
+window.addEventListener('appinstalled',()=>{triggers.forEach(trigger=>trigger.remove());close()});
 if('serviceWorker'in navigator&&location.protocol==='https:')window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js',{scope:'/'}).catch(e=>console.warn('PWA indisponível',e)));
 })();
