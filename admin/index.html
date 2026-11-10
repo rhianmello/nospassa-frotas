@@ -39,6 +39,7 @@ footer{padding:20px;text-align:center;color:#849eae;font-size:11px}
  <div id="content" hidden>
   <div class="head"><div><div class="eyebrow">BI COMERCIAL · CLIENTES E FATURAMENTO</div><h1>Central do proprietário</h1><p>Controle a entrada de clientes, status de acesso, mensagens e movimentações financeiras.</p></div><div class="account-identity" id="user-label"></div></div>
   <div class="kpis">
+   <div class="kpi"><span><span style="color:#4fe2b8">●</span> Pessoas online agora</span><b id="k-online">—</b><small id="online-detail">Conectando… · sem seu acesso</small></div>
    <div class="kpi"><span>Contas cadastradas</span><b id="k-accounts">—</b><small>Clientes (sem o proprietário)</small></div>
    <div class="kpi"><span>Aguardando pagamento</span><b id="k-trial">—</b><small>Contas sem assinatura ativa</small></div>
    <div class="kpi"><span>Assinaturas ativas</span><b id="k-active">—</b><small>Situação registrada</small></div>
@@ -344,6 +345,20 @@ async function checkBillingStatus(){
   el('xrm-mail-health').textContent='Não foi possível verificar a configuração do provedor de e-mail.';
  }
 }
+function startOnlineCounter(){
+ const card=el('k-online'),detail=el('online-detail');
+ const channel=db.channel('xrmovi-online-visitors-v1',{config:{presence:{key:'admin-observer-'+crypto.randomUUID()}}});
+ const update=()=>{
+  const state=channel.presenceState(),ids=new Set();
+  for(const records of Object.values(state))for(const item of records){if(item?.id)ids.add(item.id)}
+  card.textContent=number(ids.size);detail.textContent='Visitantes com página aberta · sem seu acesso';
+ };
+ channel.on('presence',{event:'sync'},update).subscribe(status=>{
+  if(status==='SUBSCRIBED')update();
+  if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'){card.textContent='—';detail.textContent='Conexão indisponível'}
+ });
+ window.addEventListener('pagehide',()=>void db.removeChannel(channel),{once:true});
+}
 async function start(){
  try{const cfg=await fetch('../v3/config.json',{cache:'no-store'});if(!cfg.ok)throw Error('Configuração indisponível');
   const c=await cfg.json();db=createClient(c.supabaseUrl,c.supabaseAnonKey);
@@ -352,7 +367,7 @@ async function start(){
   const check=await rpc('platform_is_admin');if(check!==true)throw Error('Usuário não autorizado como administrador da plataforma.');
   // Only a server-verified platform administrator can mark this browser as internal.
   try{localStorage.setItem('xrmovi_ga4_internal_admin_v1',JSON.stringify({role:'platform_admin',until:Date.now()+14*24*60*60*1000}))}catch(_error){}
-  await refresh();void checkBillingStatus();
+  await refresh();startOnlineCounter();void checkBillingStatus();
  }catch(e){show('unauthorized');el('denied-text').textContent=e.message}
 }
 void start();
