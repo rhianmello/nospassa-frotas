@@ -2,7 +2,7 @@
 (function(){
 'use strict';
 var GA_ID='G-1Z1PSN1SJD',KEY='xrmovi_ga4_consent_v1';
-var allowed={xrmovi_view_plans:1,xrmovi_contact:1,xrmovi_signup_start:1,xrmovi_demo_open:1,sign_up:1};
+var allowed={xrmovi_view_plans:1,xrmovi_contact:1,xrmovi_signup_start:1,xrmovi_demo_open:1,xrmovi_demo_complete:1,sign_up:1};
 var status=null,loaded=false,box,notice;
 
 var ATTR_KEY='xrmovi_campaign_first_touch_v1',ATTR_AGE=30*24*60*60*1000;
@@ -150,7 +150,7 @@ function track(name,data){
  data=data||{};
  var args={page_location:page()};
  if(typeof data.plan==='string'&&['start','pro','business','advanced','enterprise'].indexOf(data.plan)>=0)args.plan=data.plan;
- if(typeof data.location==='string'&&['landing','seo','navigation','hero','plans','footer','preview','registration'].indexOf(data.location)>=0)args.click_location=data.location;
+ if(typeof data.location==='string'&&['landing','seo','navigation','hero','plans','footer','preview','registration','qr_demo'].indexOf(data.location)>=0)args.click_location=data.location;
  if(name==='sign_up')args.method='email';
  window.gtag('event',name,args);
 }
@@ -179,11 +179,13 @@ function instrument(){
   if(e.target.closest('[data-demo]')){track('xrmovi_demo_open',{location:'preview'});return;}
   var a=e.target.closest('a[href]');if(!a)return;
   var u;try{u=new URL(a.href,location.href);}catch(err){return;}
+  var inQrDemo=Boolean(a.closest('#demo-qr'));
+  if(u.origin===location.origin&&u.hash==='#demo-qr'){track('xrmovi_demo_open',{location:'qr_demo'});return;}
   var planContainer=a.closest('.plan'),planLabel=(planContainer&&planContainer.querySelector('h2,h3')||{}).textContent||'';
   planLabel=planLabel.toLowerCase();
   var plan=['start','pro','business','advanced','enterprise'].find(function(x){return planLabel.indexOf(x)>=0;})||'';
-  if(u.hostname==='wa.me'||u.hostname==='api.whatsapp.com'){track('xrmovi_contact',{location:plan?'plans':'landing',plan:plan});return;}
-  if(u.origin===location.origin&&u.hash==='#planos')track('xrmovi_view_plans',{location:location.pathname==='/'?'landing':'seo'});
+  if(u.hostname==='wa.me'||u.hostname==='api.whatsapp.com'){track('xrmovi_contact',{location:inQrDemo?'qr_demo':plan?'plans':'landing',plan:plan});return;}
+  if(u.origin===location.origin&&u.hash==='#planos')track('xrmovi_view_plans',{location:inQrDemo?'qr_demo':location.pathname==='/'?'landing':'seo'});
  },true);
 }
 function init(){
