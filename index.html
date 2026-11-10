@@ -78,6 +78,18 @@ header .brand-logo{display:block;width:215px;height:auto;max-height:58px;object-
 .xrm-install-mobile-link{display:none}
 @media(max-width:850px){.xrm-install-mobile-link{display:inline-flex;align-items:center;font-size:12px;border:1px solid #466476;border-radius:9px;padding:9px 10px;color:var(--white)}.nav-actions{gap:7px!important}}
 @media(max-width:460px){.nav-actions .btn{font-size:11px!important;padding:9px 8px!important}.xrm-install-mobile-link{font-size:11px;padding:9px 7px}header .brand-logo{width:125px!important}}
+
+/* XRMOVI commercial: responsive native player, no autoplay. */
+.xrm-commercial-video-section{background:linear-gradient(180deg,#071b2a,#0a2334);border-top:1px solid #214557;border-bottom:1px solid #214557;padding:55px 0 58px}
+.xrm-commercial-video-section[hidden]{display:none!important}
+.xrm-commercial-video-header{text-align:center;max-width:790px;margin:0 auto 25px}
+.xrm-commercial-video-header h2{font-size:clamp(27px,3.4vw,43px);line-height:1.16;letter-spacing:-1px;margin:11px 0 10px}
+.xrm-commercial-video-header p{color:#b9cfda;font-size:15px;margin:0}
+.xrm-commercial-video-frame{max-width:1030px;margin:auto;border:1px solid #356476;border-radius:18px;overflow:hidden;background:#04111e;box-shadow:0 20px 60px #0008;aspect-ratio:1434/756}
+.xrm-commercial-video-frame video{display:block;width:100%;height:100%;object-fit:contain;background:#04111e}
+.xrm-commercial-video-actions{margin:22px auto 0;display:flex;align-items:center;justify-content:center;gap:17px;flex-wrap:wrap}
+.xrm-commercial-video-actions span{color:#a9c4ce;font-size:12px}
+@media(max-width:600px){.xrm-commercial-video-section{padding:36px 0 40px}.xrm-commercial-video-frame{border-radius:12px}}
 </style><link rel="stylesheet" href="/seo/comercial.css">
 <script defer src="/analytics/xrmovi-analytics.js?v=20261105-ga4-purchase-1"></script>
 <script defer src="/analytics/xrmovi-widget-visits.js?v=20261108-1"></script>
@@ -132,6 +144,37 @@ header .brand-logo{display:block;width:215px;height:auto;max-height:58px;object-
   </div>
  </div>
 </div>
+<section class="section xrm-commercial-video-section" id="video-xrmovi" aria-labelledby="xrm-commercial-video-title" hidden>
+ <div class="shell">
+  <div class="xrm-commercial-video-header">
+   <div class="eyebrow">CONHEÇA O XRMOVI EM AÇÃO</div>
+   <h2 id="xrm-commercial-video-title">Veja como o XRMOVI simplifica sua gestão de frotas</h2>
+   <p>Assista à apresentação e descubra como organizar veículos, motoristas, manutenção, abastecimentos e registros de quilometragem.</p>
+  </div>
+  <div class="xrm-commercial-video-frame">
+   <video id="xrm-commercial-video" controls preload="none" playsinline controlsList="nodownload" aria-label="Vídeo comercial de apresentação do XRMOVI">
+    <source src="/assets/videos/XRMOVI_comercial_web.mp4" type="video/mp4">
+    Seu navegador não oferece reprodução de vídeo HTML5.
+   </video>
+  </div>
+  <div class="xrm-commercial-video-actions"><a class="btn" href="#planos">Conhecer os planos</a><span>Assista no seu ritmo, com áudio opcional.</span></div>
+ </div>
+</section>
+<script>
+(function(){
+ const section=document.getElementById('video-xrmovi');
+ const video=document.getElementById('xrm-commercial-video');
+ if(!section||!video)return;
+ const source=video.querySelector('source');
+ if(!source)return;
+ // Avoid a broken player until the video asset is present on the host.
+ fetch(source.src,{method:'HEAD',cache:'no-store'}).then(r=>{
+  if(r.ok&&(/video\/mp4/i.test(r.headers.get('content-type')||'')||r.url.endsWith('.mp4'))){
+   section.hidden=false;
+  }
+ }).catch(()=>{});
+})();
+</script>
 <section class="section xrm-qr-product" id="qr-frota" aria-labelledby="xrm-qr-title">
  <div class="shell">
   <div class="xrm-qr-section-intro">
