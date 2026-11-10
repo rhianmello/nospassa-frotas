@@ -41,7 +41,26 @@ form.addEventListener('submit',async event=>{
   // Atribuição é opcional e nunca bloqueia o login nem libera assinatura.
   try{await Promise.race([Promise.allSettled([window.XrmoviAnalytics?.syncAttribution?.(client)||Promise.resolve(false),window.XrmoviAnalytics?.syncPurchaseIdentity?.(client)||Promise.resolve(false)]),new Promise(resolve=>setTimeout(resolve,2800))]);}catch(_error){}
   location.replace(destination);
- }catch(error){msg.textContent=error.message||'Não foi possível autenticar.'}finally{submit.disabled=false}
+ }catch(error){
+  const original=String(error?.message||'');
+  const code=String(error?.code||'');
+  if(mode==='signup'&&(code==='user_already_exists'||/user already registered|already been registered|already registered/i.test(original))){
+    // A conta existente nunca é sobrescrita e a senha não é alterada.
+    mode='signin';
+    document.querySelectorAll('[data-auth-mode]').forEach(b=>{const selected=b.dataset.authMode==='signin';b.classList.toggle('active',selected);b.setAttribute('aria-selected',String(selected))});
+    confirm.hidden=true;confirm.querySelector('input').required=false;
+    passwordRow.hidden=false;passwordRow.querySelector('input').required=true;
+    form.querySelector('[name=password]').setAttribute('autocomplete','current-password');
+    forgot.hidden=false;submit.textContent='Entrar no painel';
+    msg.textContent='Este e-mail já possui cadastro. Entre com sua senha ou toque em “Esqueci minha senha” para recuperar o acesso.';
+  }else if(/invalid login credentials/i.test(original)){
+    msg.textContent='E-mail ou senha incorretos. Confira os dados ou toque em “Esqueci minha senha”.';
+  }else if(/email not confirmed/i.test(original)){
+    msg.textContent='Seu e-mail ainda não foi confirmado. Verifique a caixa de entrada e o spam.';
+  }else{
+    msg.textContent=original||'Não foi possível autenticar. Tente novamente.';
+  }
+ }finally{submit.disabled=false}
 });
 // A abertura da janela de acesso é controlada pelo script da landing.
 
