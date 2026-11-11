@@ -9,7 +9,7 @@ export async function showXrmoviOnboarding({login,client,onCreated,onLogout,exis
  const form=login.querySelector('#v3login');
  form.classList.add('xrm-signup');
  form.style.cssText='';
- form.innerHTML="\n  <header class=\"wizard-header\">\n   <div class=\"wizard-brand\">\n    <span class=\"wizard-brand-symbol\" aria-hidden=\"true\">X</span>\n    <div><b>XRMOVI</b><small>Plataforma inteligente de frotas</small></div>\n   </div>\n   <button type=\"button\" class=\"wizard-exit\" aria-label=\"Encerrar sessão e sair do cadastro\"><span aria-hidden=\"true\">↗</span> Sair da conta</button>\n  </header>\n  <div class=\"wizard-intro\">\n   <div class=\"wizard-eyebrow\">Sua operação começa aqui</div>\n   <h1>Configure sua frota.<br><em>O controle começa agora.</em></h1>\n   <p>Defina sua empresa, organize o primeiro contrato e escolha a capacidade ideal. Tudo preparado para começar assim que o pagamento for confirmado.</p>\n  </div>\n  <div class=\"wizard-journey\" aria-label=\"Etapas do cadastro\">\n   <div class=\"wizard-journey-step\" data-journey=\"1\" data-active=\"true\"><span class=\"journey-number\">01</span><span>Empresa</span></div>\n   <div class=\"wizard-journey-step\" data-journey=\"2\" data-active=\"false\"><span class=\"journey-number\">02</span><span>Contrato</span></div>\n   <div class=\"wizard-journey-step\" data-journey=\"3\" data-active=\"false\"><span class=\"journey-number\">03</span><span>Assinatura</span></div>\n  </div>\n  <div class=\"wizard-body\">\n   <div class=\"wizard-fields\">\n    <section class=\"step\" data-wizard-step=\"1\" aria-labelledby=\"step-company-title\">\n     <header class=\"step-heading\"><span class=\"step-number\">01</span><div><h3 id=\"step-company-title\">Dados da empresa</h3><p>Quem será o titular desta assinatura?</p></div></header>\n     <label>Nome da empresa<input name=\"company\" required minlength=\"2\" maxlength=\"160\" autocomplete=\"organization\" placeholder=\"Ex.: Transportadora Santos\"></label>\n    </section>\n    <section class=\"step\" data-wizard-step=\"2\" aria-labelledby=\"step-contract-title\">\n     <header class=\"step-heading\"><span class=\"step-number\">02</span><div><h3 id=\"step-contract-title\">Seu primeiro contrato</h3><p>Organize a estrutura inicial da frota</p></div></header>\n     <label>Nome do contrato<input name=\"contract\" required minlength=\"2\" maxlength=\"160\" placeholder=\"Ex.: Frota Matriz\"></label>\n     <div class=\"step-input-grid\">\n      <label>Cliente / contratante <span class=\"optional\">Opcional</span><input name=\"customer\" maxlength=\"160\" placeholder=\"Ex.: Empresa XYZ\"></label>\n      <label>Código do contrato <span class=\"optional\">Opcional</span><input name=\"code\" maxlength=\"60\" placeholder=\"Ex.: CT-2026-001\"></label>\n     </div>\n    </section>\n    <section class=\"step\" data-wizard-step=\"3\" aria-labelledby=\"step-plan-title\">\n     <header class=\"step-heading\"><span class=\"step-number\">03</span><div><h3 id=\"step-plan-title\">Escolha sua assinatura</h3><p>Você pode mudar de plano conforme a frota crescer</p></div></header>\n     <label>Plano mensal<select name=\"plan\" required disabled><option value=\"\">Carregando os planos...</option></select></label>\n    </section>\n    <div class=\"wizard-actions\">\n     <button type=\"submit\" class=\"wizard-submit\" disabled><span data-action-label>Continuar para o pagamento</span><span class=\"wizard-submit-arrow\" aria-hidden=\"true\">›</span></button>\n     <p class=\"wizard-note\"><span class=\"wizard-note-dot\" aria-hidden=\"true\">●</span><span>Cadastro sem cobrança imediata. O Mercado Pago apresenta as condições antes de confirmar. O painel operacional é liberado após pagamento aprovado.</span></p>\n     <p class=\"wizard-msg\" role=\"status\" aria-live=\"polite\"></p>\n    </div>\n   </div>\n   <aside class=\"plan-preview\" aria-label=\"Resumo da assinatura escolhida\" aria-live=\"polite\">\n    <div class=\"preview-top\">\n     <span class=\"preview-label\">Sua assinatura</span>\n     <div class=\"preview-plan\" data-plan-title>Selecione um plano</div>\n     <div class=\"preview-price-line\"><strong data-plan-price>—</strong><small>/ mês</small></div>\n    </div>\n    <div class=\"preview-rule\" aria-hidden=\"true\"></div>\n    <div class=\"preview-cap\">\n     <p class=\"preview-cap-title\">Capacidade incluída</p>\n     <div class=\"limits\" data-limits></div>\n    </div>\n    <div class=\"preview-summary\">\n     <span>Resumo do cadastro</span>\n     <div class=\"preview-summary-row\"><small>Empresa</small><strong data-summary-company>Não informado</strong></div>\n     <div class=\"preview-summary-row\"><small>Contrato</small><strong data-summary-contract>Não informado</strong></div>\n    </div>\n    <div class=\"preview-footer\"><span class=\"preview-footer-mark\" aria-hidden=\"true\">✓</span><span>Limites compartilhados entre as empresas, não multiplicados por contrato. Sem acesso operacional antes da confirmação do pagamento.</span></div>\n   </aside>\n  </div>";
+ form.innerHTML="\n  <header class=\"wizard-header\">\n   <div class=\"wizard-brand\">\n    <span class=\"wizard-brand-symbol\" aria-hidden=\"true\">X</span>\n    <div><b>XRMOVI</b><small>Plataforma inteligente de frotas</small></div>\n   </div>\n   <button type=\"button\" class=\"wizard-exit\" aria-label=\"Encerrar sessão e sair do cadastro\"><span aria-hidden=\"true\">↗</span> Sair da conta</button>\n  </header>\n  <div class=\"wizard-intro\">\n   <div class=\"wizard-eyebrow\">Sua operação começa aqui</div>\n   <h1>Configure sua frota.<br><em>O controle começa agora.</em></h1>\n   <p>Informe os dados da empresa e escolha o plano para sua frota. Tudo preparado para começar assim que o pagamento for confirmado.</p>\n  </div>\n  <div class=\"wizard-journey\" aria-label=\"Etapas do cadastro\">\n   <div class=\"wizard-journey-step\" data-journey=\"1\" data-active=\"true\"><span class=\"journey-number\">01</span><span>Empresa</span></div>\n   <div class=\"wizard-journey-step\" data-journey=\"2\" data-active=\"false\"><span class=\"journey-number\">02</span><span>Assinatura</span></div>\n  </div>\n  <div class=\"wizard-body\">\n   <div class=\"wizard-fields\">\n    <section class=\"step\" data-wizard-step=\"1\" aria-labelledby=\"step-company-title\">\n     <header class=\"step-heading\"><span class=\"step-number\">01</span><div><h3 id=\"step-company-title\">Dados da empresa</h3><p>Quem será o titular desta assinatura?</p></div></header>\n     <label>Nome da empresa<input name=\"company\" required minlength=\"2\" maxlength=\"160\" autocomplete=\"organization\" placeholder=\"Ex.: Transportadora Santos\"></label>\n    </section>\n    <section class=\"step\" data-wizard-step=\"2\" aria-labelledby=\"step-plan-title\">\n     <header class=\"step-heading\"><span class=\"step-number\">02</span><div><h3 id=\"step-plan-title\">Escolha sua assinatura</h3><p>Você pode mudar de plano conforme a frota crescer</p></div></header>\n     <label>Plano mensal<select name=\"plan\" required disabled><option value=\"\">Carregando os planos...</option></select></label>\n    </section>\n    <div class=\"wizard-actions\">\n     <button type=\"submit\" class=\"wizard-submit\" disabled><span data-action-label>Continuar para o pagamento</span><span class=\"wizard-submit-arrow\" aria-hidden=\"true\">›</span></button>\n     <p class=\"wizard-note\"><span class=\"wizard-note-dot\" aria-hidden=\"true\">●</span><span>Cadastro sem cobrança imediata. O Mercado Pago apresenta as condições antes de confirmar. O painel operacional é liberado após pagamento aprovado.</span></p>\n     <p class=\"wizard-msg\" role=\"status\" aria-live=\"polite\"></p>\n    </div>\n   </div>\n   <aside class=\"plan-preview\" aria-label=\"Resumo da assinatura escolhida\" aria-live=\"polite\">\n    <div class=\"preview-top\">\n     <span class=\"preview-label\">Sua assinatura</span>\n     <div class=\"preview-plan\" data-plan-title>Selecione um plano</div>\n     <div class=\"preview-price-line\"><strong data-plan-price>—</strong><small>/ mês</small></div>\n    </div>\n    <div class=\"preview-rule\" aria-hidden=\"true\"></div>\n    <div class=\"preview-cap\">\n     <p class=\"preview-cap-title\">Capacidade incluída</p>\n     <div class=\"limits\" data-limits></div>\n    </div>\n    <div class=\"preview-summary\">\n     <span>Resumo do cadastro</span>\n     <div class=\"preview-summary-row\"><small>Empresa</small><strong data-summary-company>Não informado</strong></div>\n    </div>\n    <div class=\"preview-footer\"><span class=\"preview-footer-mark\" aria-hidden=\"true\">✓</span><span>Limites compartilhados entre as empresas, não multiplicados por contrato. Sem acesso operacional antes da confirmação do pagamento.</span></div>\n   </aside>\n  </div>";
  const paymentChoice=document.createElement('fieldset');
  paymentChoice.className='wizard-payment-choice';
  paymentChoice.innerHTML=`<legend>Como deseja pagar?</legend>
@@ -23,29 +23,27 @@ export async function showXrmoviOnboarding({login,client,onCreated,onLogout,exis
    <span class="wizard-payment-indicator" aria-hidden="true"></span>
    <span class="wizard-payment-copy"><strong>Pix</strong><small>QR Code ou Copia e Cola · renovação mensal manual</small></span>
   </label>`;
- form.querySelector('[data-wizard-step="3"]').append(paymentChoice);
+ form.querySelector('[data-wizard-step="2"]').append(paymentChoice);
  // Before redirecting to Mercado Pago, identify the payer address bound to this account.
  const emailSlot=document.createElement('div');
  emailSlot.id='xrm-checkout-login-email';
- form.querySelector('[data-wizard-step="3"]').append(emailSlot);
+ form.querySelector('[data-wizard-step="2"]').append(emailSlot);
  void createPaymentEmailNotice(client).then(note=>emailSlot.replaceChildren(note))
   .catch(()=>{emailSlot.textContent='Confira o e-mail do login XRMOVI antes de confirmar no Mercado Pago.';});
  const elements=form.elements, select=elements.namedItem('plan'), submit=form.querySelector('.wizard-submit'), status=form.querySelector('.wizard-msg');
 
  const setSummary=()=>{
   const companyName=String(elements.namedItem('company').value||'').trim();
-  const contractName=String(elements.namedItem('contract').value||'').trim();
   form.querySelector('[data-summary-company]').textContent=companyName||'Não informado';
-  form.querySelector('[data-summary-contract]').textContent=contractName||'Não informado';
  };
- for(const field of ['company','contract'])elements.namedItem(field).addEventListener('input',setSummary);
+ elements.namedItem('company').addEventListener('input',setSummary);
  const setStep=(number)=>{
   for(const tab of form.querySelectorAll('[data-journey]'))tab.dataset.active=String(tab.dataset.journey===String(number));
  };
  for(const step of form.querySelectorAll('[data-wizard-step]')){
   step.addEventListener('focusin',()=>setStep(step.dataset.wizardStep));
  }
- elements.namedItem('plan').addEventListener('change',()=>setStep(3));
+ elements.namedItem('plan').addEventListener('change',()=>setStep(2));
  setSummary();
 
  form.querySelector('.wizard-exit').onclick=onLogout;
@@ -58,9 +56,6 @@ export async function showXrmoviOnboarding({login,client,onCreated,onLogout,exis
    if(error)throw error;
    pendingSnapshot=data;
    form.elements.namedItem('company').value=String(data.company_name||existing.name||'');
-   form.elements.namedItem('contract').value=String(data.contract_name||'');
-   form.elements.namedItem('customer').value=String(data.contract_client||'');
-   form.elements.namedItem('code').value=String(data.contract_code||'');
    setSummary();
    const {data:attempt,error:attemptError}=await client.rpc('xrmovi_checkout_reconcile_lookup',{cid:existing.id});
    if(attemptError)throw attemptError;
@@ -167,10 +162,8 @@ export async function showXrmoviOnboarding({login,client,onCreated,onLogout,exis
    const {data,error}=await client.rpc(existing?.id?'xrmovi_onboarding_update':'xrmovi_onboarding_complete',{
     ...(existing?.id?{cid:existing.id}:{}),
     company_name:String(elements.namedItem('company').value).trim(),
-    contract_name:String(elements.namedItem('contract').value).trim(),
-    chosen_plan:plan,
-    contract_client:String(elements.namedItem('customer').value).trim(),
-    contract_code:String(elements.namedItem('code').value).trim()
+    contract_name:null,
+    chosen_plan:plan
    });
    if(error)throw error;
    // Leave onboarding immediately; no operational dashboard until payment.

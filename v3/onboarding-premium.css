@@ -44,7 +44,7 @@
 .xrm-signup .wizard-intro h1 {font-size:clamp(25px,3.2vw,38px);letter-spacing:-.045em;line-height:1.12;margin:10px 0 10px;font-weight:850;color:#f7fdff}
 .xrm-signup .wizard-intro h1 em {font-style:normal;color:#7bebd3}
 .xrm-signup .wizard-intro p {max-width:650px;color:#aac5d1;font-size:13px;line-height:1.65;margin:0}
-.xrm-signup .wizard-journey {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:23px clamp(18px,3vw,34px) 0}
+.xrm-signup .wizard-journey {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:23px clamp(18px,3vw,34px) 0}
 .xrm-signup .wizard-journey-step {display:flex;gap:10px;align-items:center;min-width:0;padding:10px 12px;border:1px solid #28475a;border-radius:12px;background:#122a3c;transition:border-color .2s,background .2s}
 .xrm-signup .wizard-journey-step[data-active=true] {background:#123e43;border-color:#3c9f92}
 .xrm-signup .wizard-journey-step .journey-number {flex:none;display:grid;place-items:center;width:29px;height:29px;border-radius:9px;background:#203d50;color:#99bac9;font-weight:850;font-size:12px}
