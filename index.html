@@ -91,7 +91,7 @@ header .brand-logo{display:block;width:248px;height:auto;max-height:64px;object-
 .xrm-commercial-video-actions span{color:#a9c4ce;font-size:12px}
 @media(max-width:600px){.xrm-commercial-video-section{padding:36px 0 40px}.xrm-commercial-video-frame{border-radius:12px}}
 </style><link rel="stylesheet" href="/seo/comercial.css">
-<script defer src="/analytics/xrmovi-analytics.js?v=20261105-ga4-purchase-1"></script>
+<script defer src="/analytics/xrmovi-analytics.js?v=20261110-qr-demo-1"></script>
 <script defer src="/analytics/xrmovi-widget-visits.js?v=20261108-1"></script>
 <link rel="stylesheet" href="/legal/policies.css">
 <link rel="manifest" href="/manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><link rel="icon" href="/pwa/icon.svg?v=20261110-brand-v2" type="image/svg+xml" sizes="any"></head><body>
@@ -104,7 +104,7 @@ header .brand-logo{display:block;width:248px;height:auto;max-height:64px;object-
    <h1>O motorista informa.<br><em>Você tem o controle.</em></h1>
    <p class="xrm-qr-hero-lead">Um QR Code para cada veículo. O motorista escaneia, informa a quilometragem total e envia uma foto do painel. Você acompanha as leituras, identifica variações suspeitas e recebe alertas de troca de óleo no XRMOVI.</p>
    <div class="actions xrm-qr-hero-actions">
-    <a class="btn xrm-qr-action-primary" href="/?login=1">Começar com o XRMOVI <span aria-hidden="true">↗</span></a>
+    <a class="btn xrm-qr-action-primary" href="#demo-qr">Testar com um veículo fictício <span aria-hidden="true">↓</span></a>
     <a class="btn outline" href="#recursos">Ver como funciona <span aria-hidden="true">↓</span></a>
    </div>
    <div class="xrm-qr-hero-details">
@@ -140,10 +140,74 @@ header .brand-logo{display:block;width:248px;height:auto;max-height:64px;object-
      <div class="xrm-qr-management-alert"><span aria-hidden="true">◷</span> <span>Troca de óleo próxima · Alerta configurável</span></div>
     </div>
    </div>
-   <div class="xrm-qr-showcase-note">Fluxo ilustrativo com dados fictícios. O QR de exemplo leva a esta apresentação, não ao cadastro de um veículo.</div>
+   <div class="xrm-qr-showcase-note">Escaneie o QR Code ou <a href="#demo-qr">abra a simulação</a> para testar com dados fictícios.</div>
   </div>
  </div>
 </div>
+<section class="section" id="demo-qr" aria-labelledby="demo-qr-title">
+ <div class="shell">
+  <div class="qr-demo-card">
+   <h2 id="demo-qr-title" tabindex="-1">Teste com um veículo fictício</h2>
+   <p>Veja o que o motorista envia e o que aparece no painel do gestor. Sem cadastro.</p>
+   <noscript><p>Ative o JavaScript para testar ou <a href="#qr-frota">veja como funciona o registro de KM</a>.</p></noscript>
+   <div class="qr-demo-steps" hidden>
+    <div data-qr-step="driver">
+     <h3 tabindex="-1">1 de 3 · Envie a leitura do motorista</h3>
+     <p>Ao abrir o QR Code da van FRT-007, o motorista informa o KM e anexa uma foto do hodômetro.</p>
+     <div class="qr-demo-reading"><span>Hodômetro de exemplo</span><strong>19.850 km</strong></div>
+     <button type="button" class="btn" data-qr-action="received">Simular envio do KM com foto</button>
+    </div>
+    <div data-qr-step="received" hidden>
+     <h3 tabindex="-1">2 de 3 · Confira a leitura no painel</h3>
+     <p>A van FRT-007 aparece com <strong>19.850 km</strong> no histórico. O gestor pode conferir a foto junto à leitura.</p>
+     <button type="button" class="btn" data-qr-action="alert">Ver alerta de troca de óleo</button>
+    </div>
+    <div data-qr-step="alert" hidden>
+     <h3 tabindex="-1">3 de 3 · Faltam 150 km para trocar o óleo</h3>
+     <p>A troca da van FRT-007 está programada para <strong>20.000 km</strong>. Com a leitura atualizada, o gestor já pode programar o serviço.</p>
+     <div class="qr-demo-actions">
+      <a class="btn" href="#planos">Ver planos</a>
+      <a class="btn outline" href="https://wa.me/5521959092414?text=Ol%C3%A1%21%20Testei%20a%20demonstra%C3%A7%C3%A3o%20do%20XRMOVI%20e%20quero%20saber%20mais%20sobre%20os%20planos." target="_blank" rel="noopener noreferrer">Tirar dúvidas no WhatsApp</a>
+      <button type="button" class="btn outline" data-qr-action="driver">Recomeçar</button>
+     </div>
+    </div>
+   </div>
+  </div>
+ </div>
+</section>
+<style>
+#demo-qr{scroll-margin-top:96px}
+#demo-qr [hidden]{display:none}
+.qr-demo-card{max-width:760px;margin:auto;padding:clamp(20px,4vw,40px);background:#10293b;border:1px solid #30635f;border-radius:20px}
+.qr-demo-card h2,.qr-demo-card h3{margin-top:0}
+.qr-demo-card p{color:#c4d9e1}
+.qr-demo-steps{margin-top:24px;padding-top:24px;border-top:1px solid #366059}
+.qr-demo-reading{display:grid;gap:4px;width:fit-content;padding:10px 16px;margin:0 0 16px;background:#071722;border:1px solid #366059;border-radius:10px}
+.qr-demo-reading span{font-size:.85rem;color:#bed3df}
+.qr-demo-reading strong{font-variant-numeric:tabular-nums;color:#65e8b5;font-size:1.4rem}
+.qr-demo-actions{display:flex;flex-wrap:wrap;gap:10px}
+</style>
+<script id="xrm-qr-interactive">
+(function(){
+ const section=document.getElementById('demo-qr');
+ const steps=section.querySelector('.qr-demo-steps');
+ const panels=Array.from(steps.querySelectorAll('[data-qr-step]'));
+ let completed=false;
+ steps.hidden=false;
+ steps.querySelectorAll('[data-qr-action]').forEach(function(button){
+  button.addEventListener('click',function(){
+   const step=button.dataset.qrAction;
+   const panel=panels.find(function(item){return item.dataset.qrStep===step;});
+   panels.forEach(function(item){item.hidden=item!==panel;});
+   panel.querySelector('h3').focus();
+   if(step==='alert'&&!completed){
+    completed=true;
+    window.XrmoviAnalytics?.track('xrmovi_demo_complete',{location:'qr_demo'});
+   }
+  });
+ });
+})();
+</script>
 <section class="section xrm-commercial-video-section" id="video-xrmovi" aria-labelledby="xrm-commercial-video-title" hidden>
  <div class="shell">
   <div class="xrm-commercial-video-header">
@@ -754,7 +818,7 @@ document.addEventListener('DOMContentLoaded',function(){
  try{
   if(typeof window.QRCode!=='function')throw Error('Módulo de QR indisponível');
   root.replaceChildren();
-  const demoUrl=new URL('/#qr-frota',location.origin).href;
+  const demoUrl=new URL('/#demo-qr',location.origin).href;
   new window.QRCode(root,{text:demoUrl,width:165,height:165,colorDark:'#082735',colorLight:'#ffffff',correctLevel:window.QRCode.CorrectLevel.M});
   root.title='QR demonstrativo que abre esta apresentação, sem acesso a veículos reais';
  }catch(error){
