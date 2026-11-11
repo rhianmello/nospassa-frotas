@@ -1,7 +1,7 @@
 import{createClient}from 'https://esm.sh/@supabase/supabase-js@2.58.0';
 import { setupSubscriptionPanel } from './subscription-panel.js?v=20261105-syntax-fix-2';
 import { renewalNotice } from './renewal-reminder.js?v=20261103-reminders-2';
-import { showXrmoviOnboarding } from './onboarding.js?v=20261110-company-plan-2';
+import { showXrmoviOnboarding } from './onboarding.js?v=20261110-resume-account-1';
 import { createCompanyBranding } from './company-branding.js?v=20261029-logo-1';
 import { setupMileage } from './mileage.js?v=20261106-mileage-page-1';
 import { setupVehicleExport } from './vehicle-export.js?v=20261106-vehicle-xlsx-1';
@@ -157,14 +157,14 @@ async function xrmLogout(){
  window.location.replace(new URL('../?login=1',location.href));
 }
 for(const id of ['xrm-fleet-logout','xrm-fleet-logout-mobile'])el(id)?.addEventListener('click',()=>void xrmLogout());
-async function init({skipWizard=false}={}){
+async function init({skipWizard=false,companyId=null}={}){
  try{
   if(!sb)throw Error('Serviço de autenticação ainda não inicializado.');
   const {data,error:authError}=await sb.auth.getUser();
   if(authError||!data?.user){window.location.replace(new URL('../?login=1',location.href));return}
   companies=await rpc('my_companies');
   if(!companies?.length){showCompanyOnboarding();return}
-  company=companies.find(c=>c.name.includes('DEMONSTRAÇÃO'))||companies[0];
+  company=companies.find(c=>c.id===companyId)||companies.find(c=>c.name.includes('DEMONSTRAÇÃO'))||companies[0];
   if(!skipWizard&&company.role==='owner'){
    const access=await rpc('access_status',{cid:company.id});
    if(access?.billing_required&&access?.status==='pending'){
@@ -477,7 +477,7 @@ function completeMaintenance(task){openWrite('maintenance-complete',task)}
 function showCompanyOnboarding(existing=null){
  void showXrmoviOnboarding({
   login,client:sb,existing,
-  onCreated:async()=>{await init({skipWizard:true});},
+  onCreated:async data=>{await init({skipWizard:true,companyId:data.company_id});},
   onLogout:async()=>{const {error}=await sb.auth.signOut();if(error){msg(error.message);return;}window.location.replace(new URL('../?login=1',location.href))}
  }).catch(showLoadFailure);
 }

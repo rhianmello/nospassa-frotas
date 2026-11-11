@@ -169,6 +169,7 @@ export async function showXrmoviOnboarding({login,client,onCreated,onLogout,exis
    // Leave onboarding immediately; no operational dashboard until payment.
    login.hidden=true;
    await onCreated(data);
+   if(data.recovered)return;
    if(paymentMethod==='pix'){
     openPixCheckout({client,companyId:data.company_id,onPaid:async()=>window.location.reload()});
     return;
