@@ -2,7 +2,7 @@ import{createClient}from 'https://esm.sh/@supabase/supabase-js@2.58.0';
 import { setupSubscriptionPanel } from './subscription-panel.js?v=20261105-syntax-fix-2';
 import { renewalNotice } from './renewal-reminder.js?v=20261103-reminders-2';
 import { showXrmoviOnboarding } from './onboarding.js?v=20261110-resume-account-1';
-import { createCompanyBranding } from './company-branding.js?v=20261029-logo-1';
+import { createCompanyBranding } from './company-branding.js?v=20261110-company-name-1';
 import { setupMileage } from './mileage.js?v=20261106-mileage-page-1';
 import { setupVehicleExport } from './vehicle-export.js?v=20261106-vehicle-xlsx-1';
 import { createDocumentCenter } from './document-center.js?v=20261106-fine-attachments-1';
@@ -1338,7 +1338,16 @@ async function startXrmovi(){
    client:sb,getCompany:()=>company,
    onSave:(id,data)=>{
     const record=companies.find(c=>c.id===id);
-    if(record&&data){record.logo_path=data.logo_path;record.logo_url=data.logo_url}
+    if(!record||!data)return;
+    if('logo_path' in data){record.logo_path=data.logo_path;record.logo_url=data.logo_url;}
+    if(typeof data.name==='string'&&record.name!==data.name){
+     record.name=data.name;
+     for(const selector of [el('v3-company'),el('v3-company-mobile')]){
+      const option=Array.from(selector?.options||[]).find(item=>item.value===id);
+      if(option)option.textContent=data.name;
+     }
+     void subscriptionPanel?.refresh();
+    }
    }
   });
   window.XrmoviCompanyBranding=Object.freeze({forPdf:()=>branding.forPdf()});

@@ -29,6 +29,15 @@ export function createCompanyBranding({ client, getCompany, onSave }) {
   const input = byId('company-logo-file');
   const area = byId('company-logo-area');
   const status = byId('company-logo-status');
+  const name = byId('company-name');
+  const nameEdit = byId('company-name-edit');
+  const nameDialog = byId('company-name-dialog');
+  const nameInput = byId('company-name-input');
+  const nameError = byId('company-name-error');
+  const nameSave = byId('company-name-save');
+  const nameCancel = byId('company-name-cancel');
+  let nameCompanyId = null;
+  let savingName = false;
   let generation = 0;
   let imageUrl = null;
   let pickerCompanyId = null;
@@ -75,7 +84,8 @@ export function createCompanyBranding({ client, getCompany, onSave }) {
       image.alt = current?.name ? 'Logo de ' + current.name : 'Logo da empresa';
     }
     if (placeholder) placeholder.hidden = false;
-    if (byId('company-name')) byId('company-name').textContent = current?.name || 'Empresa ativa';
+    if (name) name.textContent = current?.name || 'Empresa ativa';
+    if (nameEdit) nameEdit.hidden = !canEdit(current);
     updateControls();
     feedback(uploading.has(current?.id) ? 'Salvando imagem…' : '');
     if (!current) return true;
@@ -102,6 +112,57 @@ export function createCompanyBranding({ client, getCompany, onSave }) {
       return false;
     }
   }
+
+  nameEdit?.addEventListener('click', () => {
+    const current = getCompany();
+    if (!canEdit(current) || savingName) return;
+    nameCompanyId = current.id;
+    nameInput.value = current.name;
+    nameError.textContent = '';
+    nameDialog.showModal();
+    nameInput.select();
+  });
+
+  nameCancel?.addEventListener('click', () => nameDialog.close());
+  nameDialog?.addEventListener('cancel', event => {
+    if (savingName) event.preventDefault();
+  });
+
+  byId('company-name-form')?.addEventListener('submit', async event => {
+    event.preventDefault();
+    const current = getCompany();
+    if (savingName || !canEdit(current) || current.id !== nameCompanyId) return;
+    const proposed = nameInput.value.trim();
+    if (proposed.length < 2 || proposed.length > 160) {
+      nameError.textContent = 'Informe um nome com 2 a 160 caracteres.';
+      return;
+    }
+    if (proposed === current.name) {
+      nameDialog.close();
+      return;
+    }
+    savingName = true;
+    nameSave.disabled = nameCancel.disabled = true;
+    nameInput.readOnly = true;
+    nameError.textContent = 'Salvando…';
+    try {
+      const { data, error } = await client.rpc('xrmovi_company_name_save', { cid: current.id, p_name: proposed });
+      if (error) throw error;
+      onSave(current.id, data);
+      if (getCompany()?.id === current.id) {
+        name.textContent = data.name;
+        if (image) image.alt = 'Logo de ' + data.name;
+        feedback('Nome atualizado.');
+      }
+      nameDialog.close();
+    } catch (error) {
+      nameError.textContent = 'Não foi possível salvar o nome: ' + error.message;
+    } finally {
+      savingName = false;
+      nameSave.disabled = nameCancel.disabled = false;
+      nameInput.readOnly = false;
+    }
+  });
 
   if (edit && input) {
     edit.addEventListener('click', () => {

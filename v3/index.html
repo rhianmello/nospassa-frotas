@@ -27,6 +27,20 @@
 @media (min-width:761px) and (max-width:1020px){.fleet-page .fleet-sidebar .fleet-brand .xrmovi-fleet-logo{width:66px;max-height:50px}}
 @media (max-width:760px){.fleet-page .fleet-sidebar .fleet-brand{justify-content:flex-start;padding:2px 0 12px}.fleet-page .fleet-sidebar .fleet-brand .xrmovi-fleet-logo{width:182px;max-height:64px}}
 </style>
+<style>
+.fleet-company-name-row{display:flex;align-items:center;gap:9px;min-width:0}
+.fleet-company-name-row h1{min-width:0;overflow-wrap:anywhere}
+#company-name-edit{flex:none;width:36px;height:36px}
+#company-name-edit[hidden]{display:none}
+#company-name-dialog{width:min(440px,calc(100vw - 32px));box-sizing:border-box;padding:22px;border:1px solid #426980;border-radius:15px;background:#10273c;color:#edf7ff}
+#company-name-dialog::backdrop{background:#07111fbd}
+#company-name-form{display:grid;gap:10px}
+#company-name-form h2,#company-name-error{margin:0}
+#company-name-input{width:100%;box-sizing:border-box;padding:10px;border:1px solid #43647a;border-radius:8px;background:#091b2e;color:#fff;font:inherit}
+#company-name-error{color:#ffd1a0}
+#company-name-error:empty{display:none}
+.company-name-actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px}
+</style>
 </head>
 <body class="fleet-page">
   <a class="fleet-skip" href="#fleet-main">Ir para o conteúdo</a>
@@ -93,7 +107,22 @@
           </div>
           <div class="fleet-hero-copy">
             <p class="eyebrow">CENTRAL OPERACIONAL</p>
-            <h1 id="company-name">Empresa ativa</h1>
+            <div class="fleet-company-name-row">
+              <h1 id="company-name">Empresa ativa</h1>
+              <button id="company-name-edit" class="fleet-icon-button" type="button" aria-label="Alterar nome da empresa ou seu nome" title="Alterar nome" hidden><i data-lucide="pencil" aria-hidden="true"></i></button>
+            </div>
+            <dialog id="company-name-dialog" aria-labelledby="company-name-dialog-title">
+              <form id="company-name-form">
+                <h2 id="company-name-dialog-title">Alterar nome</h2>
+                <label for="company-name-input">Nome da empresa ou seu nome</label>
+                <input id="company-name-input" required minlength="2" maxlength="160">
+                <p id="company-name-error" role="status"></p>
+                <div class="company-name-actions">
+                  <button class="fleet-button" type="button" id="company-name-cancel">Cancelar</button>
+                  <button class="fleet-button primary" type="submit" id="company-name-save">Salvar</button>
+                </div>
+              </form>
+            </dialog>
             <p class="fleet-company-subtitle">Operação, manutenção e conformidade</p>
             <p id="company-logo-status" class="fleet-company-logo-status" role="status" aria-live="polite" aria-atomic="true"></p>
           </div>
@@ -294,7 +323,7 @@
 <script defer src="./xrmovi-local-assistant.js?v=20261030-v4-3"></script>
 <script defer src="/analytics/xrmovi-analytics.js?v=20261105-ga4-purchase-1"></script>
  <script type="module" src="/analytics/xrmovi-bridge.js?v=20261105-1"></script>
- <script type="module" src="./xrmovi-adapter.js?v=20261110-resume-account-1"></script>
+ <script type="module" src="./xrmovi-adapter.js?v=20261110-company-name-1"></script>
  <script defer src="./mobile-experience.js?v=20261106-mileage-separate-1"></script>
 <script type="module" src="/analytics/xrmovi-presence.js?v=20261109-1"></script>
 </body>
