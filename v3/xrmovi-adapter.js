@@ -162,6 +162,7 @@ async function init({skipWizard=false,companyId=null}={}){
   if(!sb)throw Error('Serviço de autenticação ainda não inicializado.');
   const {data,error:authError}=await sb.auth.getUser();
   if(authError||!data?.user){window.location.replace(new URL('../?login=1',location.href));return}
+  const loggedEmail=el('xrm-logged-email');if(loggedEmail){loggedEmail.textContent=data.user.email||'';loggedEmail.hidden=!data.user.email;}
   companies=await rpc('my_companies');
   if(!companies?.length){showCompanyOnboarding();return}
   company=companies.find(c=>c.id===companyId)||companies.find(c=>c.name.includes('DEMONSTRAÇÃO'))||companies[0];
