@@ -268,7 +268,7 @@ if(kind==='driver'){buildDriverForm(form,record)}
 else if(kind==='expense'){buildExpenseForm(form,record)}
 else if(kind==='maintenance-edit'){const vehicle=document.createElement('p');vehicle.className='wide';vehicle.textContent=record.plate||vehicles.find(v=>v.id===record.vehicle_id)?.plate||'Veículo';form.append(vehicle,field('title','Serviço','text',record.title,true),field('due_date','Vencimento por data','date',record.due_date||''),field('due_meter','Vencimento por KM/horímetro','number',record.due_meter??''),field('notes','Observações','text',record.notes||''),field('reason','Motivo da alteração','text','',true));form.elements.title.maxLength=150;form.elements.reason.minLength=3;form.elements.reason.maxLength=500;form.elements.notes.maxLength=1000}
 else if(kind==='maintenance-cost'||kind==='maintenance-complete'){const description=document.createElement('p');description.className='wide';description.textContent=(record.plate||vehicles.find(v=>v.id===record.vehicle_id)?.plate||'Veículo')+' · '+record.title;form.append(description,field('estimate','Custo previsto (R$)','number',record.estimated_cost??''),field('actual','Custo realizado (R$)','number',record.actual_cost??'',kind==='maintenance-complete'),field('completed_meter','KM/horímetro na execução','number',record.completed_meter??'',kind==='maintenance-complete'));if(kind==='maintenance-complete'){const note=document.createElement('p');note.className='wide';note.textContent='Confirme os valores e a leitura na execução. O serviço será marcado como concluído.';form.append(note)}}
-else if(kind==='vehicle'){form.append(field('plate','Placa / identificação','text',record?.plate||'',true),pick('category','Categoria',['Leve','Utilitário','Caminhão','Van','Trator','Máquina','Ônibus','Moto','Implemento','Equipamento','Outro'].map(value=>[value,value]),record?.category),pick('status','Situação operacional',[['Ativo','Ativo — operacional'],['Manutenção','Em manutenção — não operacional'],['Inativo','Inativo — não operacional']],record?.status||'Ativo'),field('brand','Marca','text',record?.brand||'',true),field('model','Modelo','text',record?.model||'',true),field('manufacture_year','Ano fabricação','number',record?.manufacture_year||''),field('model_year','Ano modelo','number',record?.model_year||''),field('odometer','KM/H','number',record?.odometer_value||0),field('unit','Unidade / local','text',record?.unit_name||''),field('notes','Observações','text',record?.notes||''));buildVehicleDriverSelect(form,record);
+else if(kind==='vehicle'){form.append(field('plate','Placa / identificação','text',record?.plate||'',true),pick('category','Categoria',['Leve','Utilitário','Caminhão','Van','Trator','Máquina','Ônibus','Moto','Implemento','Equipamento','Outro'].map(value=>[value,value]),record?.category),pick('status','Situação operacional',[['Ativo','Ativo — operacional'],['Manutenção','Em manutenção — não operacional'],['Inativo','Inativo — não operacional']],record?.status||'Ativo'),field('brand','Marca','text',record?.brand||'',true),field('model','Modelo','text',record?.model||'',true),field('manufacture_year','Ano fabricação','number',record?.manufacture_year||''),field('model_year','Ano modelo','number',record?.model_year||''),field('odometer','KM/H','number',record?.odometer_value||0),field('unit','Unidade / local','text',record?.unit_name||''),field('notes','Observações','text',record?.notes||''));const contractField=pick('contract','Contrato',[['','Todos os contratos (sem vínculo)'],...contracts.map(c=>[c.id,c.name])],record?.contract_id||'');form.append(contractField);buildVehicleDriverSelect(form,record);
  const statusInfo=document.createElement('p');
  statusInfo.className='wide xrm-oil-vehicle-note';
  statusInfo.textContent='Operacional significa status Ativo. Revisão vencida gera alerta, mas não altera automaticamente o status. Apenas proprietários e gestores podem modificar esta situação.';
@@ -416,6 +416,7 @@ if(kind==='vehicle'){
   if(num('oil_warning')===null||num('oil_warning')<0||num('weekly_max')<100)throw Error('Confira a margem de aviso e o limite semanal.');
  }
  draft.savedRecordId=await rpc('vehicle_save_with_driver',{cid:companyId,p_id:record?.id||draft.savedRecordId||null,p_plate:plate,p_brand:str('brand'),p_model:str('model'),p_category:str('category'),p_manufacture_year:num('manufacture_year'),p_model_year:num('model_year'),p_odometer:num('odometer')||0,p_unit:str('unit'),p_notes:str('notes'),p_driver:str('driver')||null});
+ await rpc('vehicle_set_contract',{cid:companyId,vid:draft.savedRecordId,contract:str('contract')||null});
  if(str('status')!==(record?.status||'Ativo')){
   await rpc('vehicle_status_update',{cid:companyId,vid:draft.savedRecordId,p_status:str('status'),
    p_expected_status:record?.status||'Ativo',p_reason:str('status_reason')||'Alteração pelo cadastro'});
@@ -636,6 +637,27 @@ if(el('view-clear-filters'))el('view-clear-filters').onclick=()=>{const view=cur
 
 function syncContractFilter(){const select=el('xrm-contract-filter');if(!select)return;const current=select.value;select.replaceChildren();const all=document.createElement('option');all.value='';all.textContent='Todos os contratos';select.append(all);for(const c of contracts){const opt=document.createElement('option');opt.value=c.id;opt.textContent=c.name;select.append(opt)}select.value=contracts.some(c=>c.id===current)?current:''}
 
+function setupContractCreateButton(){
+ const select=el('xrm-contract-filter');if(!select||el('xrm-contract-add'))return;
+ const button=document.createElement('button');button.type='button';button.id='xrm-contract-add';button.textContent='+ Contrato';button.title='Cadastrar contrato para a empresa ativa';button.style.cssText='margin-left:7px;padding:7px 10px;border:1px solid #345471;border-radius:7px;background:#10283c;color:#d8f7ff;font:600 11px system-ui;cursor:pointer';
+ select.insertAdjacentElement('afterend',button);
+ button.onclick=async()=>{
+  if(!company)return;
+  const name=window.prompt('Nome do novo contrato:');
+  if(name===null)return;
+  const trimmed=name.trim();
+  if(!trimmed||trimmed.length>160){window.alert('Informe um nome de contrato válido (até 160 caracteres).');return;}
+  button.disabled=true;
+  try{
+   await rpc('contract_create',{cid:company.id,contract_name:trimmed,client:'',code:''});
+   contracts=await rpc('contracts_list',{cid:company.id})||[];
+   syncContractFilter();
+   msg('Contrato cadastrado. Agora você pode vinculá-lo ao veículo em Criar ou Editar ativo.');
+  }catch(error){window.alert('Não foi possível cadastrar o contrato: '+(error?.message||'Erro desconhecido'))}
+  finally{button.disabled=false}
+ };
+}
+setupContractCreateButton();
 if(el('xrm-contract-filter'))el('xrm-contract-filter').onchange=applyVehicleFilters;
 
 function msg(text){const notice=el('page-notice');if(notice){notice.textContent=text;notice.classList.toggle('hidden',!text)}}
