@@ -1,7 +1,7 @@
 import {createClient} from "npm:@supabase/supabase-js@2.58.0";
 import {cancelPreapproval, preapprovalPath, isCancelled} from "./preapproval-transport.js";
 import {buildPixPaymentPayload} from "./pix-payment-payload.js";
-const ORIGINS=new Set(["https://frota.nospassa.com.br","https://www.frota.nospassa.com.br"]);
+const ORIGINS=new Set(["https://xrmovi.com.br","https://www.xrmovi.com.br"]);
 function respond(data:unknown,status=200,origin=""){
  const headers:Record<string,string>={"content-type":"application/json; charset=utf-8","cache-control":"no-store","vary":"Origin"};
  if(ORIGINS.has(origin))headers["access-control-allow-origin"]=origin;
@@ -18,7 +18,7 @@ function validCpf(value:string){
 Deno.serve(async(req:Request)=>{
  const origin=req.headers.get("origin")||"";
  if(origin&&!ORIGINS.has(origin))return respond({error:"Origem não autorizada."},403,origin);
- if(req.method==="OPTIONS")return new Response(null,{status:204,headers:{"access-control-allow-origin":origin||"https://frota.nospassa.com.br","access-control-allow-methods":"POST,OPTIONS","access-control-allow-headers":"authorization,apikey,content-type,x-client-info"}});
+ if(req.method==="OPTIONS")return new Response(null,{status:204,headers:{"access-control-allow-origin":origin||"https://xrmovi.com.br","access-control-allow-methods":"POST,OPTIONS","access-control-allow-headers":"authorization,apikey,content-type,x-client-info"}});
  if(req.method!=="POST")return respond({error:"Método inválido."},405,origin);
  const auth=req.headers.get("authorization")||"";
  if(!auth.startsWith("Bearer "))return respond({error:"Entre na conta."},401,origin);
