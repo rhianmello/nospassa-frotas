@@ -1,6 +1,6 @@
 // Admin-only diagnostics for XRMOVI Mercado Pago. Never exposes secrets.
 import {createClient} from "npm:@supabase/supabase-js@2.58.0";
-const origins=new Set(["https://frota.nospassa.com.br","https://www.frota.nospassa.com.br"]);
+const origins=new Set(["https://xrmovi.com.br","https://www.xrmovi.com.br"]);
 const respond=(data:unknown,status=200,origin:string|null=null)=>{
  const headers:Record<string,string>={"content-type":"application/json; charset=utf-8","cache-control":"private, no-store","vary":"Origin"};
  if(origin&&origins.has(origin))headers["access-control-allow-origin"]=origin;
@@ -10,7 +10,7 @@ Deno.serve(async (request:Request)=>{
  const origin=request.headers.get("origin");
  if(origin&&!origins.has(origin))return respond({error:"Origin not permitted"},403);
  if(request.method==="OPTIONS")return new Response(null,{status:204,headers:{
-  "access-control-allow-origin":origin||"https://frota.nospassa.com.br",
+  "access-control-allow-origin":origin||"https://xrmovi.com.br",
   "access-control-allow-headers":"authorization, apikey, content-type, x-client-info",
   "access-control-allow-methods":"POST, OPTIONS","vary":"Origin"
  }});
