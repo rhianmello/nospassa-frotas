@@ -8,7 +8,7 @@ const shortDate=v=>{if(!v)return 'Não conferida';const s=String(v).slice(0,10);
 const namedStatus={indexed:'Indexada',pending:'Aguardando indexação',issue:'Requer atenção',unknown:'Não verificada'};
 const sourceName={search_console_screenshot:'Print do Search Console',manual_owner:'Atualização manual'};
 const searchConsole='https://search.google.com/search-console?resource_id=https%3A%2F%2Ffrota.nospassa.com.br%2F';
-const site='https://frota.nospassa.com.br';
+const site='https://xrmovi.com.br';
 const limitedPath=x=>typeof x==='string'&&/^\/[a-z0-9\-/]*$/.test(x)?x:'/';
 function appendText(parent,tag,value,cls){const a=el(tag,value,cls);parent.append(a);return a}
 function link(parent,label,url){const a=appendText(parent,'a',label);a.href=url;a.target='_blank';a.rel='noopener noreferrer';return a}
