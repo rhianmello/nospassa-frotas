@@ -1,7 +1,7 @@
 // XRMOVI: authenticated read-only reconciliation against Mercado Pago. NEVER creates a payment.
 // Settles only verified, approved recurring invoices that belong to the caller's own account.
 import {createClient} from "npm:@supabase/supabase-js@2.58.0";
-const origins=new Set(["https://xrmovi.com.br","https://www.xrmovi.com.br"]);
+const origins=new Set(["https://frota.nospassa.com.br","https://www.frota.nospassa.com.br","https://xrmovi.com.br","https://www.xrmovi.com.br"]);
 const json=(data:unknown,status=200,origin:string|null=null)=>{
  const headers:Record<string,string>={"content-type":"application/json; charset=utf-8","cache-control":"no-store","vary":"Origin"};
  if(origin&&origins.has(origin))headers["access-control-allow-origin"]=origin;
@@ -11,7 +11,7 @@ Deno.serve(async(req:Request)=>{
  const origin=req.headers.get("origin");
  if(origin&&!origins.has(origin))return json({error:"Origem não autorizada"},403,origin);
  if(req.method==="OPTIONS")return new Response(null,{status:204,headers:{
-  "access-control-allow-origin":origin||"https://xrmovi.com.br",
+  "access-control-allow-origin":origin||"https://frota.nospassa.com.br",
   "access-control-allow-methods":"POST, OPTIONS",
   "access-control-allow-headers":"authorization,apikey,content-type,x-client-info",
   "vary":"Origin"
