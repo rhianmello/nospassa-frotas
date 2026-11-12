@@ -42,7 +42,7 @@ export function setupMileage({client,getCompany,getVehicles,getFilteredIds,onRel
   head.append(btn('Gerenciar KM →',()=>{document.querySelector('[data-view="mileage"]')?.click();id('xrm-mileage-console')?.scrollIntoView({behavior:'smooth',block:'start'})}));
   dboard.append(head);
   const chips=add('div','xrm-mileage-dash-chips');
-  for(const [label,count,tone] of [['Troca de óleo',oil.length,'oil'],['KM semanal pendente',reminders.length,'weekly'],['Leituras para conferir',pending.length,'pending']]){
+  for(const [label,count,tone] of [['Troca de óleo',oil.length,'oil'],['KM semanal pendente',reminders.length,'weekly'],['KM para aprovar',pending.length,'pending']]){
    const chip=add('div','xrm-mileage-dash-chip '+tone);chip.append(add('span','',label),add('strong','',String(count)));chips.append(chip);
   }
   dboard.append(chips);
@@ -57,7 +57,7 @@ export function setupMileage({client,getCompany,getVehicles,getFilteredIds,onRel
    alerts.append(header);
    for(const v of oil)alerts.append(add('p',toStatusClass(v),v.plate+' — '+toStatus(v)+' · '+km(v.meter)+' / '+km(v.next_due_km)+' km'));
    if(reminders.length)alerts.append(add('p','',reminders.length+' veículo(s) aguardam atualização semanal de KM ('+days[state.weekday]+').'));
-   if(pending.length)alerts.append(add('p','xrm-oil-overdue',pending.length+' leitura(s) suspeita(s) aguardam conferência do gestor.'));
+   if(pending.length)alerts.append(add('p','xrm-oil-overdue',pending.length+' leitura(s) aguardam aprovação do gestor.'));
   }
   renderConsole();
  }
@@ -116,7 +116,7 @@ export function setupMileage({client,getCompany,getVehicles,getFilteredIds,onRel
   if(pending.length){
    const box=add('div','xrm-mileage-review');
    const head=add('div','xrm-mileage-review-head');
-   head.append(add('h3','','Leituras suspeitas aguardando conferência'));
+   head.append(add('h3','','KM enviados pelos motoristas · aguardando aprovação'));
    head.append(add('small','','Rejeitar remove da fila, mas preserva o registro no histórico. Consulte a origem pelo botão ao lado de cada leitura.'));
    box.append(head);
    const toolbar=add('div','xrm-mileage-review-toolbar');
@@ -163,7 +163,7 @@ export function setupMileage({client,getCompany,getVehicles,getFilteredIds,onRel
     if(owned())actions.append(btn('Origem / histórico',()=>void showReadingHistory({id:r.vehicle_id,plate:r.plate}),'subtle small'));
     if(owned()){
      actions.append(btn('Rejeitar',()=>void rejectOne(r),'danger small'));
-     actions.append(btn('Conferir',()=>showReview(r),'primary small'));
+     actions.append(btn('Aprovar KM / corrigir',()=>showReview(r),'primary small'));
     }
     line.append(actions);list.append(line);
    }
@@ -384,7 +384,7 @@ export function setupMileage({client,getCompany,getVehicles,getFilteredIds,onRel
   form.append(message);
   const actions=add('div','xrm-mileage-actions');
   const reject=btn('Rejeitar',()=>void act('reject'),'subtle');
-  const accept=btn('Aprovar / corrigir',()=>void act('accept'),'primary');
+  const accept=btn('Salvar KM aprovado',()=>void act('accept'),'primary');
   const validate=()=>{
    const raw=value.input.value.trim();
    const typed=Number(raw);
