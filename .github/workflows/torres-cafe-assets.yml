@@ -15,6 +15,7 @@ jobs:
         env:
           PYTHONUNBUFFERED: '1'
         run: |
+          python - <<'PY'
           import os, urllib.request, time, subprocess
           urls = {
             "embalagem": "https://media.canva.com/v2/image-resize/format:JPG/height:198/quality:75/uri:ifs%3A%2F%2FM%2Fecf4b8ac-39ed-4ef9-92fe-8692b7841291/watermark:F/width:200?csig=AAAAAAAAAAAAAAAAAAAAAD2xw2-fbJXqcio82R5otGhlYiECLT-ENo4lACcExfkN&exp=1795316669&osig=AAAAAAAAAAAAAAAAAAAAAGJXB02BHpiMBFluk8mlxn3dIFKNGDIFuKi1eWU3MMwW&signer=media-rpc&token=AAIAAU0AJGVjZjRiOGFjLTM5ZWQtNGVmOS05MmZlLTg2OTJiNzg0MTI5MQAAAAABogE2WkgknstlRIjDV83DTfAJZwwwwhhBc4w7mC9mfMZTGmeQhA&x-canva-quality=thumbnail",
@@ -35,7 +36,7 @@ jobs:
                       req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
                       with urllib.request.urlopen(req, timeout=35) as response:
                           data = response.read()
-                      if len(data) < 1000 or data[:3] != b"\\xff\\xd8\\xff":
+                      if len(data) < 1000 or data[:3] != bytes([255,216,255]):
                           raise RuntimeError("Unexpected image response")
                       with open(target, "wb") as output: output.write(data)
                       print(name, len(data), "bytes")
@@ -49,6 +50,7 @@ jobs:
               html=html.replace(url, "assets/"+name+".jpg")
           with open("torres-cafe/index.html","w",encoding="utf-8") as out: out.write(html)
           
+          PY
       - name: Publicar fotos na pasta da demonstracao
         run: |
           git config user.name "github-actions[bot]"
